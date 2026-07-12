@@ -1,0 +1,30 @@
+flowchart TD
+  Operator[Trusted Operator] --> Dashboard[Next.js Dashboard]
+  Operator --> ControlAPI[Control-plane REST API]
+  Consumer[API Consumer] --> Proxy[Platform Route Proxy]
+  Dashboard --> ControlAPI
+
+  subgraph ControlPlane[ForgeML Modular Monolith]
+    ControlAPI --> App[Application Use Cases]
+    App --> Package[Package Service]
+    App --> Analyzer[Model Analyzer]
+    App --> Generator[Runtime Artifact Generator]
+    App --> Deployment[Deployment Service]
+    App --> RuntimePort[Runtime Manager Port]
+    App --> Monitoring[Observability Service]
+    App --> Repositories[Repository Ports]
+  end
+
+  Package --> Artifacts[(Immutable Artifact Store)]
+  Repositories --> Metadata[(Relational Metadata DB)]
+  Monitoring --> Metadata
+  RuntimePort --> Docker[Local Docker Engine]
+  Docker --> Runtime[Isolated Model Runtime Container]
+  Monitoring --> Docker
+  Proxy --> Runtime
+
+  classDef trust fill:#fff4cc,stroke:#8a6d00;
+  classDef runtime fill:#e8f5e9,stroke:#2e7d32;
+  class Operator,Consumer trust;
+  class Runtime runtime;
+

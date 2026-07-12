@@ -1,0 +1,25 @@
+flowchart TD
+  Upload[Stream .forge upload] --> Store[Atomic artifact store + SHA-256]
+  Store --> Validate[Archive and manifest validation]
+  Validate -->|invalid| Rejected[Package REJECTED\nfindings retained]
+  Validate -->|valid| Accepted[Package VALIDATED\ncontract retained]
+  Accepted --> Create[Create idempotent deployment operation]
+  Create --> Intent[Persist BUILDING desired state]
+  Intent --> Generate[Generate deterministic runtime artifact]
+  Generate --> Build[Build immutable Docker image]
+  Build -->|failure| Failed[Attempt FAILED\nbounded logs + classified reason]
+  Build -->|success| Start[Start constrained internal container]
+  Start --> ReadyCheck[Readiness/health check]
+  ReadyCheck -->|failure| Failed
+  ReadyCheck -->|success| Ready[Version READY]
+  Ready --> Activate[Acquire deployment lock\natomically update route]
+  Activate -->|success| Active[Version ACTIVE\nstable prediction route]
+  Activate -->|failure| Ready
+  Active --> Replace[Activate replacement]
+  Replace --> Ready
+  Active --> Stop[Remove route then stop]
+  Ready --> Stop
+  Stop --> Stopped[Version STOPPED]
+  Failed --> Retry[Explicit retry]
+  Retry --> Create
+

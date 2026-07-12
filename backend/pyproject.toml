@@ -1,0 +1,64 @@
+[build-system]
+requires = ["setuptools==83.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "forgeml"
+version = "0.1.0"
+description = "ForgeML single-server model deployment control plane"
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+  "fastapi==0.139.0",
+  "pydantic==2.13.4",
+  "uvicorn==0.51.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "black==26.5.1",
+  "build==1.5.1",
+  "coverage==7.15.0",
+  "httpx==0.28.1",
+  "mypy==2.2.0",
+  "pip-tools==7.5.3",
+  "pytest==9.1.1",
+  "ruff==0.15.21",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF", "S"]
+ignore = ["S104"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "S105", "S106", "S108", "S603"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unused_configs = true
+packages = ["forgeml"]
+
+[tool.pytest.ini_options]
+addopts = "-ra -W error"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+source = ["forgeml"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+fail_under = 95
