@@ -1,7 +1,8 @@
 """Application error invariant tests."""
 
-import pytest
 from typing import cast
+
+import pytest
 
 from forgeml.core.errors import AppError, ErrorCategory, ErrorDetail
 
@@ -21,7 +22,8 @@ def test_valid_error_is_immutable_and_safe() -> None:
 
     assert error.details == (detail,)
     with pytest.raises(AttributeError):
-        setattr(error, "code", "changed")
+        attribute = "code"
+        setattr(error, attribute, "changed")
 
 
 @pytest.mark.parametrize(

@@ -16,6 +16,12 @@ authentication, frontend, or other later-module behavior.
 The pyproject file is authoritative for direct dependencies. Lock files are generated
 with pip-tools using the exact commands in the frozen Module 0 design.
 
+For development and tests, install the locked dependencies and then install the local
+source without resolving dependencies:
+
+    python -m pip install --require-hashes -r requirements-dev.lock
+    python -m pip install --no-deps --no-build-isolation --editable .
+
 ## Configuration
 
 | Variable | Required/default | Constraint |

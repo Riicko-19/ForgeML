@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import unicodedata
 from collections.abc import Sequence
 from typing import Final
-import unicodedata
 from uuid import UUID
 
 from fastapi import FastAPI, Request
@@ -106,10 +106,8 @@ def _validation_path(location: tuple[object, ...]) -> tuple[str | int, ...] | No
             continue
         if isinstance(item, bool):
             continue
-        if (
-            isinstance(item, int)
-            and 0 <= item <= 2_147_483_647
-            or isinstance(item, str)
+        if (isinstance(item, int) and 0 <= item <= 2_147_483_647) or (
+            isinstance(item, str)
             and 1 <= len(item) <= 128
             and not any(
                 unicodedata.category(character).startswith("C") for character in item

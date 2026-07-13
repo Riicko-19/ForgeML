@@ -1,10 +1,10 @@
 """Request middleware lifecycle tests."""
 
 import asyncio
-from contextlib import suppress
 import io
 import json
 import logging
+from contextlib import suppress
 
 import pytest
 from starlette.types import Message, Receive, Scope, Send

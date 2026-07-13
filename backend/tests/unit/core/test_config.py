@@ -1,7 +1,7 @@
 """Configuration contract tests."""
 
-from importlib import metadata
 from collections.abc import Mapping
+from importlib import metadata
 from typing import cast
 
 import pytest

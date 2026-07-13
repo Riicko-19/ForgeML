@@ -1,5 +1,7 @@
 """Operational health routes."""
 
+from typing import Any
+
 from fastapi import APIRouter
 
 from forgeml.api.schemas import ErrorEnvelope, HealthResponse
@@ -11,7 +13,7 @@ def create_health_router(settings: AppSettings) -> APIRouter:
 
     router = APIRouter()
 
-    error_responses = {
+    error_responses: dict[int | str, dict[str, Any]] = {
         405: {"model": ErrorEnvelope},
         500: {"model": ErrorEnvelope},
         503: {"model": ErrorEnvelope},

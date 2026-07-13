@@ -134,7 +134,10 @@ def test_server_exit_behavior(
     assert result == expected
     assert "secret" not in caplog.text
     if started is False and failure is None:
-        assert any(record.event == "server_startup_failed" for record in caplog.records)
+        assert any(
+            getattr(record, "event", None) == "server_startup_failed"
+            for record in caplog.records
+        )
 
 
 @pytest.mark.parametrize("boundary", ["composition", "config", "server"])
@@ -161,7 +164,10 @@ def test_post_logging_startup_boundaries_fail_safely(
         result = bootstrap.main()
 
     assert result == 1
-    assert any(record.event == "server_startup_failed" for record in caplog.records)
+    assert any(
+        getattr(record, "event", None) == "server_startup_failed"
+        for record in caplog.records
+    )
     assert "secret" not in caplog.text
 
 

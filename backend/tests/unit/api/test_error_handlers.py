@@ -1,8 +1,8 @@
 """Direct error-mapping branch tests."""
 
 import asyncio
-from collections.abc import Awaitable, Callable
-from typing import cast
+from collections.abc import Callable, Coroutine
+from typing import Any, cast
 
 import pytest
 from fastapi import Request
@@ -14,7 +14,7 @@ from forgeml.api import error_handlers
 from forgeml.core.correlation import reset_request_id, set_request_id
 from forgeml.core.errors import AppError, ErrorCategory
 
-Handler = Callable[[Request, Exception], Awaitable[JSONResponse]]
+Handler = Callable[[Request, Exception], Coroutine[Any, Any, JSONResponse]]
 
 
 def _run_handler(handler: Handler, exc: Exception) -> JSONResponse:

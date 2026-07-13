@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from time import perf_counter
+
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from forgeml.api.error_handlers import internal_error_response
