@@ -58,5 +58,8 @@ Review ownership/dependency direction, compatibility, validation, idempotency, e
 - The V1 CI implementation is .github/workflows/backend-quality.yml, owned by the
   Backend Engineer and reviewed by QA. It runs the repository-defined gates on Linux
   with supported Python 3.11.
+- ADR-014 records a one-time Module 0 evidence exception necessitated by the absence
+  of a usable repository/remote. It does not weaken the CI requirement for subsequent
+  modules or changes, and reports must distinguish an exception from a passing run.
 - Every side effect has timeout, diagnosis, and appropriate idempotency/cleanup.
 - Public changes carry documentation and risk-proportionate tests.

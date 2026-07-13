@@ -450,29 +450,32 @@ Warnings are errors except a documented dependency warning with owner and expiry
 | Strict unknown setting keys block later modules | Later modules extend the composed allowlist in their own reviewed design. |
 | Lock and pyproject drift | pyproject is sole direct source; hashed locks regenerated and compared in CI. |
 | Python 3.11 unavailable locally | Verification must use an isolated approved Python 3.11 environment; absence blocks freeze. |
-| CI platform unavailable | Local gates may run, but Module 0 cannot freeze without required CI evidence or approved exception. |
+| CI platform unavailable | Local gates may run, but Module 0 cannot freeze without required CI evidence or an approved, explicitly recorded exception. ADR-014 records that exception. |
 
 ## 9. Acceptance criteria
 
 ### Design freeze
 
-- [ ] Chief Architect PASS: FEK, boundaries, dependencies, folder layout.
-- [ ] Backend PASS: simplicity, maintainability, exact interfaces.
-- [ ] Security PASS: configuration, logs, correlation, public errors.
-- [ ] QA PASS: traceability, negative cases, reproducible gates.
-- [ ] Documentation PASS: no contradictions or ambiguous contract.
+- [x] Chief Architect PASS: FEK, boundaries, dependencies, folder layout.
+- [x] Backend PASS: simplicity, maintainability, exact interfaces.
+- [x] Security PASS: configuration, logs, correlation, public errors.
+- [x] QA PASS: traceability, negative cases, reproducible gates.
+- [x] Documentation PASS: no contradictions or ambiguous contract.
 
 ### Implementation completion
 
-- [ ] All M0-R01 through M0-R09 evidence passes.
-- [ ] Every planned file exists and no unplanned production file is introduced.
-- [ ] No TODO/FIXME, placeholder, fabricated success, duplicated policy, unsafe Any,
+- [x] All M0-R01 through M0-R09 evidence passes under the ADR-014 Module 0
+      evidence exception.
+- [x] Every planned file exists and no unplanned production file is introduced.
+- [x] No TODO/FIXME, placeholder, fabricated success, duplicated policy, unsafe Any,
       mutable global application state, import cycle, or forbidden import.
-- [ ] No secret, traceback, host path, raw query/header/payload, or environment value
+- [x] No secret, traceback, host path, raw query/header/payload, or environment value
       leaks through logs or responses.
-- [ ] Locks, build, clean Python 3.11 install, local quality gates, and CI pass.
-- [ ] Backend README, FEK decisions, reports, and implementation remain synchronized.
-- [ ] Final V2 scan reports none and no dependency exists for hypothetical future work.
+- [x] Locks, build, clean Python 3.11 install, and all local-equivalent quality gates
+      pass; actual CI was not run and is covered only by the ADR-014 Module 0
+      exception.
+- [x] Backend README, FEK decisions, reports, and implementation remain synchronized.
+- [x] Final V2 scan reports none and no dependency exists for hypothetical future work.
 
 ## 10. Design review record
 
@@ -488,3 +491,7 @@ Warnings are errors except a documented dependency warning with owner and expiry
 All iteration-3 reviews passed. This design is frozen before implementation. Changes
 require a bug fix, approved architecture change, or documented interface-preserving
 refactor under the EEP/EAP.
+
+The implementation and its public contracts were accepted and frozen on 2026-07-13.
+The final freeze uses the narrow Module 0 evidence exception in ADR-014; it does not
+claim that GitHub Actions executed.

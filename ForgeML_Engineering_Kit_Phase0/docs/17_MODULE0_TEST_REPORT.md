@@ -1,7 +1,8 @@
 # Module 0 Test Report
 
 **Local result:** PASS  
-**CI result:** NOT RUN — no Git repository or remote available  
+**CI result:** NOT RUN — accepted for Module 0 only under ADR-014 evidence exception
+**Freeze evidence result:** PASS — explicit user authorization, 2026-07-13
 **Interpreter:** CPython 3.11.14  
 **Package:** forgeml 0.1.0
 
@@ -82,6 +83,13 @@ failures, SIGINT behavior, real subprocess SIGTERM shutdown, and forbidden impor
 ## GitHub Actions
 
 The workflow exists at .github/workflows/backend-quality.yml and mirrors the successful
-local commands. It could not be triggered because the provided workspace has no usable
-Git repository or remote. ADR-014 requires actual CI evidence, so this test report does
-not claim that gate passed.
+local commands. It could not be triggered during iteration-3 review because no usable
+Git repository or remote was then available. A remote is now configured, but no
+authenticated workflow result was available to the freeze audit. This report does not
+claim that CI passed. The user explicitly
+approved ADR-014's Module 0-only evidence exception on 2026-07-13, so the complete
+recorded local-equivalent results satisfy the Module 0 freeze gate. Actual workflow
+evidence remains mandatory for subsequent modules and backend changes.
+
+The frozen implementation evidence corresponds to local commit
+`fdc1e9eb7923127b0570c9b4b08f7e9a5b429711`.

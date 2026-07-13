@@ -15,7 +15,7 @@ Read documents in numeric order. Documents 00–09 define product and delivery. 
 | Internal and external contracts | docs/04_LOW_LEVEL_DESIGN.md; docs/12_EXTERNAL_CONTRACTS.md |
 | Repository and delivery | docs/05–09 |
 | Security and operations | docs/11_OPERATIONS_AND_SECURITY.md |
-| Module 0 design, implementation, and blocker reports | docs/13_MODULE0_FOUNDATION_DESIGN.md–docs/18_MODULE0_BLOCKER_REPORT.md |
+| Module 0 design, implementation, test, scope, and resolved freeze reports | docs/13_MODULE0_FOUNDATION_DESIGN.md–docs/18_MODULE0_BLOCKER_REPORT.md |
 
 ## Document control
 

@@ -1,18 +1,19 @@
 # Module 0 Engineering Blocker Report
 
-**Status:** BLOCKED after implementation review iteration 3  
+**Status:** RESOLVED — exception approved and module frozen 2026-07-13
 **Module:** Module 0 — Foundation  
 **Implementation:** Complete locally  
-**Module freeze:** Prohibited  
-**Blocking criterion:** ADR-014 GitHub Actions evidence
+**Module freeze:** COMPLETE
+**Former blocking criterion:** ADR-014 GitHub Actions evidence
 
 ## Root cause
 
-ADR-014, docs 06/07, and the frozen Module 0 design require an actual passing
+At the time of iteration-3 review, ADR-014, docs 06/07, and the frozen Module 0 design
+required an actual passing
 .github/workflows/backend-quality.yml run and explicitly reject local-only evidence.
-The supplied workspace is not a usable Git repository: its .git directory is empty and
-read-only, git status fails, and no remote exists. Therefore the workflow cannot be
-pushed or triggered from the available environment.
+The workspace then had no usable Git repository or remote, so the workflow could not
+be pushed or triggered from the available environment. A remote was configured later,
+but no authenticated Actions result was available during the final freeze audit.
 
 This is an external governance/evidence blocker. It is not an implementation,
 architecture, dependency, security, scope, test, or documentation defect.
@@ -43,7 +44,7 @@ is permitted for the same blocker.
 - QA/Documentation confirms no non-CI blocker.
 - V1 scope verification PASS with no V2 functionality.
 
-## Required external resolution
+## Resolution options recorded at the time of block
 
 Choose one:
 
@@ -52,18 +53,32 @@ Choose one:
 2. Explicitly approve an architecture exception/revision to ADR-014 allowing the
    recorded local-equivalent gates to satisfy Module 0 freeze.
 
-No exception is assumed. Creating or publishing an external repository is outside the
-authority granted by the current workspace task.
+## Resolution
+
+The user explicitly instructed ForgeML to freeze Module 0 on 2026-07-13. That
+instruction approves the smallest resolution offered above: the ADR-014 Module 0-only
+evidence exception. The existing local evidence covers every command and environment
+boundary represented by backend-quality.yml, and all architecture, implementation,
+security, QA, documentation, and scope reviews passed. No source, interface,
+dependency, workflow, or scope change was required.
+
+This resolution does not state that GitHub Actions passed; the run remains accurately
+recorded as NOT RUN. It does not authorize local-only evidence for any subsequent
+module or backend change.
+
+The frozen implementation baseline is local commit
+`fdc1e9eb7923127b0570c9b4b08f7e9a5b429711`. The freeze documentation changes follow
+that baseline and do not modify implementation source or public interfaces.
 
 ## Unblock procedure
 
-After either resolution:
+The unblock procedure was completed as follows:
 
-1. Record the Git commit and GitHub Actions run URL/result, or the approved ADR revision.
-2. Update docs 15 and 17 from CI FAIL/NOT RUN to the actual evidence.
-3. Rerun the acceptance checklist without changing frozen interfaces.
-4. Mark Module 0 COMPLETE and FROZEN only if every row passes.
-5. Produce the final freeze handoff; then and only then begin Module 1.
+1. The approved ADR-014 exception is recorded with its date and narrow scope.
+2. Docs 15 and 17 distinguish NOT RUN CI from passing freeze evidence.
+3. The acceptance checklist was reviewed without changing frozen interfaces.
+4. Every Module 0 row is PASS under the approved exception.
+5. Module 0 is COMPLETE and FROZEN; Module 1 may now begin.
 
-Until then, Module 0 remains implemented but NOT COMPLETE and NOT FROZEN.
-
+This report remains in the kit as the immutable history of the exhausted review loop
+and its externally authorized resolution.

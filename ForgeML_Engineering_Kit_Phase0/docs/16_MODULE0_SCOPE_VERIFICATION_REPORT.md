@@ -1,8 +1,8 @@
 # Module 0 Scope Verification Report
 
 **Result:** PASS  
-**Review point:** Post-implementation iteration 3  
-**Module freeze:** Blocked only by external CI evidence, not scope
+**Review point:** Final freeze review, 2026-07-13
+**Module freeze:** PASS under the ADR-014 Module 0 evidence exception
 
 ## V1 requirements implemented
 
@@ -50,5 +50,6 @@ authoritative for Modules 1–10 and the existing deferred/V2 items.
 
 ## Compliance confirmation
 
-Module 0 remains fully within the approved ForgeML V1 Foundation scope. The remaining
-CI blocker is a completion-governance issue and does not change this PASS result.
+Module 0 remains fully within the approved ForgeML V1 Foundation scope. No V2 feature,
+future-only abstraction, or additional infrastructure was introduced. The CI evidence
+exception changes only Module 0 completion governance and does not alter scope.

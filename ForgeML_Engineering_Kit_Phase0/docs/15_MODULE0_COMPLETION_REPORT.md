@@ -1,7 +1,8 @@
 # Module 0 Completion Report
 
-**Status:** IMPLEMENTED; NOT FROZEN — mandatory GitHub Actions evidence unavailable  
-**Implementation review:** Iteration 3 complete — freeze FAIL on CI evidence only  
+**Status:** COMPLETE AND FROZEN — 2026-07-13
+**Implementation review:** Iteration 3 completed with the CI-evidence blocker
+**Final acceptance closure:** PASS under the ADR-014 Module 0 evidence exception
 **Design:** FROZEN, docs 13  
 **Scope verification:** PASS, docs 16  
 **Local test report:** PASS, docs 17
@@ -70,6 +71,7 @@ No later V1 module or V2 feature is implemented.
 - docs/15_MODULE0_COMPLETION_REPORT.md
 - docs/16_MODULE0_SCOPE_VERIFICATION_REPORT.md
 - docs/17_MODULE0_TEST_REPORT.md
+- docs/18_MODULE0_BLOCKER_REPORT.md
 
 The FEK README, roadmap, standards, coding guidelines, decisions, operations/security,
 external contracts, low-level design, and backend README were updated consistently.
@@ -112,9 +114,13 @@ design. The HTTP/config/error/log wire contracts are frozen.
 - The control plane has no package, persistence, Docker, deployment, routing,
   monitoring, frontend, authentication, or authorization functionality yet.
 - It must remain on a protected administrative network.
-- GitHub Actions was configured but could not be executed: this workspace has an empty,
-  read-only .git directory and no repository remote. Under ADR-014 and docs 06/07,
-  local equivalent gates do not authorize module freeze.
+- GitHub Actions was configured but was not executed because no usable Git repository
+  or remote was available during iteration-3 review. A remote is now configured, but
+  no authenticated workflow result was available for the freeze audit. The user
+  approved ADR-014's narrow Module 0 evidence exception on 2026-07-13. This is an
+  evidence limitation, not a passing CI run, and the exception does not apply to
+  subsequent modules or changes. The frozen implementation baseline is local commit
+  `fdc1e9eb7923127b0570c9b4b08f7e9a5b429711`.
 
 ## Acceptance checklist
 
@@ -134,9 +140,11 @@ design. The HTTP/config/error/log wire contracts are frozen.
 | Real process health and SIGTERM | PASS | Automated integration; manual health wire check |
 | Documentation synchronized | PASS | FEK docs and backend README |
 | No V2 functionality | PASS | Scope report |
-| GitHub Actions workflow | FAIL | Cannot run without a Git repository/remote |
-| Module frozen | FAIL | CI evidence is mandatory |
+| GitHub Actions workflow or approved exception | PASS | Workflow present; execution recorded as NOT RUN; ADR-014 Module 0 exception approved 2026-07-13 |
+| Module frozen | PASS | Final acceptance review and explicit freeze authorization, 2026-07-13 |
 
-Module 0 must not be represented as COMPLETE or FROZEN until the GitHub Actions gate
-passes or the user explicitly approves an architecture exception revising ADR-014.
-The final three-iteration disposition is recorded in docs 18.
+Every mandatory Module 0 requirement is PASS. The implementation and documented public
+interfaces are frozen. Future modules may consume those interfaces but may not modify
+Module 0 internals except for a bug fix, approved architecture change, or documented
+interface-preserving refactor. The resolved three-iteration blocker is retained in
+docs 18 as an audit record.

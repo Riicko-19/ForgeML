@@ -48,4 +48,6 @@ Multi-user auth, remote orchestration, GPU policy, registries, package signing, 
 - No phase is done without test evidence and operational documentation.
 - Reference deployment is reproducible on a clean supported host from docs/configuration.
 - Module 0 and later backend changes pass the repository's GitHub Actions backend
-  quality workflow; local-only evidence does not satisfy the CI gate.
+  quality workflow; local-only evidence does not normally satisfy the CI gate. The
+  one-time Module 0 evidence exception recorded in ADR-014 is the sole approved
+  deviation and does not apply to later modules or backend changes.

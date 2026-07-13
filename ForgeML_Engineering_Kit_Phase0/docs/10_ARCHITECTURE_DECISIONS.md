@@ -100,7 +100,7 @@ supporting another minor requires a compatibility decision and CI evidence.
 
 ## ADR-014 — Backend CI authority
 
-**Status:** Accepted  
+**Status:** Accepted; Module 0 evidence exception approved 2026-07-13
 **Decision:** GitHub Actions is the V1 repository CI provider. The backend quality
 workflow lives at .github/workflows/backend-quality.yml, is owned by Backend
 Engineering, reviewed by QA, and enforces locks, format, lint, type, tests, contract,
@@ -108,6 +108,19 @@ build, and installed-package smoke gates on Python 3.11.
 
 **Consequences:** CI is development governance only and adds no runtime/cloud service
 to ForgeML. Module completion requires passing workflow evidence.
+
+**Module 0 evidence exception:** The user explicitly authorized Module 0 freeze on
+2026-07-13 after the configured workflow could not run during iteration-3 review
+because no usable Git repository or remote was then available. For Module 0 only, the
+recorded execution of every command and environment boundary represented by the
+workflow, together with the three-iteration architecture, backend/security, QA,
+documentation, and scope reviews, satisfies the completion evidence gate. The test
+report must identify the CI run as not executed and must not describe it as passing.
+This exception neither removes the workflow nor permits local-only evidence for later
+modules or later backend changes.
+The frozen implementation baseline is local commit
+`fdc1e9eb7923127b0570c9b4b08f7e9a5b429711`; the later presence of a configured remote
+does not retroactively constitute workflow evidence.
 
 ## ADR-015 — Server-owned request identifiers
 

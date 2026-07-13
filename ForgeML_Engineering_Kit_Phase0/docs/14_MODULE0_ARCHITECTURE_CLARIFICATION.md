@@ -3,8 +3,12 @@
 **Status:** APPROVED by user instruction to fix, freeze, and implement Module 0  
 **Raised by:** Chief Architect, design review iteration 1  
 **Affected module:** Module 0 — Foundation  
-**Implementation state:** Not started  
+**State when raised:** Implementation not started
+**Current module state:** Complete and frozen 2026-07-13
 **Decision rule:** AC-001 through AC-004 accepted; design iteration 2 authorized
+
+**Freeze addendum (2026-07-13):** AC-005 below is approved by the user's explicit
+instruction to freeze Module 0.
 
 ## 1. Reason for stopping
 
@@ -100,6 +104,24 @@ does not introduce new behavior.
 **FEK change after approval:** Correct the single conflicting row in docs 04.
 
 **Approval:** ACCEPTED; docs 04 corrected to the higher-authority docs 12 contract.
+
+### AC-005 — Module 0 CI evidence exception
+
+**Gap:** The mandatory GitHub Actions workflow was implemented, but no usable Git
+repository or remote was available during iteration-3 review through which it could be
+executed. All commands and environment boundaries represented by that workflow passed
+locally, and all three permitted review iterations found no remaining non-CI defect.
+
+**Approved decision:** For Module 0 only, the recorded local-equivalent workflow
+evidence and completed independent reviews satisfy the completion gate. Reports must
+continue to state that CI was not run. ADR-014 remains mandatory for later modules and
+later backend changes.
+
+**Why this is minimal:** It resolves an external evidence limitation without changing
+runtime architecture, source code, interfaces, dependencies, workflow contents, V1
+scope, or the standing CI policy.
+
+**Approval:** ACCEPTED by explicit user instruction on 2026-07-13.
 
 ## 3. Design corrections that do not require architecture approval
 
