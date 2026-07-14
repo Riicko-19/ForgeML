@@ -1,8 +1,18 @@
 # Module 1 — Forge Package System Design
 
+**Status: FROZEN**
+**Implementation date: 2026-07-14**
+**Freeze date: 2026-07-14**
+**Freeze authority: ADR-014**
+**Frozen baseline: commit `4aa140cd7d19fd9db4b4e3d5248c27c22e33a894`**
+
 Owner: Package Engineer. Reviewed by Chief Architect, Backend, Security, QA, and
 Documentation. This document is normative for the .forge format implementation and
 is subordinate to FEK, the ADR register, and docs 04/12.
+
+The frozen public surface is the .forge format contract, the finding codes, and the
+`ArtifactStore` / `ArchiveReader` ports. Changing a finding code or a manifest field
+meaning is a package major version, not a refactor (docs 12 compatibility).
 
 ## Scope
 
@@ -188,15 +198,24 @@ otherwise recurse inside `jsonschema` before any limit could reject it.
 | Coverage ≥ 95% branch | 99% |
 | Locks reproducible | Both locks regenerate byte-identically |
 | Installed wheel smoke | Clean 3.11 venv, runtime lock, wheel installed `--no-deps` |
-| **CI workflow evidence** | **Not yet run — see below** |
+| CI workflow evidence | Backend quality run on `4aa140c`: conclusion `success` (2026-07-14) |
 
 ## Freeze status
 
-**Module 1 is implementation-complete but NOT frozen.**
+**Module 1 is FROZEN as of 2026-07-14, under ADR-014.**
 
 ADR-014 requires passing GitHub Actions backend-quality workflow evidence for module
-completion, and records explicitly that the Module 0 evidence exception "neither
-removes the workflow nor permits local-only evidence for later modules or later
-backend changes." Every gate the workflow runs has been executed locally on Python
-3.11 and passes, but local execution is not the workflow. Freezing Module 1 requires
-the changes to be pushed and the workflow to pass.
+completion, and records that the Module 0 evidence exception "neither removes the
+workflow nor permits local-only evidence for later modules." That requirement is
+satisfied on its own terms, not by exception: the configured `Backend quality`
+workflow ran against commit `4aa140cd7d19fd9db4b4e3d5248c27c22e33a894` — the frozen
+baseline itself, not an ancestor or a local stand-in — and completed with conclusion
+`success`. Local runs of the same gates agree, but the workflow run is the evidence.
+
+No blocker remains, no TODO or placeholder exists in any Module 1 path, and the one
+deliberate simplification (the 1 MiB compression-ratio floor) is recorded in Known
+Limitations and marked in the source.
+
+Downstream phases build from this baseline. Module 2 (Metadata) may not silently
+change the package contract frozen here; doing so requires a new package version or
+an explicit ADR.

@@ -112,6 +112,25 @@ def test_application_depends_on_domain_not_providers(path: Path) -> None:
     )
 
 
+ORM_HOME = SOURCE / "infrastructure" / "database"
+
+
+@pytest.mark.parametrize(
+    "path",
+    sorted(item for item in SOURCE.rglob("*.py") if ORM_HOME not in item.parents),
+    ids=lambda path: str(path.relative_to(SOURCE)),
+)
+def test_sqlalchemy_never_escapes_the_database_adapter(path: Path) -> None:
+    """The ORM is confined to one package.
+
+    If SQLAlchemy can be imported anywhere else, a mapped object eventually
+    reaches domain policy, and a lazy load fires outside a session in
+    production. The membrane is the mapper layer, and this is what holds it.
+    """
+
+    assert _violations(path, ("sqlalchemy", "alembic", "psycopg")) == set()
+
+
 @pytest.mark.parametrize(
     "path",
     sorted(item for root in PACKAGE_PATHS for item in root.rglob("*.py")),

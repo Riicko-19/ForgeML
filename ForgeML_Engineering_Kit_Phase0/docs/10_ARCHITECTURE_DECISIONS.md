@@ -122,6 +122,42 @@ The frozen implementation baseline is local commit
 `fdc1e9eb7923127b0570c9b4b08f7e9a5b429711`; the later presence of a configured remote
 does not retroactively constitute workflow evidence.
 
+**Module 1 evidence (no exception required):** The backend quality workflow ran against
+commit `4aa140cd7d19fd9db4b4e3d5248c27c22e33a894` — the Module 1 frozen baseline itself
+— and completed with conclusion `success` on 2026-07-14. Module 1 therefore satisfies
+this ADR on its ordinary terms. The Module 0 exception above remains closed and is not
+extended.
+
+## ADR-016 — Operation lease, crash recovery, and retry
+
+**Status:** Accepted 2026-07-14
+**Context:** ADR-006 requires a "restart-safe" worker and ADR-010 repeats the
+requirement, but neither specifies a mechanism. A worker that claims an operation
+and is then killed leaves the row RUNNING forever: the claim query selects only
+PENDING rows, so nothing ever reclaims it, and the client polls an operation that
+can never reach a terminal state. Module 2's schema carried `claimed_at` and
+`attempts` with no rule that consumed them, so ADR-006 was unsatisfied in fact.
+
+**Decision:** Recovery is a **startup reconciliation sweep**, not a lease. ADR-010
+supervises exactly one worker, which makes "every RUNNING row at startup belongs
+to the process that died" provable rather than heuristic. `recover_orphaned()`
+returns such rows to PENDING, or terminally fails them as `operation_abandoned`
+once `attempts` reaches MAX_ATTEMPTS (3). There is **no automatic retry** in V1:
+docs 04 already makes retry an operator action that creates a new immutable
+attempt. Claims are lane-aware (`claim_next(types=...)`) so a long build cannot
+block a fast validation behind it in a single queue.
+
+**Alternatives:** A lease/visibility timeout re-queues RUNNING rows older than N,
+but a lease shorter than a legitimately slow build causes double execution —
+expensive for a build, dangerous for an activation. Fencing tokens are correct
+under N workers and unjustifiable under one.
+
+**Consequences:** Restart safety has a mechanism with no double-execution window.
+Recovery heals only at startup, so a worker that hangs without dying still holds
+its row. Lifting ADR-010's single-worker cap invalidates this decision and
+requires a lease or fencing token; `recover_orphaned` is the single place that
+assumption lives.
+
 ## ADR-015 — Server-owned request identifiers
 
 **Status:** Accepted  

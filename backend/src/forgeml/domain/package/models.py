@@ -11,8 +11,10 @@ from __future__ import annotations
 import unicodedata
 from collections.abc import Mapping
 from dataclasses import dataclass
+from datetime import datetime
 from enum import StrEnum
 from typing import Annotated, Any
+from uuid import UUID
 
 from pydantic import (
     AfterValidator,
@@ -92,6 +94,24 @@ class ValidationState(StrEnum):
 
     VALIDATED = "validated"
     REJECTED = "rejected"
+
+
+class PackageState(StrEnum):
+    """Persisted package lifecycle (docs 04).
+
+    ValidationState is the validator's verdict about one archive; PackageState is
+    the durable lifecycle of a stored package. They overlap on the two terminal
+    values by design, and `from_validation` is the only sanctioned bridge.
+    """
+
+    DRAFT = "draft"
+    VALIDATING = "validating"
+    VALIDATED = "validated"
+    REJECTED = "rejected"
+
+    @classmethod
+    def from_validation(cls, state: ValidationState) -> PackageState:
+        return cls.VALIDATED if state is ValidationState.VALIDATED else cls.REJECTED
 
 
 class ArchiveUnreadable(Exception):
@@ -229,6 +249,27 @@ class PackageValidation:
     state: ValidationState
     validator_version: str
     findings: tuple[ErrorDetail, ...]
+    manifest: ManifestV1 | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class Package:
+    """A stored package. Checksum and artifact are immutable (ADR-003).
+
+    manifest_version is None until the package has been validated. The bytes are
+    stored before anything has parsed them, and recording a format version we
+    have not yet read would be a fabricated fact in a durable record.
+    """
+
+    id: UUID
+    sha256: str
+    filename: str
+    size_bytes: int
+    state: PackageState
+    artifact_uri: str
+    created_at: datetime
+    updated_at: datetime
+    manifest_version: int | None = None
     manifest: ManifestV1 | None = None
 
 

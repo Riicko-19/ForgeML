@@ -17,6 +17,7 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
+    SecretStr,
     ValidationError,
     field_validator,
     model_validator,
@@ -108,6 +109,19 @@ class PackageLimits(BaseModel):
         return self
 
 
+def _require_postgresql(value: SecretStr) -> SecretStr:
+    # ADR-009: PostgreSQL is the only supported metadata database. SQLite cannot
+    # express the row-locking semantics durable operation claims depend on, so a
+    # non-PostgreSQL URL fails closed rather than degrading silently.
+    scheme = value.get_secret_value().split("://", 1)[0]
+    if scheme not in ("postgresql", "postgresql+psycopg"):
+        raise ValueError("database URL must use the postgresql+psycopg driver")
+    return value
+
+
+DatabaseUrl = Annotated[SecretStr, AfterValidator(_require_postgresql)]
+
+
 class _EnvironmentSettings(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -117,6 +131,9 @@ class _EnvironmentSettings(BaseModel):
     bind_port: int = Field(default=8000, ge=1, le=65535)
     graceful_shutdown_seconds: int = Field(default=30, ge=1, le=300)
     artifact_root: Path = Path("storage/artifacts")
+    database_url: DatabaseUrl | None = None
+    database_pool_size: int = Field(default=5, ge=1, le=50)
+    database_statement_timeout_ms: int = Field(default=30_000, ge=100, le=600_000)
 
     @field_validator("environment", mode="before")
     @classmethod
@@ -133,6 +150,9 @@ class _EnvironmentSettings(BaseModel):
         "bind_port",
         "graceful_shutdown_seconds",
         "artifact_root",
+        "database_url",
+        "database_pool_size",
+        "database_statement_timeout_ms",
         mode="before",
     )
     @classmethod
@@ -155,9 +175,27 @@ class AppSettings(BaseModel):
     bind_port: int = Field(default=8000, ge=1, le=65535)
     graceful_shutdown_seconds: int = Field(default=30, ge=1, le=300)
     artifact_root: Path = Path("storage/artifacts")
+    database_url: DatabaseUrl | None = None
+    database_pool_size: int = Field(default=5, ge=1, le=50)
+    database_statement_timeout_ms: int = Field(default=30_000, ge=100, le=600_000)
     package_limits: PackageLimits = PackageLimits()
     service_name: str = Field(default=SERVICE_NAME, frozen=True)
     service_version: str = Field(min_length=1, max_length=64)
+
+    def require_database_url(self) -> str:
+        """The metadata database URL, or a fail-closed configuration error.
+
+        Module 0 and Module 1 run without a database, so the setting is optional
+        until something actually needs it. Asking for it when it is absent is a
+        configuration failure, never a silent fallback.
+        """
+
+        if self.database_url is None:
+            raise ConfigurationFailure(
+                "configuration_invalid",
+                (ConfigurationIssue(field="FORGEML_DATABASE_URL", kind="missing"),),
+            )
+        return self.database_url.get_secret_value()
 
     @field_validator("service_name")
     @classmethod
@@ -181,6 +219,9 @@ _ENVIRONMENT_FIELDS = {
     f"{_PREFIX}BIND_PORT": "bind_port",
     f"{_PREFIX}GRACEFUL_SHUTDOWN_SECONDS": "graceful_shutdown_seconds",
     f"{_PREFIX}ARTIFACT_ROOT": "artifact_root",
+    f"{_PREFIX}DATABASE_URL": "database_url",
+    f"{_PREFIX}DATABASE_POOL_SIZE": "database_pool_size",
+    f"{_PREFIX}DATABASE_STATEMENT_TIMEOUT_MS": "database_statement_timeout_ms",
 }
 
 _PACKAGE_LIMIT_FIELDS = {

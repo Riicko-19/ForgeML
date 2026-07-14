@@ -7,12 +7,17 @@ adapter changes nothing above this line.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import BinaryIO, Protocol
+from uuid import UUID
 
 from forgeml.core.config import PackageLimits
-from forgeml.domain.package.models import ArchiveInspection
+from forgeml.domain.package.models import (
+    ArchiveInspection,
+    Package,
+    PackageValidation,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,6 +41,45 @@ class ArtifactStore(Protocol):
 
     def delete(self, sha256: str) -> None:
         """Delete a stored artifact. Deleting an absent artifact is not an error."""
+
+
+@dataclass(frozen=True, slots=True)
+class PackagePage:
+    """One page of packages, newest first."""
+
+    items: tuple[Package, ...]
+    next_cursor: str | None
+
+
+class PackageCatalog(Protocol):
+    """Durable package records. Duplicate checksums resolve to one package."""
+
+    def get_or_create(
+        self, sha256: str, filename: str, size_bytes: int, artifact_uri: str
+    ) -> Package:
+        """Return the package for these bytes, creating it in DRAFT if absent.
+
+        Storing the same archive twice is idempotent (ADR-003): the second call
+        returns the first package unchanged, and never a second record.
+        """
+
+    def find_by_id(self, package_id: UUID) -> Package | None:
+        """Read one package by its opaque identifier."""
+
+    def find_by_checksum(self, sha256: str) -> Package | None:
+        """Read one package by the SHA-256 of its bytes."""
+
+    def save_validation(self, package_id: UUID, validation: PackageValidation) -> None:
+        """Persist a validation result and transition the package accordingly.
+
+        Raises AppError(NOT_FOUND) when the package does not exist.
+        """
+
+    def list(self, limit: int, cursor: str | None = None) -> PackagePage:
+        """List packages newest first, bounded by limit."""
+
+    def findings_for(self, package_id: UUID) -> Sequence[PackageValidation]:
+        """Read the validation history of one package, newest first."""
 
 
 class ArchiveReader(Protocol):

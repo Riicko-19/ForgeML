@@ -42,6 +42,9 @@ source without resolving dependencies:
 | FORGEML_PACKAGE_MAX_MANIFEST_BYTES | 1048576 | At most the max archive size |
 | FORGEML_PACKAGE_MAX_SCHEMA_NODES | 1000 | 1–100000 |
 | FORGEML_PACKAGE_MAX_SCHEMA_DEPTH | 20 | 1–256 |
+| FORGEML_DATABASE_URL | None | postgresql+psycopg URL; required from Module 2 onward |
+| FORGEML_DATABASE_POOL_SIZE | 5 | 1–50 |
+| FORGEML_DATABASE_STATEMENT_TIMEOUT_MS | 30000 | 100–600000 |
 
 Configuration names are case-sensitive. Empty values and unknown FORGEML-prefixed
 keys fail startup. ForgeML reads no environment file automatically.
@@ -102,6 +105,32 @@ manifests, unsupported versions and frameworks, unpinned dependencies, invalid o
 external-referencing schemas, and absent or checksum-mismatched assets. Each failure
 is reported as a stable finding code with a logical path; the full matrix is in
 `tests/contract/test_package_fixtures.py`, and the design is in docs 19.
+
+## Metadata layer
+
+PostgreSQL 16 holds desired state and the audit record (ADR-004, ADR-009). SQLite
+is not supported: durable operation claims depend on row-locking semantics it
+cannot express.
+
+A package is identified by its SHA-256, and that unique index — not an
+application check — is what makes duplicate upload idempotent. A mutating command
+carries an idempotency key; the same key with the same request fingerprint
+returns the original operation, and with a different fingerprint returns a
+conflict. Operations are claimed with `FOR UPDATE SKIP LOCKED`; an operation
+orphaned by a killed worker is recovered at startup (ADR-016).
+
+The database enforces what the application cannot be trusted to: package checksum
+and artifact are immutable, terminal operations are immutable, and audit events
+reject UPDATE and DELETE.
+
+Run migrations with `python -m alembic upgrade head` (the URL comes from
+`FORGEML_DATABASE_URL`). `python -m alembic upgrade head --sql` emits DDL for
+review without touching the database.
+
+Database tests need a real PostgreSQL 16. Point them at one with
+`FORGEML_TEST_DATABASE_URL`, or run `docker run -d --name forgeml-pg -e
+POSTGRES_PASSWORD=forgeml -e POSTGRES_USER=forgeml -e POSTGRES_DB=forgeml -p
+55432:5432 postgres:16`, which is the default the tests expect.
 
 ## Logging contract
 
