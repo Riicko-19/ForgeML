@@ -132,6 +132,34 @@ Database tests need a real PostgreSQL 16. Point them at one with
 POSTGRES_PASSWORD=forgeml -e POSTGRES_USER=forgeml -e POSTGRES_DB=forgeml -p
 55432:5432 postgres:16`, which is the default the tests expect.
 
+## HTTP API (v1)
+
+| Method / path | Purpose |
+| --- | --- |
+| POST /v1/packages | Upload a .forge archive and validate it. Requires `Idempotency-Key`. Returns 202 with a durable operation and a `Location` header. |
+| GET /v1/packages | List packages, newest first. `limit` (1–100, default 50) and an opaque `cursor`. |
+| GET /v1/packages/{id} | Read one package with its manifest and validation findings. |
+| GET /v1/operations/{id} | Poll a durable operation. |
+| GET /v1/openapi.json | The published schema. Interactive docs are disabled. |
+
+Upload is `multipart/form-data` with one `file` field. The archive streams to
+content-addressed storage, so uploading identical bytes twice yields one package
+(ADR-003).
+
+A long-running command returns an **operation**, not a result (ADR-006). Replaying
+a request with the same idempotency key returns the original operation and does no
+work twice. Reusing a key for a different request is `409 idempotency_conflict`.
+
+A **rejected package still succeeds its operation**: the validation ran, and the
+verdict and findings live on the package. An operation only *fails* when the
+platform could not do the work — for example an unreadable artifact.
+
+Validation currently runs inside the request. The durable operation resource is
+what lets it move to the worker in a later module without changing this contract.
+
+**There is no authentication.** Keep the control plane on a protected
+administrative network until an authorization ADR exists (docs 11).
+
 ## Logging contract
 
 Logging is JSON-only. Base event fields are timestamp, severity, service, version,
@@ -179,9 +207,9 @@ The GitHub Actions backend-quality workflow runs the same gates with Python 3.11
 
 ## Known limitations
 
-Module 0 readiness means configuration and application composition succeeded; no
-provider exists yet. The control plane must remain behind the protected administrative
-network. Package APIs, database, Docker, workers, routing, monitoring, frontend, and
+Readiness proves the metadata database answers; it returns 503 when it does not, and
+startup fails closed without one. The control plane must remain behind the protected
+administrative network. Package APIs, database, Docker, workers, routing, monitoring, frontend, and
 authentication are later V1 modules. No V2 capability is scaffolded.
 
 Module 1 provides no HTTP surface and no package persistence: `PackageCatalog` arrives

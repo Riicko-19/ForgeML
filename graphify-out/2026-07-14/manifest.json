@@ -5,8 +5,8 @@
     "semantic_hash": "0f7b5bf037d14ebca585def52256b811"
   },
   "backend/pyproject.toml": {
-    "mtime": 1784005662.034196,
-    "ast_hash": "5117e18573603eea1241d012f1047894",
+    "mtime": 1784048321.520966,
+    "ast_hash": "eb1015564930f42723dd8e15e97a4141",
     "semantic_hash": ""
   },
   "backend/src/forgeml/__init__.py": {
@@ -60,8 +60,8 @@
     "semantic_hash": "f0ab1521e2218e39dbaa8421549bbe40"
   },
   "backend/src/forgeml/core/config.py": {
-    "mtime": 1784005817.4080925,
-    "ast_hash": "0d46e0e7e833b597ef503d68f1a47941",
+    "mtime": 1784048466.49584,
+    "ast_hash": "e5840cff8bdf2c060bb45bb3a458f150",
     "semantic_hash": ""
   },
   "backend/src/forgeml/core/correlation.py": {
@@ -80,8 +80,8 @@
     "semantic_hash": "54aef2857f71a5b1e49f933ad96151d8"
   },
   "backend/tests/architecture/test_dependency_direction.py": {
-    "mtime": 1784010560.221731,
-    "ast_hash": "eb8d5abda4506d342fa1ab4e0da90547",
+    "mtime": 1784049064.424606,
+    "ast_hash": "fc5331314ee47c798bb9605bb8b56dc2",
     "semantic_hash": ""
   },
   "backend/tests/conftest.py": {
@@ -190,13 +190,13 @@
     "semantic_hash": ""
   },
   "backend/src/forgeml/domain/package/models.py": {
-    "mtime": 1784008730.9676282,
-    "ast_hash": "5db9c49c8df9c9c465bbf877db05e0eb",
+    "mtime": 1784049453.623421,
+    "ast_hash": "c654c79baacb6aad0652e22c6dcf9d5c",
     "semantic_hash": ""
   },
   "backend/src/forgeml/domain/package/ports.py": {
-    "mtime": 1784006108.5848963,
-    "ast_hash": "1ca209b5e283a3aca682caea308c8658",
+    "mtime": 1784048375.256408,
+    "ast_hash": "ab1d300435f5f4933647c62235f71a8f",
     "semantic_hash": ""
   },
   "backend/src/forgeml/domain/package/rules.py": {
@@ -250,8 +250,8 @@
     "semantic_hash": ""
   },
   ".github/workflows/backend-quality.yml": {
-    "mtime": 1783923713.8373473,
-    "ast_hash": "6cc795a49f30624619b53b2dca503a02",
+    "mtime": 1784049370.0567973,
+    "ast_hash": "efad3040be34a2c06962b06a15091bcf",
     "semantic_hash": ""
   },
   "CLAUDE.md": {
@@ -365,8 +365,8 @@
     "semantic_hash": ""
   },
   "ForgeML_Engineering_Kit_Phase0/docs/10_ARCHITECTURE_DECISIONS.md": {
-    "mtime": 1784035682.558879,
-    "ast_hash": "d963bd23abd6bbeea688977a8c6cee66",
+    "mtime": 1784049831.7104468,
+    "ast_hash": "42e624ff9af2cdbdc350e6dce0e108e1",
     "semantic_hash": ""
   },
   "ForgeML_Engineering_Kit_Phase0/docs/11_OPERATIONS_AND_SECURITY.md": {
@@ -415,8 +415,8 @@
     "semantic_hash": ""
   },
   "backend/README.md": {
-    "mtime": 1784011248.5185044,
-    "ast_hash": "c4a04f96235a6c2c220b0dc7c7f94059",
+    "mtime": 1784049848.953077,
+    "ast_hash": "891d0e83fa309cd19eb5d5566d2af942",
     "semantic_hash": ""
   },
   "backend/src/forgeml/infrastructure/storage/__init__.py": {
@@ -435,8 +435,153 @@
     "semantic_hash": ""
   },
   "PROJECT_STATUS.md": {
-    "mtime": 1784035708.463575,
-    "ast_hash": "67bb4156a4ae404de1bc9987405f2ec3",
+    "mtime": 1784049866.0789325,
+    "ast_hash": "10e02d65060305460dbf3ba0b47d8147",
+    "semantic_hash": ""
+  },
+  "backend/migrations/env.py": {
+    "mtime": 1784048955.3891003,
+    "ast_hash": "b7466ab37b94e30501c177b0abb7fee3",
+    "semantic_hash": ""
+  },
+  "backend/migrations/versions/0d7adf1f94cf_module_2_metadata_layer.py": {
+    "mtime": 1784049555.558995,
+    "ast_hash": "a71fe1936a927d8651168da1803f2856",
+    "semantic_hash": ""
+  },
+  "backend/src/forgeml/application/unit_of_work.py": {
+    "mtime": 1784048426.0842676,
+    "ast_hash": "53ebe66b4e628c3aac07759bb8e4414f",
+    "semantic_hash": ""
+  },
+  "backend/src/forgeml/domain/audit/__init__.py": {
+    "mtime": 1784048403.9495046,
+    "ast_hash": "45c2a98de5d13c5c97af4e8beab83d08",
+    "semantic_hash": ""
+  },
+  "backend/src/forgeml/domain/audit/models.py": {
+    "mtime": 1784049467.21967,
+    "ast_hash": "66bce631e9a92b2efd5d856dcbb1de9e",
+    "semantic_hash": ""
+  },
+  "backend/src/forgeml/domain/audit/ports.py": {
+    "mtime": 1784048414.675518,
+    "ast_hash": "76a6a47e36ca0140dd7de3538eda3bc8",
+    "semantic_hash": ""
+  },
+  "backend/src/forgeml/domain/operations/__init__.py": {
+    "mtime": 1784048380.3838937,
+    "ast_hash": "c66f673fbfd3b45ad87730d11c3d3701",
+    "semantic_hash": ""
+  },
+  "backend/src/forgeml/domain/operations/models.py": {
+    "mtime": 1784048387.4266782,
+    "ast_hash": "23c0859b0e972404184bddf100d9795f",
+    "semantic_hash": ""
+  },
+  "backend/src/forgeml/domain/operations/ports.py": {
+    "mtime": 1784049071.5604599,
+    "ast_hash": "88a2154cab000594f7dcb8a193a634af",
+    "semantic_hash": ""
+  },
+  "backend/src/forgeml/infrastructure/database/__init__.py": {
+    "mtime": 1784048474.578652,
+    "ast_hash": "25874cca927d19cd9522f6920e0a3ae5",
+    "semantic_hash": ""
+  },
+  "backend/src/forgeml/infrastructure/database/engine.py": {
+    "mtime": 1784048519.77332,
+    "ast_hash": "fd5213ac92d5993b3f07a6e8425c3520",
+    "semantic_hash": ""
+  },
+  "backend/src/forgeml/infrastructure/database/mappers.py": {
+    "mtime": 1784049516.0641146,
+    "ast_hash": "f1a20ce111b7901b4e6a918f15c0ac2d",
+    "semantic_hash": ""
+  },
+  "backend/src/forgeml/infrastructure/database/models.py": {
+    "mtime": 1784049478.768538,
+    "ast_hash": "126582abc83844bdc34be8f199c20f0a",
+    "semantic_hash": ""
+  },
+  "backend/src/forgeml/infrastructure/database/repositories.py": {
+    "mtime": 1784049528.7759712,
+    "ast_hash": "d3c3b4c4e570795c4a534e6600cbf117",
+    "semantic_hash": ""
+  },
+  "backend/src/forgeml/infrastructure/database/unit_of_work.py": {
+    "mtime": 1784048621.2184029,
+    "ast_hash": "35ccabde35ce16cfe681507b2f04c2e8",
+    "semantic_hash": ""
+  },
+  "backend/tests/contract/test_port_conformance.py": {
+    "mtime": 1784049596.1543798,
+    "ast_hash": "50e5031178db45e6670be2dfc5e39a5e",
+    "semantic_hash": ""
+  },
+  "backend/tests/fakes.py": {
+    "mtime": 1784049652.9536889,
+    "ast_hash": "0d6869f3b912d08fe8de27dc4ecfe91c",
+    "semantic_hash": ""
+  },
+  "backend/tests/integration/database/conftest.py": {
+    "mtime": 1784048800.0955224,
+    "ast_hash": "bb79be1c4ae2aa9c399413a7be97e91e",
+    "semantic_hash": ""
+  },
+  "backend/tests/integration/database/test_concurrency.py": {
+    "mtime": 1784049079.6384044,
+    "ast_hash": "64d29b4bc7fabd0fe10d674b72b58218",
+    "semantic_hash": ""
+  },
+  "backend/tests/integration/database/test_engine.py": {
+    "mtime": 1784049609.7120678,
+    "ast_hash": "107cb93642cc32f262c3f07f613b843f",
+    "semantic_hash": ""
+  },
+  "backend/tests/integration/database/test_insert_races.py": {
+    "mtime": 1784049343.4391117,
+    "ast_hash": "1077599f6bc8f7522460e0904056cc6f",
+    "semantic_hash": ""
+  },
+  "backend/tests/integration/database/test_invariants.py": {
+    "mtime": 1784049071.5995665,
+    "ast_hash": "075bdbf5466c4a070ce7b9c8ebbd3b6e",
+    "semantic_hash": ""
+  },
+  "backend/tests/integration/database/test_migrations.py": {
+    "mtime": 1784049356.2999594,
+    "ast_hash": "4ed21ccfa0891c96ae5c0236392d0915",
+    "semantic_hash": ""
+  },
+  "backend/tests/unit/domain/test_metadata_records.py": {
+    "mtime": 1784049249.2312484,
+    "ast_hash": "d08158d174becef5769b69e11b644b41",
+    "semantic_hash": ""
+  },
+  "backend/tests/unit/infrastructure/test_mappers.py": {
+    "mtime": 1784049259.653678,
+    "ast_hash": "37c6bf02203418825b6149b9532cf3b4",
+    "semantic_hash": ""
+  },
+  "ForgeML_Engineering_Kit_Phase0/docs/20_MODULE2_METADATA_DESIGN.md": {
+    "mtime": 1784049818.5030966,
+    "ast_hash": "12457209a5af334890612c81fe385119",
+    "semantic_hash": ""
+  },
+  "ForgeML_Engineering_Kit_Phase0/docs/21_MODULE2_IMPLEMENTATION.md": {
+    "mtime": 1784049725.427884,
+    "ast_hash": "531184e59562d95de2862303b9620456",
+    "semantic_hash": ""
+  },
+  "ForgeML_Engineering_Kit_Phase0/docs/22_MODULE2_REVIEW_GUIDE.md": {
+    "mtime": 1784049795.9620142,
+    "ast_hash": "d4825b18cabd1e7d11513758750bec7d",
+    "semantic_hash": ""
+  },
+  "ForgeML_Engineering_Kit_Phase0/docs/23_MODULE2_ENGINEERING_DECISIONS.md": {
+    "mtime": 1784049759.5850546,
+    "ast_hash": "9d0eca3fa38a472263ff7f944c01df0b",
     "semantic_hash": ""
   }
 }

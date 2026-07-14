@@ -47,6 +47,17 @@ class OperationStore(Protocol):
         validation behind it, because both queue in one table (ADR-016).
         """
 
+    def claim(self, operation_id: UUID) -> Operation | None:
+        """Claim one named operation, or None if it is not pending.
+
+        An inline executor must run *its own* operation. `claim_next` would take
+        the oldest pending one instead, so under concurrent uploads a request
+        would execute another request's work and report the wrong result.
+
+        Returns None when the operation is absent or already claimed, which is
+        how a duplicate in-flight request declines to run the same work twice.
+        """
+
     def complete(self, operation_id: UUID, result: dict[str, Any]) -> Operation:
         """Terminally succeed a running operation."""
 

@@ -198,6 +198,19 @@ class InMemoryOperationStore:
         self._operations[claimed.id] = claimed
         return claimed
 
+    def claim(self, operation_id: UUID) -> Operation | None:
+        operation = self._operations.get(operation_id)
+        if operation is None or operation.state is not OperationState.PENDING:
+            return None
+        claimed = replace(
+            operation,
+            state=OperationState.RUNNING,
+            claimed_at=self._clock(),
+            attempts=operation.attempts + 1,
+        )
+        self._operations[operation_id] = claimed
+        return claimed
+
     def complete(self, operation_id: UUID, result: dict[str, Any]) -> Operation:
         running = self._running(operation_id)
         done = replace(

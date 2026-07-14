@@ -9,11 +9,10 @@ from forgeml.core.config import AppSettings
 from tests.support import ASGITestClient
 
 
-def test_health_and_readiness_contract(settings: AppSettings) -> None:
+def test_liveness_reports_the_process_is_up(settings: AppSettings) -> None:
     client = ASGITestClient(create_application(settings))
 
     health = client.get("/healthz")
-    ready = client.get("/readyz")
 
     assert health.status_code == 200
     assert health.json() == {
@@ -21,10 +20,22 @@ def test_health_and_readiness_contract(settings: AppSettings) -> None:
         "service": "forgeml-control-plane",
         "version": "0.1.0",
     }
-    assert ready.status_code == 200
-    assert ready.json()["status"] == "ready"
     assert health.headers["content-type"] == "application/json"
     assert UUID(health.headers["x-request-id"]).version == 4
+
+
+def test_readiness_fails_closed_without_a_metadata_database(
+    settings: AppSettings,
+) -> None:
+    # Since Module 2 the control plane cannot serve without its database.
+    # Readiness that answered "ready" here would route traffic at a process that
+    # cannot honour a single request.
+    client = ASGITestClient(create_application(settings))
+
+    ready = client.get("/readyz")
+
+    assert ready.status_code == 503
+    assert ready.json()["code"] == "dependency_unavailable"
     assert UUID(ready.headers["x-request-id"]).version == 4
 
 

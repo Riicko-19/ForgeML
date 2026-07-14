@@ -24,6 +24,7 @@ class ASGITestClient:
         *,
         headers: Headers = None,
         content: str | bytes | None = None,
+        files: Mapping[str, tuple[str, bytes, str]] | None = None,
     ) -> httpx.Response:
         async def send() -> httpx.Response:
             transport = httpx.ASGITransport(
@@ -39,6 +40,7 @@ class ASGITestClient:
                     path,
                     headers=headers,
                     content=content,
+                    files=files,
                 )
 
         return asyncio.run(send())

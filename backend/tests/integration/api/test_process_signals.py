@@ -11,6 +11,8 @@ import time
 
 import httpx
 
+from tests.integration.api.conftest import database_url
+
 
 def _available_loopback_port() -> int:
     with socket.socket() as listener:
@@ -29,6 +31,10 @@ def test_sigterm_stops_installed_process_without_traceback() -> None:
         {
             "FORGEML_ENVIRONMENT": "test",
             "FORGEML_BIND_PORT": str(port),
+            # Since Module 3 the control plane recovers abandoned operations at
+            # startup (ADR-016) and fails closed without its database (docs 11),
+            # so a real process needs a real one.
+            "FORGEML_DATABASE_URL": database_url(),
         }
     )
     process = subprocess.Popen(

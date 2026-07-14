@@ -87,5 +87,18 @@
   "85": "configure_logging",
   "86": "__init__.py",
   "87": "__init__.py",
-  "88": "__init__.py"
+  "88": "__init__.py",
+  "89": "ConfigurationIssue",
+  "90": "ValidationError",
+  "91": "Path",
+  "92": "MonkeyPatch",
+  "93": "test_artifact_store.py",
+  "94": "OperationService",
+  "95": "create_health_router",
+  "96": "errors.py",
+  "97": "PackageValidationService",
+  "98": "_EnvironmentSettings",
+  "99": ".request",
+  "100": "__init__.py",
+  "101": "__init__.py"
 }

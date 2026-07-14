@@ -66,20 +66,26 @@ def test_provider_neutral_core_does_not_import_fastapi_or_api() -> None:
         assert not any(item.startswith("forgeml.api") for item in imports)
 
 
-def test_api_never_imports_bootstrap_or_future_modules() -> None:
-    forbidden = (
-        "forgeml.bootstrap",
-        "forgeml.application",
-        "forgeml.domain",
-        "forgeml.infrastructure",
-    )
-    for path in (SOURCE / "api").glob("*.py"):
-        imports = _imports(path)
-        assert not any(
-            item == prefix or item.startswith(f"{prefix}.")
-            for item in imports
-            for prefix in forbidden
+@pytest.mark.parametrize(
+    "path", sorted((SOURCE / "api").rglob("*.py")), ids=lambda path: path.name
+)
+def test_api_adapts_application_and_never_reaches_a_provider(path: Path) -> None:
+    """Docs 02: the API adapter may depend on application use cases, and must
+    not reach a provider. It maps transport DTOs to commands; it holds no
+    lifecycle rules and never touches an ORM, an artifact path, or Docker.
+
+    Module 0's original rule forbade `forgeml.application` outright, because no
+    application layer existed yet. Enforcing that today would contradict the
+    dependency direction the FEK actually specifies.
+    """
+
+    assert (
+        _violations(
+            path,
+            ("forgeml.bootstrap", "forgeml.infrastructure", "sqlalchemy", "docker"),
         )
+        == set()
+    )
 
 
 def test_bootstrap_imports_core_not_api() -> None:

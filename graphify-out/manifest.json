@@ -5,8 +5,8 @@
     "semantic_hash": "0f7b5bf037d14ebca585def52256b811"
   },
   "backend/pyproject.toml": {
-    "mtime": 1784048321.520966,
-    "ast_hash": "eb1015564930f42723dd8e15e97a4141",
+    "mtime": 1784051591.4523578,
+    "ast_hash": "e5f597312a59a443ae4ba8e60e8e5713",
     "semantic_hash": ""
   },
   "backend/src/forgeml/__init__.py": {
@@ -30,9 +30,9 @@
     "semantic_hash": "eb2834657fa71e716074fe24c288e001"
   },
   "backend/src/forgeml/api/health.py": {
-    "mtime": 1783923590.6651363,
-    "ast_hash": "9f0f78d2c08bb4d319aeadd9df2d72d3",
-    "semantic_hash": "9f0f78d2c08bb4d319aeadd9df2d72d3"
+    "mtime": 1784051453.837989,
+    "ast_hash": "8cd7862fce5d7d0d60f4f13cf27d7a77",
+    "semantic_hash": ""
   },
   "backend/src/forgeml/api/middleware.py": {
     "mtime": 1783922809.2004037,
@@ -55,9 +55,9 @@
     "semantic_hash": "d2e26989d1e7df4e74cf55b6c035097a"
   },
   "backend/src/forgeml/core/composition.py": {
-    "mtime": 1783865014.1580954,
-    "ast_hash": "f0ab1521e2218e39dbaa8421549bbe40",
-    "semantic_hash": "f0ab1521e2218e39dbaa8421549bbe40"
+    "mtime": 1784051866.6614041,
+    "ast_hash": "ea997373ac4d71865a0cea27733a183d",
+    "semantic_hash": ""
   },
   "backend/src/forgeml/core/config.py": {
     "mtime": 1784048466.49584,
@@ -80,8 +80,8 @@
     "semantic_hash": "54aef2857f71a5b1e49f933ad96151d8"
   },
   "backend/tests/architecture/test_dependency_direction.py": {
-    "mtime": 1784049064.424606,
-    "ast_hash": "fc5331314ee47c798bb9605bb8b56dc2",
+    "mtime": 1784051465.6291115,
+    "ast_hash": "57b1c0869888541f07cf1dc84720e831",
     "semantic_hash": ""
   },
   "backend/tests/conftest.py": {
@@ -90,14 +90,14 @@
     "semantic_hash": "c14ae5df96612d7f5c568347dbbf5018"
   },
   "backend/tests/contract/test_http_contract.py": {
-    "mtime": 1783865346.21073,
-    "ast_hash": "50cefa8d37e306bebb864c00fc7b15ef",
-    "semantic_hash": "50cefa8d37e306bebb864c00fc7b15ef"
+    "mtime": 1784051649.212651,
+    "ast_hash": "7b979797951ccb590434e25c94a39a59",
+    "semantic_hash": ""
   },
   "backend/tests/contract/test_openapi_contract.py": {
-    "mtime": 1783865202.3793914,
-    "ast_hash": "eddaf0cd86489d4aac22566a5f8263e1",
-    "semantic_hash": "eddaf0cd86489d4aac22566a5f8263e1"
+    "mtime": 1784051673.0503926,
+    "ast_hash": "1c38eb5ce2d05833d33fffea8b135e32",
+    "semantic_hash": ""
   },
   "backend/tests/integration/api/test_application_boot.py": {
     "mtime": 1783923591.1321259,
@@ -110,14 +110,14 @@
     "semantic_hash": "7605e0b86e50767e1e4800cea7b8c283"
   },
   "backend/tests/integration/api/test_health.py": {
-    "mtime": 1783866107.2098358,
-    "ast_hash": "e979c75dca143b1eccc200816c8d8dfd",
-    "semantic_hash": "e979c75dca143b1eccc200816c8d8dfd"
+    "mtime": 1784051639.9428124,
+    "ast_hash": "5ca5d6f2de41cb4ae7dbc4e19dce21e1",
+    "semantic_hash": ""
   },
   "backend/tests/integration/api/test_process_signals.py": {
-    "mtime": 1783866817.2085145,
-    "ast_hash": "bea1d0bcaf888304e10f04a374283481",
-    "semantic_hash": "bea1d0bcaf888304e10f04a374283481"
+    "mtime": 1784052348.670171,
+    "ast_hash": "e126a1a87c345d40708ac1e0ba5f47af",
+    "semantic_hash": ""
   },
   "backend/tests/integration/api/test_request_logging.py": {
     "mtime": 1783922809.4263923,
@@ -125,14 +125,14 @@
     "semantic_hash": "9d4415b80010e06bc67afd032983ded4"
   },
   "backend/tests/smoke/installed_package_smoke.py": {
-    "mtime": 1783865014.187792,
-    "ast_hash": "3f99292371f19b4974587e2c19f6be99",
-    "semantic_hash": "3f99292371f19b4974587e2c19f6be99"
+    "mtime": 1784051510.4829497,
+    "ast_hash": "98e89d7f6b20ca46960df83e0b98b496",
+    "semantic_hash": ""
   },
   "backend/tests/support.py": {
-    "mtime": 1783865354.792409,
-    "ast_hash": "1819e7efc37a424a88a1a36e473ea6cc",
-    "semantic_hash": "1819e7efc37a424a88a1a36e473ea6cc"
+    "mtime": 1784051764.9978216,
+    "ast_hash": "a43efad3814e1f34b570bcaeda9fef37",
+    "semantic_hash": ""
   },
   "backend/tests/unit/api/test_error_handlers.py": {
     "mtime": 1783923590.901131,
@@ -365,8 +365,8 @@
     "semantic_hash": ""
   },
   "ForgeML_Engineering_Kit_Phase0/docs/10_ARCHITECTURE_DECISIONS.md": {
-    "mtime": 1784035682.558879,
-    "ast_hash": "d963bd23abd6bbeea688977a8c6cee66",
+    "mtime": 1784049831.7104468,
+    "ast_hash": "42e624ff9af2cdbdc350e6dce0e108e1",
     "semantic_hash": ""
   },
   "ForgeML_Engineering_Kit_Phase0/docs/11_OPERATIONS_AND_SECURITY.md": {
@@ -415,8 +415,8 @@
     "semantic_hash": ""
   },
   "backend/README.md": {
-    "mtime": 1784011248.5185044,
-    "ast_hash": "c4a04f96235a6c2c220b0dc7c7f94059",
+    "mtime": 1784049848.953077,
+    "ast_hash": "891d0e83fa309cd19eb5d5566d2af942",
     "semantic_hash": ""
   },
   "backend/src/forgeml/infrastructure/storage/__init__.py": {
@@ -435,8 +435,8 @@
     "semantic_hash": ""
   },
   "PROJECT_STATUS.md": {
-    "mtime": 1784035708.463575,
-    "ast_hash": "67bb4156a4ae404de1bc9987405f2ec3",
+    "mtime": 1784049866.0789325,
+    "ast_hash": "10e02d65060305460dbf3ba0b47d8147",
     "semantic_hash": ""
   },
   "backend/migrations/env.py": {
@@ -480,8 +480,8 @@
     "semantic_hash": ""
   },
   "backend/src/forgeml/domain/operations/ports.py": {
-    "mtime": 1784049071.5604599,
-    "ast_hash": "88a2154cab000594f7dcb8a193a634af",
+    "mtime": 1784051313.002751,
+    "ast_hash": "f5578eb62791bb7ebe76e00075889ff1",
     "semantic_hash": ""
   },
   "backend/src/forgeml/infrastructure/database/__init__.py": {
@@ -505,8 +505,8 @@
     "semantic_hash": ""
   },
   "backend/src/forgeml/infrastructure/database/repositories.py": {
-    "mtime": 1784049528.7759712,
-    "ast_hash": "d3c3b4c4e570795c4a534e6600cbf117",
+    "mtime": 1784051320.4595265,
+    "ast_hash": "0bc224001690ef4fbcf3bed709238f3f",
     "semantic_hash": ""
   },
   "backend/src/forgeml/infrastructure/database/unit_of_work.py": {
@@ -520,8 +520,8 @@
     "semantic_hash": ""
   },
   "backend/tests/fakes.py": {
-    "mtime": 1784049652.9536889,
-    "ast_hash": "0d6869f3b912d08fe8de27dc4ecfe91c",
+    "mtime": 1784051328.0286138,
+    "ast_hash": "6e126b4e27a6d0802ad7d77371d36e53",
     "semantic_hash": ""
   },
   "backend/tests/integration/database/conftest.py": {
@@ -562,6 +562,81 @@
   "backend/tests/unit/infrastructure/test_mappers.py": {
     "mtime": 1784049259.653678,
     "ast_hash": "37c6bf02203418825b6149b9532cf3b4",
+    "semantic_hash": ""
+  },
+  "ForgeML_Engineering_Kit_Phase0/docs/20_MODULE2_METADATA_DESIGN.md": {
+    "mtime": 1784049818.5030966,
+    "ast_hash": "12457209a5af334890612c81fe385119",
+    "semantic_hash": ""
+  },
+  "ForgeML_Engineering_Kit_Phase0/docs/21_MODULE2_IMPLEMENTATION.md": {
+    "mtime": 1784049725.427884,
+    "ast_hash": "531184e59562d95de2862303b9620456",
+    "semantic_hash": ""
+  },
+  "ForgeML_Engineering_Kit_Phase0/docs/22_MODULE2_REVIEW_GUIDE.md": {
+    "mtime": 1784049795.9620142,
+    "ast_hash": "d4825b18cabd1e7d11513758750bec7d",
+    "semantic_hash": ""
+  },
+  "ForgeML_Engineering_Kit_Phase0/docs/23_MODULE2_ENGINEERING_DECISIONS.md": {
+    "mtime": 1784049759.5850546,
+    "ast_hash": "9d0eca3fa38a472263ff7f944c01df0b",
+    "semantic_hash": ""
+  },
+  "backend/src/forgeml/api/v1/__init__.py": {
+    "mtime": 1784051374.1219897,
+    "ast_hash": "0bb4e9bbb5b66138bf9acac305aceadb",
+    "semantic_hash": ""
+  },
+  "backend/src/forgeml/api/v1/operations.py": {
+    "mtime": 1784051696.7743266,
+    "ast_hash": "f382194c96bc83087a6d7a711cbc7491",
+    "semantic_hash": ""
+  },
+  "backend/src/forgeml/api/v1/packages.py": {
+    "mtime": 1784052025.483683,
+    "ast_hash": "fe9d02462b669f6d0368b6944b56908f",
+    "semantic_hash": ""
+  },
+  "backend/src/forgeml/api/v1/schemas.py": {
+    "mtime": 1784052011.651844,
+    "ast_hash": "8c4615f9eb7a9b1208cf05308e3e72f8",
+    "semantic_hash": ""
+  },
+  "backend/src/forgeml/application/operations/__init__.py": {
+    "mtime": 1784051364.4060254,
+    "ast_hash": "ea8f25f764106a494f63fefa500d0f04",
+    "semantic_hash": ""
+  },
+  "backend/src/forgeml/application/operations/services.py": {
+    "mtime": 1784051525.658719,
+    "ast_hash": "70c3661bb211fe79665e77e709069eaf",
+    "semantic_hash": ""
+  },
+  "backend/src/forgeml/application/package/services.py": {
+    "mtime": 1784051525.659719,
+    "ast_hash": "664db03a8ed518255dd1fcd629ff2ba4",
+    "semantic_hash": ""
+  },
+  "backend/src/forgeml/infrastructure/database/provider.py": {
+    "mtime": 1784051830.2009532,
+    "ast_hash": "591fc58bbfb4a25387ffaf587306c8b9",
+    "semantic_hash": ""
+  },
+  "backend/tests/integration/api/conftest.py": {
+    "mtime": 1784052335.4516754,
+    "ast_hash": "e37fe51fb8d17a2f78515934051fcb86",
+    "semantic_hash": ""
+  },
+  "backend/tests/integration/api/test_lifecycle_and_failures.py": {
+    "mtime": 1784052348.670107,
+    "ast_hash": "c415988313b27268665d6f9cca0c9564",
+    "semantic_hash": ""
+  },
+  "backend/tests/integration/api/test_packages_api.py": {
+    "mtime": 1784052348.7238457,
+    "ast_hash": "1ab25880609fb61c7caeb685b2ccf4ae",
     "semantic_hash": ""
   }
 }

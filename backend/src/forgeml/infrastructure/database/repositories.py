@@ -265,6 +265,24 @@ class SqlAlchemyOperationStore:
         self._session.flush()
         return mappers.to_operation(row)
 
+    def claim(self, operation_id: UUID) -> Operation | None:
+        row = self._session.execute(
+            select(OperationRow)
+            .where(
+                OperationRow.id == operation_id,
+                OperationRow.state == OperationState.PENDING.value,
+            )
+            .with_for_update(skip_locked=True)
+        ).scalar_one_or_none()
+        if row is None:
+            return None
+
+        row.state = OperationState.RUNNING.value
+        row.claimed_at = datetime.now(tz=UTC)
+        row.attempts += 1
+        self._session.flush()
+        return mappers.to_operation(row)
+
     def complete(self, operation_id: UUID, result: dict[str, Any]) -> Operation:
         row = self._running(operation_id)
         row.state = OperationState.SUCCEEDED.value

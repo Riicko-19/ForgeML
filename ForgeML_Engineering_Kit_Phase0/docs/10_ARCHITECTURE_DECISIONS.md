@@ -128,6 +128,13 @@ commit `4aa140cd7d19fd9db4b4e3d5248c27c22e33a894` — the Module 1 frozen baseli
 this ADR on its ordinary terms. The Module 0 exception above remains closed and is not
 extended.
 
+**Module 2 evidence (no exception required):** The backend quality workflow — now
+including a PostgreSQL 16 service, without which the ADR-009 concurrency and migration
+gates cannot run at all — ran against commit
+`2c8c8721e3739529ae4862d5c712b3ba1b93a11e`, the Module 2 frozen baseline, and completed
+with conclusion `success` on 2026-07-14. Verified against the Actions API rather than
+accepted on report.
+
 ## ADR-016 — Operation lease, crash recovery, and retry
 
 **Status:** Accepted 2026-07-14

@@ -1,16 +1,16 @@
 # Graph Report - ForgeML  (2026-07-14)
 
 ## Corpus Check
-- 112 files · ~43,272 words
+- 127 files · ~51,139 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1184 nodes · 2038 edges · 89 communities (72 shown, 17 thin omitted)
-- Extraction: 83% EXTRACTED · 17% INFERRED · 0% AMBIGUOUS · INFERRED: 353 edges (avg confidence: 0.72)
+- 1376 nodes · 2443 edges · 102 communities (83 shown, 19 thin omitted)
+- Extraction: 81% EXTRACTED · 19% INFERRED · 0% AMBIGUOUS · INFERRED: 461 edges (avg confidence: 0.71)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `4aa140cd`
+- Built from commit: `2c8c8721`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -103,18 +103,30 @@
 - __init__.py
 - __init__.py
 - __init__.py
+- ConfigurationIssue
+- ValidationError
+- Path
+- MonkeyPatch
+- test_artifact_store.py
+- OperationService
+- create_health_router
+- errors.py
+- PackageValidationService
+- _EnvironmentSettings
+- .request
+- __init__.py
 
 ## God Nodes (most connected - your core abstractions)
-1. `AppSettings` - 51 edges
-2. `AppError` - 47 edges
-3. `UnitOfWork` - 44 edges
+1. `AppError` - 65 edges
+2. `AppSettings` - 59 edges
+3. `UnitOfWork` - 49 edges
 4. `ErrorDetail` - 43 edges
-5. `PackageLimits` - 35 edges
-6. `AuditEvent` - 26 edges
-7. `ZipArchiveReader` - 26 edges
-8. `build_forge()` - 24 edges
-9. `load_settings()` - 22 edges
-10. `validate_package()` - 22 edges
+5. `PackageLimits` - 40 edges
+6. `ASGITestClient` - 36 edges
+7. `build_forge()` - 34 edges
+8. `AuditEvent` - 30 edges
+9. `ZipArchiveReader` - 30 edges
+10. `Operation` - 28 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `test_limits_are_immutable()` --calls--> `PackageLimits`  [INFERRED]
@@ -131,67 +143,67 @@
 ## Import Cycles
 - None detected.
 
-## Communities (89 total, 17 thin omitted)
+## Communities (102 total, 19 thin omitted)
 
 ### Community 0 - "AppSettings"
-Cohesion: 0.16
-Nodes (13): Frozen HTTP wire contract tests., test_framework_error_wire_shape_omits_empty_details(), test_health_wire_shapes_and_header(), Health endpoint integration tests., test_docs_and_openapi_routes_are_not_public(), test_health_and_readiness_contract(), test_inbound_request_ids_are_ignored(), ASGITestClient (+5 more)
+Cohesion: 0.22
+Nodes (6): Frozen HTTP wire contract tests., test_framework_error_wire_shape_omits_empty_details(), test_health_wire_shapes_and_header(), test_unavailable_readiness_uses_the_frozen_error_envelope(), FastAPI, Minimal synchronous facade over HTTPX's in-process ASGI transport.
 
 ### Community 1 - "error_handlers.py"
-Cohesion: 0.12
-Nodes (32): app_error_handler(), _detail_response(), error_response(), http_error_handler(), internal_error_response(), Exception, FastAPI, JSONResponse (+24 more)
+Cohesion: 0.06
+Nodes (56): app_error_handler(), _detail_response(), error_response(), http_error_handler(), internal_error_response(), Exception, FastAPI, JSONResponse (+48 more)
 
 ### Community 2 - "test_request_logging.py"
-Cohesion: 0.08
-Nodes (32): ASGIApp, Server-owned request correlation and bounded request logging., Own the canonical request ID for one HTTP request., RequestContextMiddleware, current_request_id(), new_request_id(), Request-local server correlation context., Create a canonical server-owned request identifier. (+24 more)
+Cohesion: 0.06
+Nodes (46): ASGIApp, Own the canonical request ID for one HTTP request., RequestContextMiddleware, _correlation_id(), UUID, Package routes (docs 12)., The client-supplied name, reduced to something safe to store and echo.      A fi, _safe_filename() (+38 more)
 
 ### Community 3 - "ConfigurationFailure"
 Cohesion: 0.18
 Nodes (23): ConfigurationFailure, load_settings(), Exception, Resolve and validate the installed ForgeML distribution version., Load settings from an explicit mapping or the process environment., Fail-closed configuration error safe to classify at bootstrap., resolve_service_version(), MonkeyPatch (+15 more)
 
 ### Community 4 - "JsonEventFormatter"
-Cohesion: 0.15
-Nodes (19): _bounded(), JsonEventFormatter, LogRecord, Bounded structured process logging., Render a strict allowlisted JSON event., _strip_controls(), BaseException, LogRecord (+11 more)
+Cohesion: 0.22
+Nodes (16): JsonEventFormatter, Render a strict allowlisted JSON event., BaseException, LogRecord, TracebackType, Structured logging policy tests., _record(), test_event_and_fields_are_bounded() (+8 more)
 
 ### Community 5 - "AppError"
 Cohesion: 0.05
-Nodes (85): ErrorDetail, A bounded, safe detail for an expected application error., ArchiveEntry, ArchiveInspection, ArchiveUnreadable, AssetSpec, EntrypointSection, Finding (+77 more)
+Nodes (82): ErrorDetail, A bounded, safe detail for an expected application error., ArchiveEntry, ArchiveInspection, AssetSpec, EntrypointSection, Finding, is_supported_schema_dialect() (+74 more)
 
 ### Community 6 - "test_application_boot.py"
 Cohesion: 0.14
 Nodes (13): CI Status, Current Development Stage, Current Module, Current Version, Engineering Authority, ForgeML Project Status, Frozen Modules, Last Frozen Milestone (+5 more)
 
 ### Community 7 - "_run_handler"
-Cohesion: 0.08
-Nodes (51): Reads .forge archive structure from a seekable binary stream., ZipArchiveReader, _deep_schema(), _encrypted_member(), _non_utf8_name(), Any, Path, The .forge reference fixture matrix.  Each case drives a real archive through th (+43 more)
+Cohesion: 0.23
+Nodes (24): Reads .forge archive structure from a seekable binary stream., ZipArchiveReader, test_an_unreadable_artifact_fails_the_operation(), Path, ZIP reader against real archives, including safe extraction., reader(), stream(), test_a_directory_named_forge_yaml_is_not_a_manifest() (+16 more)
 
 ### Community 8 - "session_factory"
 Cohesion: 0.05
 Nodes (56): create_database_engine(), create_session_factory(), Engine, Session, sessionmaker, Engine and session factory for the metadata database (ADR-009)., Build the metadata engine from typed settings.      `pool_pre_ping` costs one ro, Session factory for the unit of work.      `expire_on_commit=False` is deliberat (+48 more)
 
 ### Community 9 - "test_dependency_direction.py"
-Cohesion: 0.32
-Nodes (12): _imports(), Path, AST-enforced dependency direction., The ORM is confined to one package.      If SQLAlchemy can be imported anywhere, test_api_never_imports_bootstrap_or_future_modules(), test_application_depends_on_domain_not_providers(), test_bootstrap_imports_core_not_api(), test_domain_depends_on_no_provider_transport_or_filesystem() (+4 more)
+Cohesion: 0.30
+Nodes (13): _imports(), Path, AST-enforced dependency direction., The ORM is confined to one package.      If SQLAlchemy can be imported anywhere, Docs 02: the API adapter may depend on application use cases, and must     not r, test_api_adapts_application_and_never_reaches_a_provider(), test_application_depends_on_domain_not_providers(), test_bootstrap_imports_core_not_api() (+5 more)
 
 ### Community 10 - "_reject_wildcard_host"
 Cohesion: 0.08
 Nodes (24): 10. Design review record, 1. Purpose and scope, 2. Architecture, 3. Folder structure and complete file plan, 4. Technology and dependency decisions, 5. Interfaces, 6. Public HTTP API, 7. Testing and traceability (+16 more)
 
 ### Community 11 - "_EnvironmentSettings"
-Cohesion: 0.29
-Nodes (5): PackageValidationService, Validate a stored .forge artifact against the format version 1 contract., Runs archive validation over a stored artifact.      Asset checksums are the onl, PackageLimits, Operator policy bounding work spent on an untrusted .forge archive.      Every b
+Cohesion: 0.10
+Nodes (20): _fingerprint(), is_accepted(), _latest(), PackageDetail, PackageService, BinaryIO, UUID, Package upload, validation, and read use cases.  Validation runs inside the requ (+12 more)
 
 ### Community 12 - "test_process_signals.py"
-Cohesion: 0.67
-Nodes (3): _available_loopback_port(), Real-process signal and graceful-shutdown integration., test_sigterm_stops_installed_process_without_traceback()
+Cohesion: 0.28
+Nodes (7): database_url(), migrated(), Shared database setup for the HTTP integration tests., Bring the schema to head once, via the migration the operator would run., _available_loopback_port(), Real-process signal and graceful-shutdown integration., test_sigterm_stops_installed_process_without_traceback()
 
 ### Community 18 - "Architecture Decision Records"
-Cohesion: 0.12
-Nodes (16): ADR-001 — Trusted packages; defense-in-depth runtime isolation, ADR-002 — Modular monolith control plane, ADR-003 — Immutable content-addressed packages/images, ADR-004 — Metadata desired state; Docker reconciliation, ADR-005 — One active version and platform route, ADR-006 — Asynchronous durable operations, ADR-007 — Storage/database behind ports, ADR-008 — Initial runtime compatibility matrix (+8 more)
+Cohesion: 0.11
+Nodes (17): ADR-001 — Trusted packages; defense-in-depth runtime isolation, ADR-002 — Modular monolith control plane, ADR-003 — Immutable content-addressed packages/images, ADR-004 — Metadata desired state; Docker reconciliation, ADR-005 — One active version and platform route, ADR-006 — Asynchronous durable operations, ADR-007 — Storage/database behind ports, ADR-008 — Initial runtime compatibility matrix (+9 more)
 
 ### Community 19 - "AuditEvent"
-Cohesion: 0.05
-Nodes (30): ErrorCategory, StrEnum, Transport-neutral classes of expected application failure., ActorType, AuditEvent, StrEnum, Audit events (docs 04: append-only; no payloads, no secrets)., Who caused a state change. (+22 more)
+Cohesion: 0.20
+Nodes (9): ErrorCategory, StrEnum, Transport-neutral classes of expected application failure., AuditEvent, One append-only record of a state change.      Metadata is bounded and redacted, AuditEventRow, Append-only audit trail enlisted in the caller's transaction., SqlAlchemyAuditLog (+1 more)
 
 ### Community 20 - "Module 0 Completion Report"
 Cohesion: 0.14
@@ -206,8 +218,8 @@ Cohesion: 0.15
 Nodes (12): 1. Reason for stopping, 2. Approval decisions, 3. Design corrections that do not require architecture approval, 4. Dependency approval inventory, 5. Review iteration accounting, 6. Approval request, AC-001 — Control-plane Python support, AC-002 — V1 CI provider and ownership (+4 more)
 
 ### Community 23 - "ForgeML Backend — Module 0 Foundation, Module 1 Forge Package System"
-Cohesion: 0.17
-Nodes (11): Configuration, Dependency locks and package smoke, Forge package contract, ForgeML Backend — Module 0 Foundation, Module 1 Forge Package System, Frozen HTTP and correlation contracts, Known limitations, Logging contract, Quality gates (+3 more)
+Cohesion: 0.15
+Nodes (12): Configuration, Dependency locks and package smoke, Forge package contract, ForgeML Backend — Module 0 Foundation, Module 1 Forge Package System, Frozen HTTP and correlation contracts, Known limitations, Logging contract, Metadata layer (+4 more)
 
 ### Community 24 - "Operations and Security"
 Cohesion: 0.18
@@ -226,7 +238,7 @@ Cohesion: 0.07
 Nodes (46): BaseException, Protocol, TracebackType, The transaction boundary owned by the application layer.  A use case opens one u, One atomic metadata transaction.      Leaving the context without committing rol, Begin the transaction., Commit on a clean exit that called commit; otherwise roll back., Commit the transaction. (+38 more)
 
 ### Community 28 - "SqlAlchemyOperationStore"
-Cohesion: 0.18
+Cohesion: 0.19
 Nodes (12): OperationRow, _conflict(), _decode_cursor(), _encode_cursor(), _not_found(), Any, datetime, UUID (+4 more)
 
 ### Community 29 - "High Level Design"
@@ -322,72 +334,72 @@ Cohesion: 0.29
 Nodes (6): Acceptance / handoff, Mission, Owned areas, Required tests, Responsibilities, runtime-engineer
 
 ### Community 52 - "test_application_boot.py"
-Cohesion: 0.18
-Nodes (16): LoggingConfigurationConflict, Raised when process logging is reconfigured incompatibly., FakeServer, BaseException, LogCaptureFixture, MonkeyPatch, Bootstrap and composition integration tests., test_configuration_failure_is_safe_and_exits_two() (+8 more)
+Cohesion: 0.14
+Nodes (19): FakeServer, BaseException, LogCaptureFixture, MonkeyPatch, Bootstrap and composition integration tests., test_configuration_failure_is_safe_and_exits_two(), test_logging_conflict_exits_one(), test_module_entrypoint_returns_bootstrap_exit_code() (+11 more)
 
 ### Community 53 - "test_openapi_contract.py"
-Cohesion: 0.08
-Nodes (30): AppError, Exception, Provider-neutral application error contracts., An immutable expected application failure., _validate_code(), _validate_message(), artifact_uri(), FilesystemArtifactStore (+22 more)
+Cohesion: 0.23
+Nodes (8): artifact_uri(), FilesystemArtifactStore, BinaryIO, Path, Content-addressed artifact storage on a local filesystem (ADR-007, ADR-009)., The opaque reference callers hold instead of a filesystem path., Streams archives to disk under their own SHA-256, atomically.      A partial wri, test_artifact_is_addressed_by_its_own_checksum()
 
 ### Community 62 - "OperationStore"
-Cohesion: 0.14
-Nodes (11): OperationStore, Any, Protocol, UUID, The durable operation store (ADR-006, ADR-010, ADR-016)., Durable operations, claimed by one worker at a time.      This store is the queu, Create the operation, or return the original one for a repeated request., Claim the oldest pending operation, or None.          `types` selects a lane. Wi (+3 more)
+Cohesion: 0.19
+Nodes (27): body(), client(), Any, MonkeyPatch, Path, Response, The package and operation HTTP surface, end to end.  A real application, a real, test_a_malformed_identifier_is_a_validation_error() (+19 more)
 
 ### Community 63 - "_NoAliasLoader"
-Cohesion: 0.18
-Nodes (10): _NoAliasLoader, Any, BinaryIO, ZipInfo, ZIP adapter for .forge archives.  This is the only module that knows a .forge fi, Safe YAML loader that also refuses aliases.      yaml.safe_load still expands al, _to_entry(), _unsafe_member() (+2 more)
+Cohesion: 0.15
+Nodes (12): CI evidence, Database schema, Engineering decisions, Files created, Files modified, Known limitations, Migrations, Module 2 — Metadata Layer Implementation (+4 more)
 
 ### Community 64 - "create_application"
-Cohesion: 0.14
-Nodes (13): APIRouter, create_health_router(), Operational health routes., Create health routes bound to immutable service identity., create_application(), FastAPI, FastAPI application composition root., Create an isolated Module 0 application without provider side effects. (+5 more)
+Cohesion: 0.18
+Nodes (8): AuditLog, Protocol, UUID, The audit trail port (docs 04)., Append-only audit trail.      `record` enlists in the caller's unit of work, bec, Append one audit event to the current transaction., Read the audit trail of one target, newest first., Read every event recorded under one correlation ID.
 
 ### Community 65 - "config.py"
-Cohesion: 0.14
-Nodes (13): ConfigurationIssue, Environment, LogLevel, StrEnum, ValidationError, Typed, fail-closed Module 0 configuration., The metadata database URL, or a fail-closed configuration error.          Module, Supported deployment environments. (+5 more)
+Cohesion: 0.25
+Nodes (8): Environment, LogLevel, StrEnum, Typed, fail-closed Module 0 configuration., Supported deployment environments., Supported process log levels., _require_postgresql(), SecretStr
 
 ### Community 66 - "Operation"
-Cohesion: 0.27
-Nodes (7): Operation, One durable unit of asynchronous work., InMemoryOperationStore, InMemoryPackageCatalog, Any, UUID, In-memory implementations of the Module 2 ports.  Module 3 will test its use cas
+Cohesion: 0.14
+Nodes (10): OperationFailure, A safe, classified failure. Never a trace, a host path, or a payload., _Clock, InMemoryOperationStore, InMemoryPackageCatalog, Any, datetime, UUID (+2 more)
 
 ### Community 67 - "SqlAlchemyPackageCatalog"
-Cohesion: 0.20
-Nodes (6): Package, A stored package. Checksum and artifact are immutable (ADR-003).      manifest_v, PackageRow, Session, Package records backed by PostgreSQL., SqlAlchemyPackageCatalog
+Cohesion: 0.13
+Nodes (15): PackageLimits, Operator policy bounding work spent on an untrusted .forge archive.      Every b, ArchiveUnreadable, Exception, The bytes are not a readable ZIP container at all., _NoAliasLoader, Any, BinaryIO (+7 more)
 
 ### Community 68 - "AppSettings"
-Cohesion: 0.23
-Nodes (11): AppSettings, Immutable settings consumed by composition and bootstrap., _client_with_failure_routes(), Payload, BaseModel, LogCaptureFixture, HTTP error normalization tests., test_404_and_405_use_frozen_envelope() (+3 more)
+Cohesion: 0.11
+Nodes (28): Container, create_application(), FastAPI, FastAPI application composition root., The dependency graph, wired once and shared by the routes., Create the control-plane application with its dependencies wired., AppSettings, Immutable settings consumed by composition and bootstrap. (+20 more)
 
 ### Community 69 - "OperationType"
-Cohesion: 0.19
-Nodes (9): OperationFailure, OperationState, OperationType, StrEnum, Durable operation records (ADR-006).  An operation is the durable intent behind, The kinds of durable work the control plane performs.      Only the package oper, Operation lifecycle. SUCCEEDED and FAILED are terminal and immutable., A safe, classified failure. Never a trace, a host path, or a payload. (+1 more)
+Cohesion: 0.09
+Nodes (21): Operation, OperationState, OperationType, StrEnum, Durable operation records (ADR-006).  An operation is the durable intent behind, The kinds of durable work the control plane performs.      Only the package oper, Operation lifecycle. SUCCEEDED and FAILED are terminal and immutable., One durable unit of asynchronous work. (+13 more)
 
 ### Community 70 - "SqlAlchemyUnitOfWork"
 Cohesion: 0.16
 Nodes (7): BaseException, Session, sessionmaker, TracebackType, The SQLAlchemy unit of work: one session, one transaction, three repositories., One atomic metadata transaction.      All three repositories are built from the, SqlAlchemyUnitOfWork
 
 ### Community 71 - "PackageCatalog"
-Cohesion: 0.18
-Nodes (8): PackageCatalog, UUID, Durable package records. Duplicate checksums resolve to one package., Return the package for these bytes, creating it in DRAFT if absent.          Sto, Read one package by its opaque identifier., Read one package by the SHA-256 of its bytes., Persist a validation result and transition the package accordingly.          Rai, Read the validation history of one package, newest first.
+Cohesion: 0.06
+Nodes (29): UnitOfWorkFactory, Package, A stored package. Checksum and artifact are immutable (ADR-003).      manifest_v, ArchiveReader, ArtifactStore, PackageCatalog, PackagePage, BinaryIO (+21 more)
 
 ### Community 72 - "main"
 Cohesion: 0.21
 Nodes (10): main(), Exception, _raise_shutdown_requested(), Fail-closed ForgeML process bootstrap., Translate Uvicorn's re-raised SIGTERM into a clean process exit., Validate configuration and run the single ForgeML ASGI worker., _safe_bootstrap_failure(), _ShutdownRequested (+2 more)
 
 ### Community 73 - "ArchiveReader"
-Cohesion: 0.20
-Nodes (8): ArchiveReader, BinaryIO, Protocol, Extract the archive into a fresh, empty staging directory., Open a stored artifact for reading., Reads .forge archive structure without importing or executing its content., Read member headers and the manifest document.          Raises ArchiveUnreadable, Compute the SHA-256 of the named members, reading bounded bytes only.
+Cohesion: 0.15
+Nodes (10): DatabaseProvider, Engine, Exception, Session, sessionmaker, Lazy database lifecycle: engine, unit of work factory, and readiness.  The compo, Owns the engine and hands out units of work., Return operations abandoned by a previous process to the queue.          ADR-016 (+2 more)
 
 ### Community 74 - "test_invariants.py"
 Cohesion: 0.35
 Nodes (11): _insert_package(), Engine, Invariants the database enforces, independently of our repositories.  These test, test_a_package_artifact_cannot_be_repointed(), test_a_package_cannot_have_zero_size(), test_a_package_checksum_cannot_be_rewritten(), test_a_package_state_may_still_advance(), test_a_terminal_operation_cannot_be_rewritten() (+3 more)
 
 ### Community 75 - "_run_handler"
-Cohesion: 0.24
-Nodes (10): Exception, JSONResponse, Direct error-mapping branch tests., _run_handler(), test_mismatched_registered_handler_inputs_fail_safe(), test_non_json_validation_error_without_location_is_safe(), test_terminal_error_handlers_are_generic(), test_unapproved_http_status_fails_safe() (+2 more)
+Cohesion: 0.18
+Nodes (10): §1 — The highest-risk code (25 min), §2 — The tests that decide whether you can trust the above (20 min), §3 — Skim only (15 min), §4 — Questions you should answer (15 min), §5 — Implementation risks, `infrastructure/database/repositories.py` — read in full (15 min), `infrastructure/database/unit_of_work.py` — read in full (5 min), `migrations/versions/0d7adf1f94cf_*.py` — read the trigger DDL only (5 min) (+2 more)
 
 ### Community 76 - "ArtifactStore"
 Cohesion: 0.22
-Nodes (7): ArtifactStore, Ports owned by the package domain.  Callers never receive a filesystem path. An, An immutable, content-addressed archive held by the artifact store., Streaming, content-addressed, atomically written artifact storage., Store the stream, returning its identity. Writing the same bytes twice         i, Delete a stored artifact. Deleting an absent artifact is not an error., StoredArtifact
+Nodes (4): InMemoryUnitOfWork, BaseException, TracebackType, A unit of work whose rollback really does discard writes.      Repositories writ
 
 ### Community 77 - "test_package_limits.py"
 Cohesion: 0.22
@@ -398,44 +410,84 @@ Cohesion: 0.32
 Nodes (7): _database_url(), Alembic environment.  The database URL comes from the same typed, fail-closed co, The URL supplied by the caller, else the application's own configuration.      T, Emit SQL without a connection, so an operator can review DDL first., Run migrations against a live database., run_migrations_offline(), run_migrations_online()
 
 ### Community 79 - "event"
-Cohesion: 0.39
-Nodes (6): event(), Domain records for the metadata layer., test_a_well_formed_audit_event_is_accepted(), test_audit_metadata_is_bounded(), test_unsafe_audit_metadata_is_refused(), test_unsafe_audit_text_is_refused()
+Cohesion: 0.18
+Nodes (16): _deep_schema(), _encrypted_member(), _non_utf8_name(), Any, Path, The .forge reference fixture matrix.  Each case drives a real archive through th, test_findings_carry_a_stable_path(), test_minimal_valid_package_is_accepted() (+8 more)
 
 ### Community 80 - "models.py"
-Cohesion: 0.33
-Nodes (4): Base, PackageValidationRow, SQLAlchemy mappings. The only ORM classes in ForgeML.  Nothing here leaves this, DeclarativeBase
+Cohesion: 0.16
+Nodes (8): Base, PackageRow, PackageValidationRow, SQLAlchemy mappings. The only ORM classes in ForgeML.  Nothing here leaves this, Session, Package records backed by PostgreSQL., SqlAlchemyPackageCatalog, DeclarativeBase
 
 ### Community 81 - "_reject_wildcard_host"
 Cohesion: 0.33
 Nodes (5): _reject_wildcard_host(), Shared Module 0 test fixtures., settings(), IPv4Address, IPv6Address
 
+### Community 82 - "_EnvironmentSettings"
+Cohesion: 0.22
+Nodes (8): Acceptance criteria — status, Changes from the frozen design, Layering (as built), Module 2 — Metadata Layer Design (as built), Schema, Scope, Scope audit, Transaction boundaries
+
 ### Community 83 - "PackagePage"
-Cohesion: 0.40
-Nodes (3): PackagePage, One page of packages, newest first., List packages newest first, bounded by limit.
+Cohesion: 0.22
+Nodes (8): D-1 — Orphaned operations: startup reconciliation, not a lease, D-2 — Concurrency is delegated to PostgreSQL, never to application checks, D-3 — Unit of Work in the application layer, not `core`, D-4 — Database-enforced immutability, not repository discipline alone, D-5 — Findings persist as an ordered JSONB array, D-6 — `manifest_version` is null until validation, D-7 — The fakes are held to the real adapters' contract, Module 2 — Engineering Decisions
 
 ### Community 85 - "configure_logging"
-Cohesion: 0.50
-Nodes (4): configure_logging(), Configure process logging once for an immutable settings fingerprint., MonkeyPatch, test_configure_logging_is_idempotent_and_rejects_conflict()
+Cohesion: 0.17
+Nodes (11): Server-owned request correlation and bounded request logging., _bounded(), configure_logging(), LoggingConfigurationConflict, LogRecord, Bounded structured process logging., Configure process logging once for an immutable settings fingerprint., Raised when process logging is reconfigured incompatibly. (+3 more)
+
+### Community 89 - "ConfigurationIssue"
+Cohesion: 0.29
+Nodes (5): ConfigurationIssue, ValidationError, The metadata database URL, or a fail-closed configuration error.          Module, A safe configuration finding without an input value., _safe_issues()
+
+### Community 90 - "ValidationError"
+Cohesion: 0.17
+Nodes (12): manifest(), Any, ZipInfo, Builders for .forge archive fixtures.  Fixtures are constructed in memory rather, A ZIP member whose mode marks it a symbolic link., A valid manifest with top-level sections replaced., symlink_member(), The manifest model is the closed shape of forge.yaml. (+4 more)
+
+### Community 91 - "Path"
+Cohesion: 0.16
+Nodes (9): provider(), BinaryIO, Path, Startup recovery and the platform-failure path.  These are the paths that only r, ADR-016, end to end: a worker dies mid-operation and the platform heals., Stores an archive, then loses it before anything can read it.      A disk failur, test_startup_recovery_is_harmless_when_nothing_was_abandoned(), test_startup_returns_an_abandoned_operation_to_the_queue() (+1 more)
+
+### Community 92 - "MonkeyPatch"
+Cohesion: 0.18
+Nodes (12): AppError, Exception, An immutable expected application failure., Payload, BaseModel, Application error invariant tests., test_detail_count_is_bounded(), test_details_must_be_typed() (+4 more)
+
+### Community 93 - "test_artifact_store.py"
+Cohesion: 0.27
+Nodes (9): Path, Filesystem artifact store against a real directory., store(), test_an_artifact_reference_that_is_not_a_digest_is_refused(), test_delete_removes_the_artifact_and_tolerates_absence(), test_failed_write_leaves_no_staging_residue(), test_oversized_upload_is_rejected_and_leaves_no_artifact(), test_reading_an_absent_artifact_is_a_not_found_error() (+1 more)
+
+### Community 94 - "OperationService"
+Cohesion: 0.25
+Nodes (5): OperationService, UnitOfWorkFactory, UUID, Reading durable operations (ADR-006: clients poll an operation resource)., Reads operations for polling clients.
+
+### Community 95 - "create_health_router"
+Cohesion: 0.33
+Nodes (5): create_health_router(), APIRouter, Operational health routes., Create health routes bound to immutable service identity.      Liveness answers, ReadinessCheck
+
+### Community 96 - "errors.py"
+Cohesion: 0.47
+Nodes (3): Provider-neutral application error contracts., _validate_code(), _validate_message()
+
+### Community 97 - "PackageValidationService"
+Cohesion: 0.40
+Nodes (3): PackageValidationService, Validate a stored .forge artifact against the format version 1 contract., Runs archive validation over a stored artifact.      Asset checksums are the onl
 
 ## Knowledge Gaps
-- **244 isolated node(s):** `forgeml`, `graphify`, `Mission`, `Owned areas`, `Responsibilities` (+239 more)
+- **279 isolated node(s):** `forgeml`, `graphify`, `Mission`, `Owned areas`, `Responsibilities` (+274 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **17 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **19 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `AppError` connect `test_openapi_contract.py` to `error_handlers.py`, `Operation`, `SqlAlchemyPackageCatalog`, `AppSettings`, `OperationType`, `test_request_logging.py`, `_run_handler`, `session_factory`, `AuditEvent`, `PackagePage`, `UnitOfWork`, `SqlAlchemyOperationStore`, `_NoAliasLoader`?**
-  _High betweenness centrality (0.122) - this node is a cross-community bridge._
-- **Why does `AppSettings` connect `AppSettings` to `create_application`, `config.py`, `AppSettings`, `ConfigurationFailure`, `JsonEventFormatter`, `test_request_logging.py`, `session_factory`, `_reject_wildcard_host`, `_EnvironmentSettings`, `test_application_boot.py`, `configure_logging`?**
-  _High betweenness centrality (0.107) - this node is a cross-community bridge._
-- **Why does `PackageLimits` connect `_EnvironmentSettings` to `config.py`, `AppError`, `PackageCatalog`, `_run_handler`, `ArchiveReader`, `ArtifactStore`, `test_package_limits.py`, `_EnvironmentSettings`, `PackagePage`, `test_openapi_contract.py`, `_NoAliasLoader`?**
-  _High betweenness centrality (0.089) - this node is a cross-community bridge._
-- **Are the 5 inferred relationships involving `AppSettings` (e.g. with `JsonEventFormatter` and `LoggingConfigurationConflict`) actually correct?**
-  _`AppSettings` has 5 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 39 inferred relationships involving `AppError` (e.g. with `app_error_handler()` and `register_error_handlers()`) actually correct?**
-  _`AppError` has 39 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 7 inferred relationships involving `UnitOfWork` (e.g. with `AuditLog` and `SqlAlchemyUnitOfWork`) actually correct?**
-  _`UnitOfWork` has 7 INFERRED edges - model-reasoned connections that need verification._
+- **Why does `AppError` connect `MonkeyPatch` to `error_handlers.py`, `test_request_logging.py`, `_run_handler`, `session_factory`, `_EnvironmentSettings`, `AuditEvent`, `UnitOfWork`, `SqlAlchemyOperationStore`, `test_openapi_contract.py`, `Operation`, `SqlAlchemyPackageCatalog`, `OperationType`, `ArchiveReader`, `ArtifactStore`, `models.py`, `Path`, `test_artifact_store.py`, `OperationService`, `errors.py`?**
+  _High betweenness centrality (0.112) - this node is a cross-community bridge._
+- **Why does `AppSettings` connect `AppSettings` to `AppSettings`, `config.py`, `_EnvironmentSettings`, `ConfigurationFailure`, `JsonEventFormatter`, `session_factory`, `ArchiveReader`, `_reject_wildcard_host`, `test_application_boot.py`, `configure_logging`, `ConfigurationIssue`, `MonkeyPatch`, `OperationService`, `create_health_router`?**
+  _High betweenness centrality (0.086) - this node is a cross-community bridge._
+- **Why does `DatabaseProvider` connect `ArchiveReader` to `ConfigurationFailure`, `AppSettings`, `_run_handler`, `Path`, `AuditEvent`, `UnitOfWork`, `MonkeyPatch`, `OperationService`?**
+  _High betweenness centrality (0.062) - this node is a cross-community bridge._
+- **Are the 54 inferred relationships involving `AppError` (e.g. with `app_error_handler()` and `register_error_handlers()`) actually correct?**
+  _`AppError` has 54 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 7 inferred relationships involving `AppSettings` (e.g. with `Container` and `JsonEventFormatter`) actually correct?**
+  _`AppSettings` has 7 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 11 inferred relationships involving `UnitOfWork` (e.g. with `OperationService` and `PackageDetail`) actually correct?**
+  _`UnitOfWork` has 11 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 24 inferred relationships involving `ErrorDetail` (e.g. with `.__post_init__()` and `ArchiveEntry`) actually correct?**
   _`ErrorDetail` has 24 INFERRED edges - model-reasoned connections that need verification._

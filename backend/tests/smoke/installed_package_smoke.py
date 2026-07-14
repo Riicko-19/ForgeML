@@ -16,4 +16,6 @@ settings = AppSettings(
 application = create_application(settings)
 
 assert application.title == "ForgeML Control Plane"
-assert set(application.openapi()["paths"]) == {"/healthz", "/readyz"}
+assert {"/healthz", "/readyz", "/v1/packages", "/v1/operations/{operation_id}"} <= set(
+    application.openapi()["paths"]
+)

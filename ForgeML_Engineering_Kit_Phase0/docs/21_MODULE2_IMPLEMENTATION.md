@@ -1,6 +1,14 @@
 # Module 2 — Metadata Layer Implementation
 
-Status: implementation complete; freeze pending CI evidence (ADR-014).
+**Status: FROZEN**
+**Freeze date: 2026-07-14**
+**Freeze authority: ADR-014 (satisfied normally — no exception)**
+**Frozen baseline: `2c8c8721e3739529ae4862d5c712b3ba1b93a11e`**
+**CI evidence: `Backend quality` on `2c8c8721` — conclusion `success`**
+
+Verified independently against the GitHub Actions API: the workflow ran on the
+frozen SHA itself, which is also local HEAD and remote `main`. Not a local-only
+claim.
 
 ## What was implemented
 
@@ -115,5 +123,13 @@ All gates pass locally on Python 3.11 against real PostgreSQL 16:
 | architecture: layering, ORM confinement, no-execution | pass |
 | graphify | 1184 nodes, **no import cycles** |
 
-GitHub Actions evidence: **pending push** (ADR-014). Module 2 is not frozen
-until the `Backend quality` workflow passes on the frozen SHA.
+GitHub Actions evidence: **`Backend quality` on `2c8c8721` — `success`.**
+ADR-014 is satisfied on its ordinary terms.
+
+## Amendment after freeze (Module 3)
+
+Module 3 required one **additive** port method, recorded here rather than made
+silently: `OperationStore.claim(operation_id)`. An inline executor must run *its
+own* operation; `claim_next()` takes the oldest pending one, which under
+concurrent uploads would execute another request's work and report the wrong
+result. No existing symbol changed meaning; the conformance suite covers it.

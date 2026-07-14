@@ -29,8 +29,8 @@ Backend Development
 | --- | --- | --- |
 | 0 | Foundation | ██████████ Frozen |
 | 1 | Forge Package | ██████████ Frozen |
-| 2 | Metadata | ⬛ Implemented — freeze pending CI |
-| 3 | Backend API | ⬜ Not Started |
+| 2 | Metadata | ██████████ Frozen |
+| 3 | Backend API | ⬛ Implemented — freeze pending CI |
 | 4 | Analyzer / Generator | ⬜ Not Started |
 | 5 | Deployment | ⬜ Not Started |
 | 6 | Docker Runtime | ⬜ Not Started |
@@ -109,27 +109,43 @@ Known limitations carried forward:
 
 ---
 
+### Module 2 — Metadata Layer
+
+Status: **Frozen**
+Freeze date: 2026-07-14
+Freeze authority: ADR-014 (satisfied normally — no exception)
+Baseline: `2c8c8721e3739529ae4862d5c712b3ba1b93a11e`
+CI evidence: `Backend quality` on `2c8c8721` — **success**
+
+PostgreSQL metadata layer, SQLAlchemy models, Alembic migration with immutability
+triggers, `PackageCatalog` / `OperationStore` / `AuditLog`, `UnitOfWork`,
+in-memory fakes held to the same conformance suite as the real adapters, and
+ADR-016 (operation lease, crash recovery, retry).
+
+366 tests, 99% branch coverage. Docs: 20 design · 21 implementation ·
+22 review guide · 23 decisions · **24 handoff**.
+
+---
+
 ## Current Module
 
-**Module 2 — Metadata**
+**Module 3 — Backend API**
 
 Status: **Implementation complete. NOT frozen** — ADR-014 requires passing
 GitHub Actions evidence on the frozen SHA, and the changes are not yet pushed.
 
-Scope (doc 06): records, repositories, migrations, unit of work, audit.
-Entry gate: package IDs and states frozen — satisfied by the Module 1 freeze.
-Exit gate: transaction, concurrency, and migration tests — **all passing**.
+Scope (doc 06): commands/queries, operation resource, error mapping.
+Entry gate: package/metadata ports stable — satisfied by the Module 2 freeze.
+Exit gate: HTTP contract and idempotency tests — **all passing**.
 
-Delivered: PostgreSQL metadata layer, SQLAlchemy models, Alembic migration with
-immutability triggers, `PackageCatalog` / `OperationStore` / `AuditLog`
-repositories, `UnitOfWork`, in-memory fakes held to the same conformance suite as
-the real adapters, and ADR-016 (operation lease, crash recovery, retry).
+Delivered: `POST /v1/packages` (streaming upload, idempotent, 202 + operation),
+`GET /v1/packages`, `GET /v1/packages/{id}`, `GET /v1/operations/{id}`, published
+OpenAPI, database-backed readiness, ADR-016 crash recovery at startup.
 
-Local evidence: 366 tests, 99% branch coverage, mypy strict / ruff / black clean,
-migrations up-down-up with no model drift, concurrency proven against real
-PostgreSQL 16, graph clean with no import cycles.
+Local evidence: 411 tests, 99% branch coverage, mypy strict / ruff / black clean,
+graph clean with no import cycles.
 
-Design: docs 20 · Implementation: docs 21 · Review guide: docs 22 · Decisions: docs 23
+Design: docs 30 · Implementation: docs 31 · Review guide: docs 32 · Decisions: docs 33
 
 ---
 
