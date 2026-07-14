@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from importlib import metadata
 from ipaddress import IPv4Address, IPv6Address
+from pathlib import Path
 from typing import Annotated
 
 from pydantic import (
@@ -18,6 +19,7 @@ from pydantic import (
     Field,
     ValidationError,
     field_validator,
+    model_validator,
 )
 
 SERVICE_NAME = "forgeml-control-plane"
@@ -76,6 +78,36 @@ def _reject_wildcard_host(
 BindHost = Annotated[IPv4Address | IPv6Address, AfterValidator(_reject_wildcard_host)]
 
 
+class PackageLimits(BaseModel):
+    """Operator policy bounding work spent on an untrusted .forge archive.
+
+    Every bound is checked before the corresponding bytes are read, so a
+    hostile archive cannot make the validator allocate beyond this policy.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    max_archive_bytes: int = Field(default=268_435_456, ge=1_024, le=17_179_869_184)
+    max_uncompressed_bytes: int = Field(
+        default=1_073_741_824, ge=1_024, le=68_719_476_736
+    )
+    max_entries: int = Field(default=10_000, ge=1, le=1_000_000)
+    max_compression_ratio: int = Field(default=100, ge=1, le=10_000)
+    max_manifest_bytes: int = Field(default=1_048_576, ge=64, le=16_777_216)
+    max_schema_nodes: int = Field(default=1_000, ge=1, le=100_000)
+    max_schema_depth: int = Field(default=20, ge=1, le=256)
+
+    @model_validator(mode="after")
+    def enforce_consistent_bounds(self) -> PackageLimits:
+        if self.max_uncompressed_bytes < self.max_archive_bytes:
+            raise ValueError(
+                "max_uncompressed_bytes must be at least max_archive_bytes"
+            )
+        if self.max_manifest_bytes > self.max_archive_bytes:
+            raise ValueError("max_manifest_bytes must not exceed max_archive_bytes")
+        return self
+
+
 class _EnvironmentSettings(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -84,6 +116,7 @@ class _EnvironmentSettings(BaseModel):
     bind_host: BindHost = IPv4Address("127.0.0.1")
     bind_port: int = Field(default=8000, ge=1, le=65535)
     graceful_shutdown_seconds: int = Field(default=30, ge=1, le=300)
+    artifact_root: Path = Path("storage/artifacts")
 
     @field_validator("environment", mode="before")
     @classmethod
@@ -99,6 +132,7 @@ class _EnvironmentSettings(BaseModel):
         "bind_host",
         "bind_port",
         "graceful_shutdown_seconds",
+        "artifact_root",
         mode="before",
     )
     @classmethod
@@ -120,6 +154,8 @@ class AppSettings(BaseModel):
     bind_host: BindHost = IPv4Address("127.0.0.1")
     bind_port: int = Field(default=8000, ge=1, le=65535)
     graceful_shutdown_seconds: int = Field(default=30, ge=1, le=300)
+    artifact_root: Path = Path("storage/artifacts")
+    package_limits: PackageLimits = PackageLimits()
     service_name: str = Field(default=SERVICE_NAME, frozen=True)
     service_version: str = Field(min_length=1, max_length=64)
 
@@ -144,6 +180,17 @@ _ENVIRONMENT_FIELDS = {
     f"{_PREFIX}BIND_HOST": "bind_host",
     f"{_PREFIX}BIND_PORT": "bind_port",
     f"{_PREFIX}GRACEFUL_SHUTDOWN_SECONDS": "graceful_shutdown_seconds",
+    f"{_PREFIX}ARTIFACT_ROOT": "artifact_root",
+}
+
+_PACKAGE_LIMIT_FIELDS = {
+    f"{_PREFIX}PACKAGE_MAX_ARCHIVE_BYTES": "max_archive_bytes",
+    f"{_PREFIX}PACKAGE_MAX_UNCOMPRESSED_BYTES": "max_uncompressed_bytes",
+    f"{_PREFIX}PACKAGE_MAX_ENTRIES": "max_entries",
+    f"{_PREFIX}PACKAGE_MAX_COMPRESSION_RATIO": "max_compression_ratio",
+    f"{_PREFIX}PACKAGE_MAX_MANIFEST_BYTES": "max_manifest_bytes",
+    f"{_PREFIX}PACKAGE_MAX_SCHEMA_NODES": "max_schema_nodes",
+    f"{_PREFIX}PACKAGE_MAX_SCHEMA_DEPTH": "max_schema_depth",
 }
 
 
@@ -159,26 +206,30 @@ def resolve_service_version() -> str:
     return value
 
 
-def _safe_issues(error: ValidationError) -> tuple[ConfigurationIssue, ...]:
+def _safe_issues(
+    error: ValidationError, prefix: str = ""
+) -> tuple[ConfigurationIssue, ...]:
     issues: list[ConfigurationIssue] = []
     for item in error.errors(
         include_url=False, include_context=False, include_input=False
     ):
         location = ".".join(str(segment) for segment in item["loc"])
         issues.append(
-            ConfigurationIssue(field=location or "configuration", kind=item["type"])
+            ConfigurationIssue(
+                field=f"{prefix}{location}" if location else "configuration",
+                kind=item["type"],
+            )
         )
     return tuple(issues)
 
 
 def load_settings(environment: Mapping[str, str] | None = None) -> AppSettings:
-    """Load Module 0 settings from an explicit mapping or process environment."""
+    """Load settings from an explicit mapping or the process environment."""
 
     source = os.environ if environment is None else environment
+    known = _ENVIRONMENT_FIELDS.keys() | _PACKAGE_LIMIT_FIELDS.keys()
     unknown = sorted(
-        key
-        for key in source
-        if key.startswith(_PREFIX) and key not in _ENVIRONMENT_FIELDS
+        key for key in source if key.startswith(_PREFIX) and key not in known
     )
     if unknown:
         issues = tuple(
@@ -191,10 +242,23 @@ def load_settings(environment: Mapping[str, str] | None = None) -> AppSettings:
         for key, field in _ENVIRONMENT_FIELDS.items()
         if key in source
     }
+    limits_raw = {
+        field: source[key]
+        for key, field in _PACKAGE_LIMIT_FIELDS.items()
+        if key in source
+    }
+    try:
+        limits = PackageLimits.model_validate(limits_raw)
+    except ValidationError as exc:
+        raise ConfigurationFailure(
+            "configuration_invalid", _safe_issues(exc, "package_limits.")
+        ) from exc
+
     try:
         env_settings = _EnvironmentSettings.model_validate(raw)
         return AppSettings(
             **env_settings.model_dump(),
+            package_limits=limits,
             service_version=resolve_service_version(),
         )
     except ValidationError as exc:

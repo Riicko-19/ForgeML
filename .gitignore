@@ -10,4 +10,8 @@ build/
 dist/
 *.egg-info/
 .env
+/storage/
+/uploads/
+/backend/storage/
+/backend/uploads/
 

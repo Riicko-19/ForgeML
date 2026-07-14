@@ -10,7 +10,10 @@ readme = "README.md"
 requires-python = ">=3.11,<3.12"
 dependencies = [
   "fastapi==0.139.0",
+  "jsonschema==4.26.0",
+  "packaging==26.2",
   "pydantic==2.13.4",
+  "pyyaml==6.0.3",
   "uvicorn==0.51.0",
 ]
 
@@ -24,6 +27,8 @@ dev = [
   "pip-tools==7.5.3",
   "pytest==9.1.1",
   "ruff==0.15.21",
+  "types-jsonschema==4.26.0.20260518",
+  "types-pyyaml==6.0.12.20260518",
 ]
 
 [tool.setuptools.packages.find]

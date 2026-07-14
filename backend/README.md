@@ -1,11 +1,14 @@
-# ForgeML Backend — Module 0 Foundation
+# ForgeML Backend — Module 0 Foundation, Module 1 Forge Package System
 
-This backend currently implements only the frozen Module 0 foundation: typed startup
-configuration, explicit application composition, safe errors, server-owned request
-IDs, bounded JSON logs, health endpoints, and quality gates.
+This backend implements the frozen Module 0 foundation (typed startup configuration,
+explicit application composition, safe errors, server-owned request IDs, bounded JSON
+logs, health endpoints, quality gates) and the Module 1 Forge Package System (the
+.forge format, content-addressed artifact storage, and archive validation).
 
-It does not contain package, database, Docker, deployment, worker, routing, monitoring,
-authentication, frontend, or other later-module behavior.
+It does not contain database, Docker, deployment, worker, routing, monitoring,
+authentication, frontend, or other later-module behavior. Module 1 deliberately ships
+no HTTP surface: `POST /packages` belongs to phase 3, and package metadata persistence
+to phase 2.
 
 ## Requirements
 
@@ -31,9 +34,21 @@ source without resolving dependencies:
 | FORGEML_BIND_HOST | 127.0.0.1 | Non-wildcard IP address; 0.0.0.0 and :: are rejected |
 | FORGEML_BIND_PORT | 8000 | 1–65535 |
 | FORGEML_GRACEFUL_SHUTDOWN_SECONDS | 30 | 1–300 |
+| FORGEML_ARTIFACT_ROOT | storage/artifacts | Directory holding content-addressed artifacts |
+| FORGEML_PACKAGE_MAX_ARCHIVE_BYTES | 268435456 | 1 KiB – 16 GiB |
+| FORGEML_PACKAGE_MAX_UNCOMPRESSED_BYTES | 1073741824 | At least the max archive size |
+| FORGEML_PACKAGE_MAX_ENTRIES | 10000 | 1–1000000 |
+| FORGEML_PACKAGE_MAX_COMPRESSION_RATIO | 100 | 1–10000 |
+| FORGEML_PACKAGE_MAX_MANIFEST_BYTES | 1048576 | At most the max archive size |
+| FORGEML_PACKAGE_MAX_SCHEMA_NODES | 1000 | 1–100000 |
+| FORGEML_PACKAGE_MAX_SCHEMA_DEPTH | 20 | 1–256 |
 
 Configuration names are case-sensitive. Empty values and unknown FORGEML-prefixed
 keys fail startup. ForgeML reads no environment file automatically.
+
+The package limits are operator policy bounding work spent on an untrusted archive.
+Each bound is checked before the corresponding bytes are read, so a hostile archive
+cannot make the validator allocate beyond policy.
 
 ## Running
 
@@ -66,6 +81,27 @@ uses code internal_error and message “An unexpected error occurred.”
 Error codes are lower snake case up to 64 characters. Safe messages are limited to 512
 characters; details are limited to 100 and logical paths to 32 bounded segments. The
 authoritative bounds and mappings are in the frozen Module 0 design.
+
+## Forge package contract
+
+A .forge file is a ZIP archive with UTF-8 paths containing one root-level forge.yaml,
+a src/ tree, and any declared assets. Format version 1 is closed: unknown manifest
+fields are rejected at every level, and only the python-callable framework on Python
+3.11 is accepted (ADR-008). Dependencies must be exact `name==version` PEP 508 pins
+(ADR-011). Input and output schemas are JSON Schema Draft 2020-12 documents that may
+reference only local JSON Pointer targets.
+
+A package is identified by the SHA-256 of its bytes (ADR-003), so storing the same
+archive twice is idempotent. Artifacts are referenced as `artifact://<sha256>`;
+callers never receive a filesystem path.
+
+Validation never imports, executes, or deserializes package content. It rejects
+absolute, traversal, non-normalized, duplicate, and non-UTF-8 member paths, symbolic
+links, encrypted members, zip bombs, YAML alias bombs, oversized archives and
+manifests, unsupported versions and frameworks, unpinned dependencies, invalid or
+external-referencing schemas, and absent or checksum-mismatched assets. Each failure
+is reported as a stable finding code with a logical path; the full matrix is in
+`tests/contract/test_package_fixtures.py`, and the design is in docs 19.
 
 ## Logging contract
 
@@ -118,3 +154,11 @@ Module 0 readiness means configuration and application composition succeeded; no
 provider exists yet. The control plane must remain behind the protected administrative
 network. Package APIs, database, Docker, workers, routing, monitoring, frontend, and
 authentication are later V1 modules. No V2 capability is scaffolded.
+
+Module 1 provides no HTTP surface and no package persistence: `PackageCatalog` arrives
+with its adapter in phase 2, and `POST /packages` in phase 3. Package validation is
+synchronous and in-process; ADR-006 wraps it in a durable operation in phase 3. Asset
+content is verified only for assets that declare a checksum.
+
+Packages are trusted operator content (ADR-001). Validation reduces blast radius but
+does not make untrusted code safe; anonymous upload remains prohibited.
