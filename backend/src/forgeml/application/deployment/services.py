@@ -33,6 +33,7 @@ from forgeml.domain.deployment.models import (
     VersionState,
 )
 from forgeml.domain.deployment.ports import (
+    DeploymentPage,
     RuntimeExecutionError,
     RuntimeManager,
     RuntimeUnavailable,
@@ -96,6 +97,24 @@ class DeploymentService:
             )
             uow.commit()
         return deployment
+
+    def get_deployment(self, deployment_id: UUID) -> Deployment:
+        with self._unit_of_work() as uow:
+            deployment = uow.deployments.find_deployment(deployment_id)
+        if deployment is None:
+            raise self._missing("deployment")
+        return deployment
+
+    def list_deployments(self, limit: int, cursor: str | None) -> DeploymentPage:
+        with self._unit_of_work() as uow:
+            return uow.deployments.list_deployments(limit=limit, cursor=cursor)
+
+    def get_version(self, version_id: UUID) -> DeploymentVersion:
+        with self._unit_of_work() as uow:
+            version = uow.deployments.find_version(version_id)
+        if version is None:
+            raise self._missing("deployment_version")
+        return version
 
     def deploy_version(
         self,

@@ -17,6 +17,11 @@ from pydantic import BaseModel, ConfigDict, Field
 from forgeml.api.schemas import ErrorDetailResponse
 from forgeml.application.package.services import PackageDetail
 from forgeml.core.errors import AppError, ErrorCategory
+from forgeml.domain.deployment.models import (
+    Deployment,
+    DeploymentVersion,
+    ResourcePolicy,
+)
 from forgeml.domain.operations.models import Operation
 from forgeml.domain.package.models import Package
 
@@ -181,4 +186,104 @@ class OperationResource(_Wire):
             created_at=operation.created_at,
             updated_at=operation.updated_at,
             completed_at=operation.completed_at,
+        )
+
+
+DeploymentName = Annotated[str, Field(pattern=r"^[a-z][a-z0-9-]{0,62}$")]
+
+
+class ResourcePolicyModel(_Wire):
+    """Requested runtime resources, bounded by server policy at deploy time."""
+
+    cpu_millicores: Annotated[int, Field(ge=1, le=64_000)] | None = None
+    memory_mib: Annotated[int, Field(ge=1, le=1_048_576)] | None = None
+    pids_limit: Annotated[int, Field(ge=1, le=32_768)] | None = None
+
+    def to_domain(self) -> ResourcePolicy:
+        return ResourcePolicy(
+            cpu_millicores=self.cpu_millicores,
+            memory_mib=self.memory_mib,
+            pids_limit=self.pids_limit,
+        )
+
+    @classmethod
+    def of(cls, policy: ResourcePolicy) -> ResourcePolicyModel:
+        return cls(
+            cpu_millicores=policy.cpu_millicores,
+            memory_mib=policy.memory_mib,
+            pids_limit=policy.pids_limit,
+        )
+
+
+class CreateDeploymentRequest(_Wire):
+    """Create a named deployment (docs 12). The name is immutable."""
+
+    name: DeploymentName
+
+
+class CreateVersionRequest(_Wire):
+    """Create a build/deploy attempt for an accepted package (docs 12)."""
+
+    package_id: UUID
+    resource_policy: ResourcePolicyModel | None = None
+
+
+class DeploymentResource(_Wire):
+    """A deployment as clients see it (docs 12)."""
+
+    id: UUID
+    name: str
+    active_version_id: UUID | None
+    desired_state: Literal["running", "stopped"]
+    created_at: datetime
+    updated_at: datetime
+
+    @classmethod
+    def of(cls, deployment: Deployment) -> DeploymentResource:
+        return cls(
+            id=deployment.id,
+            name=deployment.name,
+            active_version_id=deployment.active_version_id,
+            desired_state=deployment.desired_state.value,
+            created_at=deployment.created_at,
+            updated_at=deployment.updated_at,
+        )
+
+
+class DeploymentListResponse(_Wire):
+    """One page of deployments, newest first."""
+
+    items: tuple[DeploymentResource, ...]
+    next_cursor: str | None = None
+
+
+class VersionResource(_Wire):
+    """A deployment version as clients see it (docs 12)."""
+
+    id: UUID
+    deployment_id: UUID
+    package_id: UUID
+    attempt: int
+    state: Literal["building", "starting", "ready", "active", "failed", "stopped"]
+    endpoint: str | None
+    resource_policy: ResourcePolicyModel
+    failure: OperationFailureResponse | None = None
+
+    @classmethod
+    def of(cls, version: DeploymentVersion) -> VersionResource:
+        return cls(
+            id=version.id,
+            deployment_id=version.deployment_id,
+            package_id=version.package_id,
+            attempt=version.attempt,
+            state=version.state.value,
+            endpoint=version.endpoint,
+            resource_policy=ResourcePolicyModel.of(version.resource_policy),
+            failure=(
+                OperationFailureResponse(
+                    code=version.failure.code, message=version.failure.message
+                )
+                if version.failure is not None
+                else None
+            ),
         )
