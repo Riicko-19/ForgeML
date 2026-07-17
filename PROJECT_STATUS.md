@@ -7,7 +7,7 @@ The phase list below mirrors the frozen roadmap in
 the authority; this file reports against it and may not diverge from it. Changing the
 phase structure requires an ADR, not an edit here.
 
-Last updated: 2026-07-14
+Last updated: 2026-07-17
 
 ---
 
@@ -31,8 +31,8 @@ Backend Development
 | 1 | Forge Package | ██████████ Frozen |
 | 2 | Metadata | ██████████ Frozen |
 | 3 | Backend API | ⬛ Implemented — freeze pending CI |
-| 4 | Analyzer / Generator | ⬜ Not Started |
-| 5 | Deployment | ⬜ Not Started |
+| 4 | Analyzer / Generator | ⬛ Implemented — freeze pending CI |
+| 5 | Deployment | ⬛ Implemented — freeze pending CI |
 | 6 | Docker Runtime | ⬜ Not Started |
 | 7 | Routing / Versioning | ⬜ Not Started |
 | 8 | Monitoring | ⬜ Not Started |
