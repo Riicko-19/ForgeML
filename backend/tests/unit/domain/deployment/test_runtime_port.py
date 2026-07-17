@@ -28,7 +28,7 @@ def test_build_start_inspect_and_reconcile_happy_path() -> None:
     runtime = FakeRuntimeManager()
     version_id = uuid4()
 
-    image = runtime.build(version_id, CONTEXT, POLICY)
+    image = runtime.build(version_id, CONTEXT, "a" * 64, POLICY)
     assert image.image_ref.startswith("forgeml/")
 
     container = runtime.start(version_id, image, POLICY)
@@ -44,7 +44,9 @@ def test_build_start_inspect_and_reconcile_happy_path() -> None:
 
 def test_stop_removes_the_container() -> None:
     runtime = FakeRuntimeManager()
-    container = runtime.start(uuid4(), runtime.build(uuid4(), CONTEXT, POLICY), POLICY)
+    container = runtime.start(
+        uuid4(), runtime.build(uuid4(), CONTEXT, "a" * 64, POLICY), POLICY
+    )
     runtime.stop(container.container_id)
     assert runtime.inspect(container.container_id).present is False
     assert runtime.reconcile() == ()
@@ -56,14 +58,14 @@ def test_build_failure_is_a_terminal_execution_error() -> None:
     runtime = FakeRuntimeManager()
     runtime.build_failure = OperationFailure(code="build_failed", message="install")
     with pytest.raises(RuntimeExecutionError) as captured:
-        runtime.build(uuid4(), CONTEXT, POLICY)
+        runtime.build(uuid4(), CONTEXT, "a" * 64, POLICY)
     assert captured.value.failure.code == "build_failed"
 
 
 def test_start_failure_is_a_terminal_execution_error() -> None:
     runtime = FakeRuntimeManager()
     runtime.start_failure = OperationFailure(code="readiness_timeout", message="slow")
-    image = runtime.build(uuid4(), CONTEXT, POLICY)
+    image = runtime.build(uuid4(), CONTEXT, "a" * 64, POLICY)
     with pytest.raises(RuntimeExecutionError):
         runtime.start(uuid4(), image, POLICY)
 
@@ -72,11 +74,13 @@ def test_docker_unavailable_is_retriable() -> None:
     runtime = FakeRuntimeManager()
     runtime.available = False
     with pytest.raises(RuntimeUnavailable):
-        runtime.build(uuid4(), CONTEXT, POLICY)
+        runtime.build(uuid4(), CONTEXT, "a" * 64, POLICY)
 
 
 def test_an_unhealthy_container_is_reported_not_raised() -> None:
     runtime = FakeRuntimeManager()
     runtime.healthy = False
-    container = runtime.start(uuid4(), runtime.build(uuid4(), CONTEXT, POLICY), POLICY)
+    container = runtime.start(
+        uuid4(), runtime.build(uuid4(), CONTEXT, "a" * 64, POLICY), POLICY
+    )
     assert runtime.inspect(container.container_id).healthy is False

@@ -90,9 +90,19 @@ class RuntimeManager(Protocol):
     """
 
     def build(
-        self, version_id: UUID, context: GeneratedBuildContext, policy: ResourcePolicy
+        self,
+        version_id: UUID,
+        context: GeneratedBuildContext,
+        artifact_sha256: str,
+        policy: ResourcePolicy,
     ) -> BuiltImage:
-        """Build the image for a version from its generated build context."""
+        """Build the image for a version.
+
+        The generated context supplies the Dockerfile, adapter, and requirements;
+        the artifact checksum locates the package archive whose `src/` tree the
+        Dockerfile copies in. The adapter (Module 6) resolves it through the
+        artifact store, so this port stays free of storage paths.
+        """
 
     def start(
         self, version_id: UUID, image: BuiltImage, policy: ResourcePolicy

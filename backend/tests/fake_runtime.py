@@ -34,7 +34,11 @@ class FakeRuntimeManager:
         self._counter = 0
 
     def build(
-        self, version_id: UUID, context: GeneratedBuildContext, policy: ResourcePolicy
+        self,
+        version_id: UUID,
+        context: GeneratedBuildContext,
+        artifact_sha256: str,
+        policy: ResourcePolicy,
     ) -> BuiltImage:
         self._require_available()
         if self.build_failure is not None:
