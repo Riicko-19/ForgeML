@@ -1,0 +1,23 @@
+$kind: http-request
+name: Readiness — GET /readyz
+description: |-
+  **Can this process actually serve?**
+
+  Executes `SELECT 1` against the metadata database.
+
+  **200** — ready.
+
+  **503 `dependency_unavailable`** — PostgreSQL is not reachable, or `FORGEML_DATABASE_URL` is not set. The control plane cannot serve a single package request in this state. Fix the database before going further; every other request in this collection will fail.
+url: "{{baseUrl}}/readyz"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Ready (200). A 503 means PostgreSQL is unreachable — fix that first.', function () {
+          pm.response.to.have.status(200);
+      });
+      pm.test('Reports ready', () => pm.expect(pm.response.json().status).to.eql('ready'));
+    language: text/javascript
+settings: {}
+examples: ./.resources/Readiness — GET -readyz.resources/examples
+order: 2000

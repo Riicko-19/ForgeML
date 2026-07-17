@@ -1,0 +1,26 @@
+$kind: http-example
+request:
+  url: ""
+  method: GET
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: text
+    content: |-
+      {
+        "items": [
+          {
+            "id": "7be9afb4-3344-41cb-80a1-02d43b2e91ce",
+            "sha256": "385952d3476e770eeba21943c7f041d51ce8e90a93de0d862835540403731c31",
+            "filename": "hello-model.forge",
+            "size_bytes": 1057,
+            "validation_state": "validated",
+            "created_at": "2026-07-14T20:17:28.069603Z"
+          }
+        ],
+        "next_cursor": null
+      }
+order: 1000

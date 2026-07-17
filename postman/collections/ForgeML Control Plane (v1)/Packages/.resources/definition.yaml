@@ -1,0 +1,3 @@
+$kind: collection
+description: Upload, list, and read packages.
+order: 2000

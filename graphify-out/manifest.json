@@ -175,8 +175,8 @@
     "semantic_hash": ""
   },
   "backend/src/forgeml/application/package/validate_package.py": {
-    "mtime": 1784008693.8522916,
-    "ast_hash": "a623295a69f4e775e0d657126c7213b0",
+    "mtime": 1784302599.2534714,
+    "ast_hash": "99e7b53046c9002f68fdc3fdd747abb7",
     "semantic_hash": ""
   },
   "backend/src/forgeml/domain/__init__.py": {
@@ -190,8 +190,8 @@
     "semantic_hash": ""
   },
   "backend/src/forgeml/domain/package/models.py": {
-    "mtime": 1784049453.623421,
-    "ast_hash": "c654c79baacb6aad0652e22c6dcf9d5c",
+    "mtime": 1784302367.9953575,
+    "ast_hash": "bb48120e6feff982f96c1dd127d48349",
     "semantic_hash": ""
   },
   "backend/src/forgeml/domain/package/ports.py": {
@@ -220,8 +220,8 @@
     "semantic_hash": ""
   },
   "backend/tests/contract/test_package_fixtures.py": {
-    "mtime": 1784009590.0052168,
-    "ast_hash": "990586981f1d3154a08a83bfef5ae6ab",
+    "mtime": 1784302650.3039994,
+    "ast_hash": "d5999ea5c2fa0880c0f1909b1986477d",
     "semantic_hash": ""
   },
   "backend/tests/integration/package/test_zip_archive.py": {
@@ -250,8 +250,8 @@
     "semantic_hash": ""
   },
   ".github/workflows/backend-quality.yml": {
-    "mtime": 1784049370.0567973,
-    "ast_hash": "efad3040be34a2c06962b06a15091bcf",
+    "mtime": 1784296709.1544838,
+    "ast_hash": "ee216ebba65c41a3f92a63612474fd0e",
     "semantic_hash": ""
   },
   "CLAUDE.md": {
@@ -365,8 +365,8 @@
     "semantic_hash": ""
   },
   "ForgeML_Engineering_Kit_Phase0/docs/10_ARCHITECTURE_DECISIONS.md": {
-    "mtime": 1784049831.7104468,
-    "ast_hash": "42e624ff9af2cdbdc350e6dce0e108e1",
+    "mtime": 1784052623.2317028,
+    "ast_hash": "5f844b19f9d028c66dbf1df8ac9b5ad6",
     "semantic_hash": ""
   },
   "ForgeML_Engineering_Kit_Phase0/docs/11_OPERATIONS_AND_SECURITY.md": {
@@ -410,13 +410,13 @@
     "semantic_hash": ""
   },
   "ForgeML_Engineering_Kit_Phase0/docs/19_MODULE1_PACKAGE_DESIGN.md": {
-    "mtime": 1784035669.0721684,
-    "ast_hash": "525b9d4378b1e21794d1e12482836a1e",
+    "mtime": 1784060182.9438927,
+    "ast_hash": "e2d229198ff6fbc231eb0a9dd19828fa",
     "semantic_hash": ""
   },
   "backend/README.md": {
-    "mtime": 1784049848.953077,
-    "ast_hash": "891d0e83fa309cd19eb5d5566d2af942",
+    "mtime": 1784052644.8383667,
+    "ast_hash": "72af28c6797c353d766fe1c02d882a7b",
     "semantic_hash": ""
   },
   "backend/src/forgeml/infrastructure/storage/__init__.py": {
@@ -435,8 +435,8 @@
     "semantic_hash": ""
   },
   "PROJECT_STATUS.md": {
-    "mtime": 1784049866.0789325,
-    "ast_hash": "10e02d65060305460dbf3ba0b47d8147",
+    "mtime": 1784052613.0595305,
+    "ast_hash": "fb781799bfb1f8978309adfc6f138ef9",
     "semantic_hash": ""
   },
   "backend/migrations/env.py": {
@@ -495,18 +495,18 @@
     "semantic_hash": ""
   },
   "backend/src/forgeml/infrastructure/database/mappers.py": {
-    "mtime": 1784049516.0641146,
-    "ast_hash": "f1a20ce111b7901b4e6a918f15c0ac2d",
+    "mtime": 1784302474.4386878,
+    "ast_hash": "9a52a895cdbd0e330a94764162b46055",
     "semantic_hash": ""
   },
   "backend/src/forgeml/infrastructure/database/models.py": {
-    "mtime": 1784049478.768538,
-    "ast_hash": "126582abc83844bdc34be8f199c20f0a",
+    "mtime": 1784302441.6756673,
+    "ast_hash": "5d6763af6f0ceff49f7a802ff9400bbb",
     "semantic_hash": ""
   },
   "backend/src/forgeml/infrastructure/database/repositories.py": {
-    "mtime": 1784051320.4595265,
-    "ast_hash": "0bc224001690ef4fbcf3bed709238f3f",
+    "mtime": 1784302494.250771,
+    "ast_hash": "4439436c3d78ec77c3ca6cc8b6d01f96",
     "semantic_hash": ""
   },
   "backend/src/forgeml/infrastructure/database/unit_of_work.py": {
@@ -515,8 +515,8 @@
     "semantic_hash": ""
   },
   "backend/tests/contract/test_port_conformance.py": {
-    "mtime": 1784049596.1543798,
-    "ast_hash": "50e5031178db45e6670be2dfc5e39a5e",
+    "mtime": 1784302559.3523397,
+    "ast_hash": "c13255f1c21a7b72aee861449fbe1a60",
     "semantic_hash": ""
   },
   "backend/tests/fakes.py": {
@@ -570,8 +570,8 @@
     "semantic_hash": ""
   },
   "ForgeML_Engineering_Kit_Phase0/docs/21_MODULE2_IMPLEMENTATION.md": {
-    "mtime": 1784049725.427884,
-    "ast_hash": "531184e59562d95de2862303b9620456",
+    "mtime": 1784052487.6517875,
+    "ast_hash": "aaf8c749e5a3f824750eeddefb112906",
     "semantic_hash": ""
   },
   "ForgeML_Engineering_Kit_Phase0/docs/22_MODULE2_REVIEW_GUIDE.md": {
@@ -637,6 +637,256 @@
   "backend/tests/integration/api/test_packages_api.py": {
     "mtime": 1784052348.7238457,
     "ast_hash": "1ab25880609fb61c7caeb685b2ccf4ae",
+    "semantic_hash": ""
+  },
+  "ForgeML_Engineering_Kit_Phase0/docs/24_MODULE2_HANDOFF.md": {
+    "mtime": 1784052469.7466662,
+    "ast_hash": "45bf52b350637745157beb0c8a50ba6d",
+    "semantic_hash": ""
+  },
+  "ForgeML_Engineering_Kit_Phase0/docs/30_MODULE3_API_DESIGN.md": {
+    "mtime": 1784052513.753654,
+    "ast_hash": "e833fc4fb3578868417525722bb9feea",
+    "semantic_hash": ""
+  },
+  "ForgeML_Engineering_Kit_Phase0/docs/31_MODULE3_IMPLEMENTATION.md": {
+    "mtime": 1784052568.0123303,
+    "ast_hash": "b381075a0229266adc45629add216663",
+    "semantic_hash": ""
+  },
+  "ForgeML_Engineering_Kit_Phase0/docs/32_MODULE3_REVIEW_GUIDE.md": {
+    "mtime": 1784052591.4684887,
+    "ast_hash": "c0e0eb25264823398e96ab72b3c1fee9",
+    "semantic_hash": ""
+  },
+  "ForgeML_Engineering_Kit_Phase0/docs/33_MODULE3_ENGINEERING_DECISIONS.md": {
+    "mtime": 1784052547.4371915,
+    "ast_hash": "3db69751d957cac233ce512032ed9e66",
+    "semantic_hash": ""
+  },
+  "backend/src/forgeml/domain/package/analyzer.py": {
+    "mtime": 1784302379.0891736,
+    "ast_hash": "ee1c27d5f87e0eb21a7374a1a6ae7f6e",
+    "semantic_hash": ""
+  },
+  "backend/tests/smoke/conftest.py": {
+    "mtime": 1784296943.5035224,
+    "ast_hash": "720526b0511433ef784c927e5460409e",
+    "semantic_hash": ""
+  },
+  "backend/tests/smoke/test_api_smoke.py": {
+    "mtime": 1784297007.5592163,
+    "ast_hash": "8fa5401edf4a524aaf80d9f1985e29f6",
+    "semantic_hash": ""
+  },
+  "backend/tests/unit/domain/package/test_analyzer.py": {
+    "mtime": 1784302608.293336,
+    "ast_hash": "e0ac32cf7556a07a507f467f82cea7e3",
+    "semantic_hash": ""
+  },
+  "docs/postman/ForgeML.postman_collection.json": {
+    "mtime": 1784060425.3216126,
+    "ast_hash": "96687771803951146b40d0b9de39f852",
+    "semantic_hash": ""
+  },
+  "docs/postman/ForgeML.postman_environment.json": {
+    "mtime": 1784060435.1695564,
+    "ast_hash": "fa3bd8127c861cfed3106b3b77d5e633",
+    "semantic_hash": ""
+  },
+  "examples/hello-model/src/model.py": {
+    "mtime": 1784060185.4668808,
+    "ast_hash": "967fc35f4bcd082c1e3c50d96a64846b",
+    "semantic_hash": ""
+  },
+  "scripts/forge_pack.py": {
+    "mtime": 1784060225.8865104,
+    "ast_hash": "b067c22e7a4aa0bc7d601a06503802da",
+    "semantic_hash": ""
+  },
+  ".postman/resources.yaml": {
+    "mtime": 1784280132.7061718,
+    "ast_hash": "51906033d6d1c9db599947232e9b4807",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1784060491.149232,
+    "ast_hash": "9f3ee143390b2b15db9783eee0e3b3f2",
+    "semantic_hash": ""
+  },
+  "docs/postman/README.md": {
+    "mtime": 1784060519.6760635,
+    "ast_hash": "1d5d3f44a6773a07990b76cedd69a402",
+    "semantic_hash": ""
+  },
+  "examples/hello-model/forge.yaml": {
+    "mtime": 1784060182.0368972,
+    "ast_hash": "cecb18160f77b2759392d8f315a0b23d",
+    "semantic_hash": ""
+  },
+  "postman/collections/ForgeML API/.resources/definition.yaml": {
+    "mtime": 1784280131.2093225,
+    "ast_hash": "792419764ba8a1d3aba74e2cdb20c3ce",
+    "semantic_hash": ""
+  },
+  "postman/collections/ForgeML Control Plane (v1)/.resources/definition.yaml": {
+    "mtime": 1784280131.2103226,
+    "ast_hash": "9a2bd5d6181002bbbbd131f3f329adf0",
+    "semantic_hash": ""
+  },
+  "postman/collections/ForgeML Control Plane (v1)/Health/.resources/Liveness \u2014 GET -healthz.resources/examples/200 OK.example.yaml": {
+    "mtime": 1784280131.214323,
+    "ast_hash": "8ad439bc30a251a6be9464a90bab74e7",
+    "semantic_hash": ""
+  },
+  "postman/collections/ForgeML Control Plane (v1)/Health/.resources/Readiness \u2014 GET -readyz.resources/examples/200 Ready.example.yaml": {
+    "mtime": 1784280131.214323,
+    "ast_hash": "48435b6a5e5dd3095300d422eecc206a",
+    "semantic_hash": ""
+  },
+  "postman/collections/ForgeML Control Plane (v1)/Health/.resources/Readiness \u2014 GET -readyz.resources/examples/503 Database unavailable.example.yaml": {
+    "mtime": 1784280131.215323,
+    "ast_hash": "bb3900dcb4ee60713bf9a103fde5565d",
+    "semantic_hash": ""
+  },
+  "postman/collections/ForgeML Control Plane (v1)/Health/.resources/definition.yaml": {
+    "mtime": 1784280131.214323,
+    "ast_hash": "0a85f2197fbbe988c46e19641ae02bf8",
+    "semantic_hash": ""
+  },
+  "postman/collections/ForgeML Control Plane (v1)/Health/Liveness \u2014 GET -healthz.request.yaml": {
+    "mtime": 1784280131.2093225,
+    "ast_hash": "e524c43b971137d7bdf945ca942f043b",
+    "semantic_hash": ""
+  },
+  "postman/collections/ForgeML Control Plane (v1)/Health/OpenAPI schema \u2014 GET -v1-openapi.json.request.yaml": {
+    "mtime": 1784280131.2103226,
+    "ast_hash": "bdb3a5ce0e9f123f7814dcf16b1fc96c",
+    "semantic_hash": ""
+  },
+  "postman/collections/ForgeML Control Plane (v1)/Health/Readiness \u2014 GET -readyz.request.yaml": {
+    "mtime": 1784280131.2103226,
+    "ast_hash": "793042d3f93f731be019596c0338b77c",
+    "semantic_hash": ""
+  },
+  "postman/collections/ForgeML Control Plane (v1)/Operations/.resources/Poll operation \u2014 GET -v1-operations-{id}.resources/examples/200 OK \u2014 failed (platform fault).example.yaml": {
+    "mtime": 1784280131.214323,
+    "ast_hash": "00fbf95712a92e95cc7e9ed17f45f3e5",
+    "semantic_hash": ""
+  },
+  "postman/collections/ForgeML Control Plane (v1)/Operations/.resources/Poll operation \u2014 GET -v1-operations-{id}.resources/examples/200 OK \u2014 succeeded.example.yaml": {
+    "mtime": 1784280131.2113225,
+    "ast_hash": "07d7c57d72bad02ba7fcaea0f92381fa",
+    "semantic_hash": ""
+  },
+  "postman/collections/ForgeML Control Plane (v1)/Operations/.resources/Poll operation \u2014 GET -v1-operations-{id}.resources/examples/404 Not found.example.yaml": {
+    "mtime": 1784280131.214323,
+    "ast_hash": "629f87f398c3065dea09431004c4773b",
+    "semantic_hash": ""
+  },
+  "postman/collections/ForgeML Control Plane (v1)/Operations/.resources/definition.yaml": {
+    "mtime": 1784280131.2103226,
+    "ast_hash": "b2e440cc2d25861035c07a3fb9ab40dc",
+    "semantic_hash": ""
+  },
+  "postman/collections/ForgeML Control Plane (v1)/Operations/Poll operation \u2014 GET -v1-operations-{id}.request.yaml": {
+    "mtime": 1784280131.2103226,
+    "ast_hash": "cd3012d5504603bfe40c84341bf265f5",
+    "semantic_hash": ""
+  },
+  "postman/collections/ForgeML Control Plane (v1)/Packages/.resources/List packages \u2014 GET -v1-packages.resources/examples/200 OK.example.yaml": {
+    "mtime": 1784280131.214323,
+    "ast_hash": "bcf163ba85e28e73e25494ac350e5408",
+    "semantic_hash": ""
+  },
+  "postman/collections/ForgeML Control Plane (v1)/Packages/.resources/Read package \u2014 GET -v1-packages-3d5d59e0-3a47-4a8a-ad12-e38d25.resources/examples/200 OK \u2014 rejected, with findings.example.yaml": {
+    "mtime": 1784280131.215323,
+    "ast_hash": "2e47fcad1a8c05782d3ce2c1ef515a6d",
+    "semantic_hash": ""
+  },
+  "postman/collections/ForgeML Control Plane (v1)/Packages/.resources/Read package \u2014 GET -v1-packages-3d5d59e0-3a47-4a8a-ad12-e38d25.resources/examples/200 OK \u2014 validated.example.yaml": {
+    "mtime": 1784280131.215323,
+    "ast_hash": "8564d6d99c031f26b810a4646bfcceaf",
+    "semantic_hash": ""
+  },
+  "postman/collections/ForgeML Control Plane (v1)/Packages/.resources/Read package \u2014 GET -v1-packages-3d5d59e0-3a47-4a8a-ad12-e38d25.resources/examples/404 Not found.example.yaml": {
+    "mtime": 1784280131.214323,
+    "ast_hash": "2d156578bff5d1d8909f20bf2a77b196",
+    "semantic_hash": ""
+  },
+  "postman/collections/ForgeML Control Plane (v1)/Packages/.resources/Upload package \u2014 POST -v1-packages.resources/examples/202 Accepted \u2014 package rejected.example.yaml": {
+    "mtime": 1784280131.215323,
+    "ast_hash": "13e4ba6f0c57a74712efc6b4948ea0d4",
+    "semantic_hash": ""
+  },
+  "postman/collections/ForgeML Control Plane (v1)/Packages/.resources/Upload package \u2014 POST -v1-packages.resources/examples/202 Accepted \u2014 validated.example.yaml": {
+    "mtime": 1784280131.214323,
+    "ast_hash": "76f21b04679b61f4b37fde49fa58292a",
+    "semantic_hash": ""
+  },
+  "postman/collections/ForgeML Control Plane (v1)/Packages/.resources/Upload package \u2014 POST -v1-packages.resources/examples/400 Idempotency-Key required.example.yaml": {
+    "mtime": 1784280131.214323,
+    "ast_hash": "4ebf2764c7e8aa0c2a145ab4d554e41b",
+    "semantic_hash": ""
+  },
+  "postman/collections/ForgeML Control Plane (v1)/Packages/.resources/Upload package \u2014 POST -v1-packages.resources/examples/409 Idempotency conflict.example.yaml": {
+    "mtime": 1784280131.214323,
+    "ast_hash": "cadcd9c92da9c084a8ff4c8d90100c45",
+    "semantic_hash": ""
+  },
+  "postman/collections/ForgeML Control Plane (v1)/Packages/.resources/definition.yaml": {
+    "mtime": 1784280131.2093225,
+    "ast_hash": "d58291fa43476203994b52622fa1c621",
+    "semantic_hash": ""
+  },
+  "postman/collections/ForgeML Control Plane (v1)/Packages/List packages \u2014 GET -v1-packages.request.yaml": {
+    "mtime": 1784280131.2103226,
+    "ast_hash": "30552988ecd6506ef584aa4267e2decc",
+    "semantic_hash": ""
+  },
+  "postman/collections/ForgeML Control Plane (v1)/Packages/Read package \u2014 GET -v1-packages-3d5d59e0-3a47-4a8a-ad12-e38d25.request.yaml": {
+    "mtime": 1784280131.2103226,
+    "ast_hash": "e6585d0f3639c37277bcab66c5ba2d78",
+    "semantic_hash": ""
+  },
+  "postman/collections/ForgeML Control Plane (v1)/Packages/Upload package \u2014 POST -v1-packages.request.yaml": {
+    "mtime": 1784280131.2103226,
+    "ast_hash": "9684293157317022a79cf1158cc27199",
+    "semantic_hash": ""
+  },
+  "postman/environments/ForgeML \u2014 Local.environment.yaml": {
+    "mtime": 1784282352.704462,
+    "ast_hash": "3b6829710e8a42549fcaf66b14895968",
+    "semantic_hash": ""
+  },
+  "postman/environments/Local ForgeML.environment.yaml": {
+    "mtime": 1784280132.6904693,
+    "ast_hash": "03dad404edb9283a0a2ef9fd792b4932",
+    "semantic_hash": ""
+  },
+  "postman/globals/workspace.globals.yaml": {
+    "mtime": 1784266317.2704341,
+    "ast_hash": "1f31f0e4d6a7b594d17c1e596c93528c",
+    "semantic_hash": ""
+  },
+  "backend/migrations/versions/1a2b3c4d5e6f_module_4_analyzed_contract.py": {
+    "mtime": 1784302511.7823272,
+    "ast_hash": "130ce91d7892ee2e0118bb105872ee7b",
+    "semantic_hash": ""
+  },
+  "ForgeML_Engineering_Kit_Phase0/docs/34_MODULE4_ANALYZER_DESIGN.md": {
+    "mtime": 1784302673.4087105,
+    "ast_hash": "4f31507c92f47e99308920678b62d663",
+    "semantic_hash": ""
+  },
+  "backend/src/forgeml/domain/package/generator.py": {
+    "mtime": 1784302824.7165499,
+    "ast_hash": "c1f0dd1b1e5088497d0d19928f8a0f56",
+    "semantic_hash": ""
+  },
+  "backend/tests/unit/domain/package/test_generator.py": {
+    "mtime": 1784302847.584638,
+    "ast_hash": "aae973bc42424a4eedf00400b3de2b4b",
     "semantic_hash": ""
   }
 }

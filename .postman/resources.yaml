@@ -1,0 +1,9 @@
+workspace:
+  id: acdde343-44c6-4e31-bdee-5c7903b7bd5c
+cloudResources:
+  collections:
+    ../postman/collections/ForgeML API: 54519941-3771ba59-f504-4d9a-be70-10d1bfb8e71d
+    ../postman/collections/ForgeML Control Plane (v1): 54519941-dad9208b-7b8a-4445-bca7-e854b8a11ee8
+  environments:
+    ../postman/environments/ForgeML — Local.environment.yaml: 54519941-2fe2a0b7-f9d8-4ddb-95a5-799d5b445488
+    ../postman/environments/Local ForgeML.environment.yaml: 54519941-ac1219e9-9290-43ec-8274-55e0ce1622f7

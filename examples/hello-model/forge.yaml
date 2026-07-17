@@ -1,0 +1,47 @@
+# A minimal, valid .forge manifest (format version 1).
+#
+# Format version 1 is closed: every field below is understood by the platform,
+# and any field it does not understand is rejected rather than ignored.
+forge_version: 1
+
+model:
+  name: Hello Model
+  # ADR-008: python-callable is the only framework format version 1 supports.
+  framework: python-callable
+  version: 1.0.0
+
+runtime:
+  # ADR-008/ADR-013: Python 3.11 is the only supported runtime.
+  python: "3.11"
+
+entrypoint:
+  # Resolves to src/model.py, and `predict` must exist inside it.
+  module: model
+  callable: predict
+
+input:
+  schema:
+    $schema: https://json-schema.org/draft/2020-12/schema
+    type: object
+    properties:
+      value:
+        type: number
+    required:
+      - value
+    additionalProperties: false
+
+output:
+  schema:
+    type: object
+    properties:
+      score:
+        type: number
+    required:
+      - score
+
+# Optional. ADR-011 requires exact `name==version` pins; a range, a URL, a VCS
+# reference, or an editable install is rejected.
+dependencies: []
+
+metadata:
+  team: platform

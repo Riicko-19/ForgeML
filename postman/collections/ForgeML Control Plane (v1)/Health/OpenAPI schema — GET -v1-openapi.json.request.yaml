@@ -1,0 +1,21 @@
+$kind: http-request
+name: OpenAPI schema — GET /v1/openapi.json
+description: |-
+  The published schema — the API's source of truth.
+
+  **Swagger UI and ReDoc are deliberately disabled.** Docs 11 keeps the control plane on an administrative network until an authorization ADR exists, and a browsable console on an unauthenticated, code-executing control plane invites exactly the exposure that decision has not been made yet. The schema itself is published so you can generate a client.
+url: "{{baseUrl}}/v1/openapi.json"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('200 OK', () => pm.response.to.have.status(200));
+      const schema = pm.response.json();
+      pm.test('Publishes the v1 surface', function () {
+          const paths = Object.keys(schema.paths);
+          pm.expect(paths).to.include('/v1/packages');
+          pm.expect(paths).to.include('/v1/operations/{operation_id}');
+      });
+    language: text/javascript
+settings: {}
+order: 3000

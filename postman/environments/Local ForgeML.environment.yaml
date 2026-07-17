@@ -1,0 +1,21 @@
+owner: "54519941"
+team: "15645005"
+lastUpdatedBy: "54519941"
+lastRevision: 1784059787000
+name: Local ForgeML
+color: null
+values:
+  - key: baseURL
+    value: ""
+    enabled: true
+  - key: packageId
+    value: ""
+    enabled: true
+  - key: operationId
+    value: ""
+    enabled: true
+  - key: correlatioId
+    value: ""
+    enabled: true
+createdAt: 2026-07-14T20:07:06.000Z
+updatedAt: 2026-07-14T20:09:47.000Z

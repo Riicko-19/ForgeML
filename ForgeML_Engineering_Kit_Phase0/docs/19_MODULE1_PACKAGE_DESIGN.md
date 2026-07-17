@@ -219,3 +219,4 @@ Limitations and marked in the source.
 Downstream phases build from this baseline. Module 2 (Metadata) may not silently
 change the package contract frozen here; doing so requires a new package version or
 an explicit ADR.
+

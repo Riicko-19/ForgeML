@@ -1,0 +1,48 @@
+$kind: collection
+description: |-
+  The ForgeML V1 control-plane API.
+
+  **Before you start**
+
+  1. PostgreSQL 16 must be running and migrated (`alembic upgrade head`).
+  2. The backend must be running (`python -m forgeml`), by default on http://127.0.0.1:8000.
+  3. You need a `.forge` file. Build one with:
+     `python3 scripts/forge_pack.py examples/hello-model`
+
+  **Key concepts**
+
+  - A package is identified by the SHA-256 of its bytes. Uploading identical bytes twice yields **one** package (ADR-003).
+  - `POST /v1/packages` returns **202 and an operation**, not a package (ADR-006). Poll the operation, then read the package.
+  - A **rejected** package still produces a **succeeded** operation: the validation ran, and the verdict lives on the package. An operation only *fails* when the platform could not do the work.
+  - Every mutation requires an `Idempotency-Key`. Replaying a request returns the original operation and does no work twice.
+  - Every response carries `X-Request-ID`, which is also the operation's `correlation_id`. The server generates it and ignores any you send (ADR-015).
+
+  **There is no authentication.** Keep this on a trusted network.
+variables:
+  correlationId: ""
+scripts:
+  - type: http:afterResponse
+    code: |-
+      // Applies to every request in the collection.
+      pm.test('Server issued a correlation id (ADR-015)', function () {
+          pm.response.to.have.header('X-Request-ID');
+          const id = pm.response.headers.get('X-Request-ID');
+          pm.expect(id).to.match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+          pm.collectionVariables.set('correlationId', id);
+      });
+
+      pm.test('Response is JSON', function () {
+          pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');
+      });
+
+      // Any error must use the frozen ForgeML envelope (docs 12).
+      if (pm.response.code >= 400) {
+          pm.test('Error uses the frozen envelope', function () {
+              const body = pm.response.json();
+              pm.expect(body).to.have.property('code');
+              pm.expect(body).to.have.property('message');
+              pm.expect(body).to.have.property('request_id');
+              pm.expect(body).to.not.have.property('detail');
+          });
+      }
+    language: text/javascript

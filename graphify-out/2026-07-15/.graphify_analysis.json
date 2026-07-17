@@ -1,0 +1,490 @@
+{
+  "communities": {
+    "0": [
+      "backend_src_forgeml_core_composition",
+      "backend_src_forgeml_core_composition_create_application",
+      "backend_src_forgeml_core_composition_py_fastapi",
+      "backend_src_forgeml_core_composition_rationale_1",
+      "backend_src_forgeml_core_composition_rationale_12",
+      "backend_src_forgeml_core_config_appsettings",
+      "backend_src_forgeml_core_config_appsettings_enforce_service_name",
+      "backend_src_forgeml_core_config_appsettings_validate_service_version",
+      "backend_src_forgeml_core_config_rationale_114",
+      "backend_tests_contract_test_http_contract",
+      "backend_tests_contract_test_http_contract_rationale_1",
+      "backend_tests_contract_test_http_contract_test_framework_error_wire_shape_omits_empty_details",
+      "backend_tests_contract_test_http_contract_test_health_wire_shapes_and_header",
+      "backend_tests_contract_test_openapi_contract",
+      "backend_tests_contract_test_openapi_contract_rationale_1",
+      "backend_tests_contract_test_openapi_contract_test_openapi_contains_only_health_paths",
+      "backend_tests_contract_test_openapi_contract_test_response_schemas_forbid_extra_fields",
+      "backend_tests_integration_api_test_error_handling",
+      "backend_tests_integration_api_test_error_handling_client_with_failure_routes",
+      "backend_tests_integration_api_test_error_handling_py_logcapturefixture",
+      "backend_tests_integration_api_test_error_handling_rationale_1",
+      "backend_tests_integration_api_test_error_handling_test_404_and_405_use_frozen_envelope",
+      "backend_tests_integration_api_test_error_handling_test_expected_application_error_is_mapped",
+      "backend_tests_integration_api_test_error_handling_test_request_validation_is_sanitized",
+      "backend_tests_integration_api_test_error_handling_test_unexpected_error_is_opaque",
+      "backend_tests_integration_api_test_health",
+      "backend_tests_integration_api_test_health_rationale_1",
+      "backend_tests_integration_api_test_health_test_docs_and_openapi_routes_are_not_public",
+      "backend_tests_integration_api_test_health_test_health_and_readiness_contract",
+      "backend_tests_integration_api_test_health_test_inbound_request_ids_are_ignored",
+      "backend_tests_integration_api_test_request_logging_py_logcapturefixture",
+      "backend_tests_integration_api_test_request_logging_test_request_completion_record_is_safe",
+      "backend_tests_support",
+      "backend_tests_support_asgitestclient",
+      "backend_tests_support_asgitestclient_get",
+      "backend_tests_support_asgitestclient_init",
+      "backend_tests_support_asgitestclient_post",
+      "backend_tests_support_asgitestclient_request",
+      "backend_tests_support_py_fastapi",
+      "backend_tests_support_rationale_1",
+      "backend_tests_support_rationale_15",
+      "backend_tests_unit_core_test_config_test_explicit_valid_service_identity_is_accepted",
+      "backend_tests_unit_core_test_config_test_invalid_explicit_service_version_fails",
+      "backend_tests_unit_core_test_config_test_service_identity_is_fixed",
+      "backend_tests_unit_core_test_config_test_settings_are_immutable",
+      "headers",
+      "response"
+    ],
+    "1": [
+      "apirouter",
+      "backend_src_forgeml_api_error_handlers",
+      "backend_src_forgeml_api_error_handlers_app_error_handler",
+      "backend_src_forgeml_api_error_handlers_detail_response",
+      "backend_src_forgeml_api_error_handlers_error_response",
+      "backend_src_forgeml_api_error_handlers_http_error_handler",
+      "backend_src_forgeml_api_error_handlers_internal_error_response",
+      "backend_src_forgeml_api_error_handlers_py_exception",
+      "backend_src_forgeml_api_error_handlers_py_fastapi",
+      "backend_src_forgeml_api_error_handlers_py_jsonresponse",
+      "backend_src_forgeml_api_error_handlers_pydantic_error_handler",
+      "backend_src_forgeml_api_error_handlers_rationale_1",
+      "backend_src_forgeml_api_error_handlers_rationale_126",
+      "backend_src_forgeml_api_error_handlers_rationale_155",
+      "backend_src_forgeml_api_error_handlers_rationale_165",
+      "backend_src_forgeml_api_error_handlers_rationale_171",
+      "backend_src_forgeml_api_error_handlers_rationale_181",
+      "backend_src_forgeml_api_error_handlers_rationale_56",
+      "backend_src_forgeml_api_error_handlers_rationale_71",
+      "backend_src_forgeml_api_error_handlers_rationale_87",
+      "backend_src_forgeml_api_error_handlers_register_error_handlers",
+      "backend_src_forgeml_api_error_handlers_request_id",
+      "backend_src_forgeml_api_error_handlers_unexpected_error_handler",
+      "backend_src_forgeml_api_error_handlers_validation_error_handler",
+      "backend_src_forgeml_api_error_handlers_validation_path",
+      "backend_src_forgeml_api_health",
+      "backend_src_forgeml_api_health_create_health_router",
+      "backend_src_forgeml_api_health_rationale_1",
+      "backend_src_forgeml_api_health_rationale_12",
+      "backend_src_forgeml_api_schemas",
+      "backend_src_forgeml_api_schemas_errordetailresponse",
+      "backend_src_forgeml_api_schemas_errorenvelope",
+      "backend_src_forgeml_api_schemas_healthresponse",
+      "backend_src_forgeml_api_schemas_py_basemodel",
+      "backend_src_forgeml_api_schemas_rationale_1",
+      "backend_src_forgeml_api_schemas_rationale_21",
+      "backend_src_forgeml_api_schemas_rationale_37",
+      "backend_src_forgeml_api_schemas_rationale_54",
+      "request"
+    ],
+    "2": [
+      "asgiapp",
+      "backend_src_forgeml_api_middleware",
+      "backend_src_forgeml_api_middleware_rationale_1",
+      "backend_src_forgeml_api_middleware_rationale_22",
+      "backend_src_forgeml_api_middleware_requestcontextmiddleware",
+      "backend_src_forgeml_api_middleware_requestcontextmiddleware_call",
+      "backend_src_forgeml_api_middleware_requestcontextmiddleware_init",
+      "backend_src_forgeml_core_correlation",
+      "backend_src_forgeml_core_correlation_current_request_id",
+      "backend_src_forgeml_core_correlation_new_request_id",
+      "backend_src_forgeml_core_correlation_rationale_1",
+      "backend_src_forgeml_core_correlation_rationale_12",
+      "backend_src_forgeml_core_correlation_rationale_18",
+      "backend_src_forgeml_core_correlation_rationale_24",
+      "backend_src_forgeml_core_correlation_rationale_30",
+      "backend_src_forgeml_core_correlation_reset_request_id",
+      "backend_src_forgeml_core_correlation_set_request_id",
+      "backend_tests_integration_api_test_application_boot_fakeserver_run",
+      "backend_tests_integration_api_test_request_logging",
+      "backend_tests_integration_api_test_request_logging_rationale_1",
+      "backend_tests_integration_api_test_request_logging_receive",
+      "backend_tests_integration_api_test_request_logging_send",
+      "backend_tests_integration_api_test_request_logging_test_cancelled_request_cleans_context",
+      "backend_tests_integration_api_test_request_logging_test_concurrent_requests_receive_distinct_context",
+      "backend_tests_integration_api_test_request_logging_test_failure_after_response_start_is_reraised_and_cleans_context",
+      "backend_tests_integration_api_test_request_logging_test_non_http_scope_passes_through_without_context",
+      "backend_tests_integration_api_test_request_logging_test_untrusted_request_id_variants_are_removed",
+      "backend_tests_unit_core_test_correlation",
+      "backend_tests_unit_core_test_correlation_rationale_1",
+      "backend_tests_unit_core_test_correlation_test_concurrent_contexts_are_isolated",
+      "backend_tests_unit_core_test_correlation_test_context_is_restored_by_token",
+      "backend_tests_unit_core_test_correlation_test_new_request_id_is_uuid4",
+      "backend_tests_unit_core_test_logging_test_internal_event_has_exact_safe_base_fields",
+      "message",
+      "receive",
+      "scope",
+      "send",
+      "token"
+    ],
+    "3": [
+      "backend_src_forgeml_core_config",
+      "backend_src_forgeml_core_config_configurationfailure",
+      "backend_src_forgeml_core_config_configurationfailure_init",
+      "backend_src_forgeml_core_config_configurationissue",
+      "backend_src_forgeml_core_config_environment",
+      "backend_src_forgeml_core_config_load_settings",
+      "backend_src_forgeml_core_config_loglevel",
+      "backend_src_forgeml_core_config_py_exception",
+      "backend_src_forgeml_core_config_py_strenum",
+      "backend_src_forgeml_core_config_rationale_1",
+      "backend_src_forgeml_core_config_rationale_151",
+      "backend_src_forgeml_core_config_rationale_175",
+      "backend_src_forgeml_core_config_rationale_30",
+      "backend_src_forgeml_core_config_rationale_38",
+      "backend_src_forgeml_core_config_rationale_49",
+      "backend_src_forgeml_core_config_rationale_56",
+      "backend_src_forgeml_core_config_resolve_service_version",
+      "backend_src_forgeml_core_config_safe_issues",
+      "backend_tests_unit_core_test_config",
+      "backend_tests_unit_core_test_config_py_monkeypatch",
+      "backend_tests_unit_core_test_config_rationale_1",
+      "backend_tests_unit_core_test_config_test_explicit_mapping_is_not_supplemented_by_process_environment",
+      "backend_tests_unit_core_test_config_test_load_settings_normalizes_and_defaults",
+      "backend_tests_unit_core_test_config_test_load_settings_rejects_invalid_values",
+      "backend_tests_unit_core_test_config_test_lowercase_prefix_is_not_configuration",
+      "backend_tests_unit_core_test_config_test_non_string_explicit_value_is_validated_without_string_operations",
+      "backend_tests_unit_core_test_config_test_resolve_service_version_missing_is_safe",
+      "backend_tests_unit_core_test_config_test_resolve_service_version_normalizes_unexpected_reader_failure",
+      "backend_tests_unit_core_test_config_test_resolve_service_version_rejects_invalid_metadata",
+      "backend_tests_unit_core_test_config_test_resolve_service_version_rejects_non_string_metadata",
+      "backend_tests_unit_core_test_config_test_unknown_forgeml_setting_fails_without_value_disclosure",
+      "validationerror"
+    ],
+    "4": [
+      "backend_src_forgeml_core_logging",
+      "backend_src_forgeml_core_logging_bounded",
+      "backend_src_forgeml_core_logging_configure_logging",
+      "backend_src_forgeml_core_logging_jsoneventformatter",
+      "backend_src_forgeml_core_logging_jsoneventformatter_format",
+      "backend_src_forgeml_core_logging_jsoneventformatter_init",
+      "backend_src_forgeml_core_logging_jsoneventformatter_normalize_extra",
+      "backend_src_forgeml_core_logging_jsoneventformatter_severity",
+      "backend_src_forgeml_core_logging_py_logrecord",
+      "backend_src_forgeml_core_logging_rationale_1",
+      "backend_src_forgeml_core_logging_rationale_137",
+      "backend_src_forgeml_core_logging_rationale_54",
+      "backend_src_forgeml_core_logging_strip_controls",
+      "backend_tests_unit_core_test_logging",
+      "backend_tests_unit_core_test_logging_py_baseexception",
+      "backend_tests_unit_core_test_logging_py_logrecord",
+      "backend_tests_unit_core_test_logging_py_monkeypatch",
+      "backend_tests_unit_core_test_logging_rationale_1",
+      "backend_tests_unit_core_test_logging_record",
+      "backend_tests_unit_core_test_logging_test_configure_logging_is_idempotent_and_rejects_conflict",
+      "backend_tests_unit_core_test_logging_test_event_and_fields_are_bounded",
+      "backend_tests_unit_core_test_logging_test_exception_text_and_traceback_are_not_serialized",
+      "backend_tests_unit_core_test_logging_test_explicit_exception_type_is_bounded",
+      "backend_tests_unit_core_test_logging_test_formatter_rejects_unreachable_extra_field",
+      "backend_tests_unit_core_test_logging_test_log_level_settings_are_rendered",
+      "backend_tests_unit_core_test_logging_test_near_prefix_logger_is_not_trusted",
+      "backend_tests_unit_core_test_logging_test_severity_is_normalized",
+      "backend_tests_unit_core_test_logging_test_third_party_message_and_arguments_are_suppressed",
+      "tracebacktype"
+    ],
+    "5": [
+      "backend_src_forgeml_core_errors",
+      "backend_src_forgeml_core_errors_apperror",
+      "backend_src_forgeml_core_errors_apperror_post_init",
+      "backend_src_forgeml_core_errors_errorcategory",
+      "backend_src_forgeml_core_errors_errordetail",
+      "backend_src_forgeml_core_errors_errordetail_post_init",
+      "backend_src_forgeml_core_errors_py_exception",
+      "backend_src_forgeml_core_errors_py_strenum",
+      "backend_src_forgeml_core_errors_rationale_1",
+      "backend_src_forgeml_core_errors_rationale_19",
+      "backend_src_forgeml_core_errors_rationale_47",
+      "backend_src_forgeml_core_errors_rationale_80",
+      "backend_src_forgeml_core_errors_validate_code",
+      "backend_src_forgeml_core_errors_validate_message",
+      "backend_tests_integration_api_test_error_handling_payload",
+      "backend_tests_integration_api_test_error_handling_py_basemodel",
+      "backend_tests_unit_core_test_errors",
+      "backend_tests_unit_core_test_errors_rationale_1",
+      "backend_tests_unit_core_test_errors_test_detail_count_is_bounded",
+      "backend_tests_unit_core_test_errors_test_details_must_be_typed",
+      "backend_tests_unit_core_test_errors_test_invalid_codes_are_rejected",
+      "backend_tests_unit_core_test_errors_test_invalid_messages_are_rejected",
+      "backend_tests_unit_core_test_errors_test_invalid_paths_are_rejected",
+      "backend_tests_unit_core_test_errors_test_valid_error_is_immutable_and_safe"
+    ],
+    "6": [
+      "backend_src_forgeml_core_logging_loggingconfigurationconflict",
+      "backend_src_forgeml_core_logging_rationale_36",
+      "backend_tests_integration_api_test_application_boot",
+      "backend_tests_integration_api_test_application_boot_fakeserver",
+      "backend_tests_integration_api_test_application_boot_fakeserver_init",
+      "backend_tests_integration_api_test_application_boot_py_baseexception",
+      "backend_tests_integration_api_test_application_boot_py_logcapturefixture",
+      "backend_tests_integration_api_test_application_boot_py_monkeypatch",
+      "backend_tests_integration_api_test_application_boot_rationale_1",
+      "backend_tests_integration_api_test_application_boot_test_configuration_failure_is_safe_and_exits_two",
+      "backend_tests_integration_api_test_application_boot_test_logging_conflict_exits_one",
+      "backend_tests_integration_api_test_application_boot_test_module_entrypoint_returns_bootstrap_exit_code",
+      "backend_tests_integration_api_test_application_boot_test_multiple_applications_are_isolated",
+      "backend_tests_integration_api_test_application_boot_test_post_logging_startup_boundaries_fail_safely",
+      "backend_tests_integration_api_test_application_boot_test_server_exit_behavior",
+      "backend_tests_integration_api_test_application_boot_test_sigterm_adapter_raises_internal_shutdown_signal",
+      "backend_tests_integration_api_test_application_boot_test_unexpected_logging_failure_is_safe",
+      "backend_tests_integration_api_test_application_boot_test_uvicorn_configuration_is_single_worker_and_hardened",
+      "capturefixture"
+    ],
+    "7": [
+      "backend_tests_unit_api_test_error_handlers",
+      "backend_tests_unit_api_test_error_handlers_py_exception",
+      "backend_tests_unit_api_test_error_handlers_py_jsonresponse",
+      "backend_tests_unit_api_test_error_handlers_rationale_1",
+      "backend_tests_unit_api_test_error_handlers_run_handler",
+      "backend_tests_unit_api_test_error_handlers_test_all_application_categories_map",
+      "backend_tests_unit_api_test_error_handlers_test_mismatched_registered_handler_inputs_fail_safe",
+      "backend_tests_unit_api_test_error_handlers_test_non_json_validation_error_without_location_is_safe",
+      "backend_tests_unit_api_test_error_handlers_test_terminal_error_handlers_are_generic",
+      "backend_tests_unit_api_test_error_handlers_test_unapproved_http_status_fails_safe",
+      "backend_tests_unit_api_test_error_handlers_test_validation_path_is_bounded_and_sanitized",
+      "handler",
+      "runtimeerror"
+    ],
+    "8": [
+      "backend_src_forgeml_bootstrap",
+      "backend_src_forgeml_bootstrap_main",
+      "backend_src_forgeml_bootstrap_py_exception",
+      "backend_src_forgeml_bootstrap_raise_shutdown_requested",
+      "backend_src_forgeml_bootstrap_rationale_1",
+      "backend_src_forgeml_bootstrap_rationale_22",
+      "backend_src_forgeml_bootstrap_rationale_47",
+      "backend_src_forgeml_bootstrap_safe_bootstrap_failure",
+      "backend_src_forgeml_bootstrap_shutdownrequested",
+      "backend_src_forgeml_main",
+      "backend_src_forgeml_main_rationale_1",
+      "frametype"
+    ],
+    "9": [
+      "backend_tests_architecture_test_dependency_direction",
+      "backend_tests_architecture_test_dependency_direction_imports",
+      "backend_tests_architecture_test_dependency_direction_rationale_1",
+      "backend_tests_architecture_test_dependency_direction_test_api_never_imports_bootstrap_or_future_modules",
+      "backend_tests_architecture_test_dependency_direction_test_bootstrap_imports_core_not_api",
+      "backend_tests_architecture_test_dependency_direction_test_provider_neutral_core_does_not_import_fastapi_or_api",
+      "path"
+    ],
+    "10": [
+      "backend_src_forgeml_core_config_reject_wildcard_host",
+      "backend_tests_conftest",
+      "backend_tests_conftest_rationale_1",
+      "backend_tests_conftest_settings",
+      "ipv4address",
+      "ipv6address"
+    ],
+    "11": [
+      "backend_src_forgeml_core_config_environmentsettings",
+      "backend_src_forgeml_core_config_environmentsettings_normalize_environment",
+      "backend_src_forgeml_core_config_environmentsettings_normalize_log_level",
+      "backend_src_forgeml_core_config_environmentsettings_reject_empty_values",
+      "backend_src_forgeml_core_config_py_basemodel"
+    ],
+    "12": [
+      "backend_tests_integration_api_test_process_signals",
+      "backend_tests_integration_api_test_process_signals_available_loopback_port",
+      "backend_tests_integration_api_test_process_signals_rationale_1",
+      "backend_tests_integration_api_test_process_signals_test_sigterm_stops_installed_process_without_traceback"
+    ],
+    "13": [
+      "backend_src_forgeml_api_init",
+      "backend_src_forgeml_api_init_rationale_1"
+    ],
+    "14": [
+      "backend_src_forgeml_core_init",
+      "backend_src_forgeml_core_init_rationale_1"
+    ],
+    "15": [
+      "backend_src_forgeml_init",
+      "backend_src_forgeml_init_rationale_1"
+    ],
+    "16": [
+      "backend_tests_smoke_installed_package_smoke",
+      "backend_tests_smoke_installed_package_smoke_rationale_1"
+    ],
+    "17": [
+      "pkg_forgeml"
+    ]
+  },
+  "cohesion": {
+    "0": 0.0786308973172988,
+    "1": 0.10256410256410256,
+    "2": 0.08108108108108109,
+    "3": 0.12903225806451613,
+    "4": 0.12561576354679804,
+    "5": 0.13405797101449277,
+    "6": 0.17543859649122806,
+    "7": 0.23076923076923078,
+    "8": 0.21212121212121213,
+    "9": 0.42857142857142855,
+    "10": 0.3333333333333333,
+    "11": 0.4,
+    "12": 0.6666666666666666,
+    "13": 1.0,
+    "14": 1.0,
+    "15": 1.0,
+    "16": 1.0,
+    "17": 1.0
+  },
+  "gods": [
+    {
+      "id": "backend_src_forgeml_core_config_appsettings",
+      "label": "AppSettings",
+      "degree": 48
+    },
+    {
+      "id": "backend_src_forgeml_core_composition_create_application",
+      "label": "create_application()",
+      "degree": 19
+    },
+    {
+      "id": "backend_src_forgeml_core_logging_jsoneventformatter",
+      "label": "JsonEventFormatter",
+      "degree": 18
+    },
+    {
+      "id": "backend_src_forgeml_core_config_configurationfailure",
+      "label": "ConfigurationFailure",
+      "degree": 16
+    },
+    {
+      "id": "backend_tests_support_asgitestclient",
+      "label": "ASGITestClient",
+      "degree": 15
+    },
+    {
+      "id": "backend_src_forgeml_core_config_load_settings",
+      "label": "load_settings()",
+      "degree": 14
+    },
+    {
+      "id": "backend_tests_unit_core_test_logging_record",
+      "label": "_record()",
+      "degree": 12
+    },
+    {
+      "id": "backend_src_forgeml_api_error_handlers_error_response",
+      "label": "error_response()",
+      "degree": 11
+    },
+    {
+      "id": "backend_src_forgeml_core_errors_errordetail",
+      "label": "ErrorDetail",
+      "degree": 11
+    },
+    {
+      "id": "backend_src_forgeml_core_errors_apperror",
+      "label": "AppError",
+      "degree": 11
+    }
+  ],
+  "surprises": [
+    {
+      "source": "_request_id()",
+      "target": "current_request_id()",
+      "source_files": [
+        "backend/src/forgeml/api/error_handlers.py",
+        "backend/src/forgeml/core/correlation.py"
+      ],
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "why": "inferred connection - not explicitly stated in source; bridges separate communities"
+    },
+    {
+      "source": "_request_id()",
+      "target": "new_request_id()",
+      "source_files": [
+        "backend/src/forgeml/api/error_handlers.py",
+        "backend/src/forgeml/core/correlation.py"
+      ],
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "why": "inferred connection - not explicitly stated in source; bridges separate communities"
+    },
+    {
+      "source": "app_error_handler()",
+      "target": "AppError",
+      "source_files": [
+        "backend/src/forgeml/api/error_handlers.py",
+        "backend/src/forgeml/core/errors.py"
+      ],
+      "confidence": "INFERRED",
+      "relation": "indirect_call",
+      "why": "inferred connection - not explicitly stated in source; bridges separate communities"
+    },
+    {
+      "source": "register_error_handlers()",
+      "target": "AppError",
+      "source_files": [
+        "backend/src/forgeml/api/error_handlers.py",
+        "backend/src/forgeml/core/errors.py"
+      ],
+      "confidence": "INFERRED",
+      "relation": "indirect_call",
+      "why": "inferred connection - not explicitly stated in source; bridges separate communities"
+    },
+    {
+      "source": "create_application()",
+      "target": "register_error_handlers()",
+      "source_files": [
+        "backend/src/forgeml/core/composition.py",
+        "backend/src/forgeml/api/error_handlers.py"
+      ],
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "why": "inferred connection - not explicitly stated in source; bridges separate communities"
+    }
+  ],
+  "questions": [
+    {
+      "type": "bridge_node",
+      "question": "Why does `AppSettings` connect `AppSettings` to `error_handlers.py`, `test_request_logging.py`, `ConfigurationFailure`, `JsonEventFormatter`, `AppError`, `test_application_boot.py`, `_reject_wildcard_host`, `_EnvironmentSettings`?",
+      "why": "High betweenness centrality (0.434) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `create_application()` connect `AppSettings` to `main`, `error_handlers.py`, `test_request_logging.py`, `test_application_boot.py`?",
+      "why": "High betweenness centrality (0.172) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `Payload` connect `AppError` to `AppSettings`?",
+      "why": "High betweenness centrality (0.118) - this node is a cross-community bridge."
+    },
+    {
+      "type": "verify_inferred",
+      "question": "Are the 4 inferred relationships involving `AppSettings` (e.g. with `JsonEventFormatter` and `LoggingConfigurationConflict`) actually correct?",
+      "why": "`AppSettings` has 4 INFERRED edges - model-reasoned connections that need verification."
+    },
+    {
+      "type": "verify_inferred",
+      "question": "Are the 15 inferred relationships involving `create_application()` (e.g. with `main()` and `register_error_handlers()`) actually correct?",
+      "why": "`create_application()` has 15 INFERRED edges - model-reasoned connections that need verification."
+    },
+    {
+      "type": "verify_inferred",
+      "question": "Are the 11 inferred relationships involving `JsonEventFormatter` (e.g. with `AppSettings` and `test_request_completion_record_is_safe()`) actually correct?",
+      "why": "`JsonEventFormatter` has 11 INFERRED edges - model-reasoned connections that need verification."
+    },
+    {
+      "type": "verify_inferred",
+      "question": "Are the 10 inferred relationships involving `ConfigurationFailure` (e.g. with `_ShutdownRequested` and `FakeServer`) actually correct?",
+      "why": "`ConfigurationFailure` has 10 INFERRED edges - model-reasoned connections that need verification."
+    }
+  ]
+}

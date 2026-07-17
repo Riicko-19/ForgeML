@@ -1,0 +1,3 @@
+$kind: collection
+description: Operational probes. Liveness answers "is the process up"; readiness answers "can it actually serve", which since Module 2 means PostgreSQL must answer.
+order: 1000

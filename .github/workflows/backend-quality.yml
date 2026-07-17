@@ -1,14 +1,19 @@
 name: Backend quality
 
+# The checkpoint is `make verify`, so every input it reads has to be able to
+# trigger it. Before the Makefile defined the gate, `backend/**` was the whole
+# story; now the packing script and the example the smoke test uploads are part
+# of it too, and a break in one of those must not sail past a green tick.
 on:
   push:
-    paths:
+    paths: &checkpoint_inputs
       - "backend/**"
+      - "scripts/**"
+      - "examples/**"
+      - "Makefile"
       - ".github/workflows/backend-quality.yml"
   pull_request:
-    paths:
-      - "backend/**"
-      - ".github/workflows/backend-quality.yml"
+    paths: *checkpoint_inputs
 
 permissions:
   contents: read
@@ -64,22 +69,18 @@ jobs:
           python -m piptools compile pyproject.toml --resolver=backtracking --generate-hashes --strip-extras --no-header --no-emit-index-url --extra dev --all-build-deps --allow-unsafe --output-file /tmp/requirements-dev.lock
           cmp requirements-dev.lock /tmp/requirements-dev.lock
 
-      - name: Format
-        run: python -m black --check src tests
-
-      - name: Lint
-        run: python -m ruff check src tests
-
-      - name: Type check
-        run: python -m mypy src tests
-
       - name: Install backend source
         run: python -m pip install --no-deps --no-build-isolation --editable .
 
-      - name: Test with branch coverage
-        run: |
-          python -m coverage run --branch -m pytest tests/unit tests/integration tests/contract tests/architecture
-          python -m coverage report --fail-under=95
+      # Format, lint, type check, and test -- the checkpoint. Its definition
+      # lives in the Makefile so that this workflow cannot drift away from the
+      # command the developer ran before pushing. PY points the Makefile at the
+      # runner's interpreter, which has the locked dependencies already.
+      - name: Verify
+        run: make verify
+        working-directory: .
+        env:
+          PY: python
 
       - name: Build locked package
         run: python -m build --no-isolation

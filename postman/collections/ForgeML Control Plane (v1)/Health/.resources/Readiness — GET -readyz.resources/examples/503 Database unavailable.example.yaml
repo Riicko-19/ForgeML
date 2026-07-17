@@ -1,0 +1,18 @@
+$kind: http-example
+request:
+  url: ""
+  method: GET
+response:
+  statusCode: 503
+  statusText: Service Unavailable
+  headers:
+    Content-Type: application/json
+  body:
+    type: text
+    content: |-
+      {
+        "code": "dependency_unavailable",
+        "message": "The metadata database is unavailable.",
+        "request_id": "1bc48560-aae5-4dbb-94ec-56f85b2ac581"
+      }
+order: 2000

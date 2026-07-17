@@ -1,0 +1,53 @@
+$kind: http-request
+name: Read package — GET /v1/packages/3d5d59e0-3a47-4a8a-ad12-e38d2593d31f
+description: |-
+  **Read one package, with its manifest and validation findings.**
+
+  This is where the *verdict* lives. `validation_state` is `validated` or `rejected`; when rejected, `validation_findings` lists stable machine codes with a logical path (for example `dependency_not_pinned` at `["dependencies", 0]`).
+
+  `manifest` is populated only for a validated package — the platform will not report a manifest it did not accept. `manifest_version` is `null` until validation has actually parsed the archive.
+
+  `{{packageId}}` is set automatically by the Upload request.
+
+  **404 `package_not_found`** — unknown id.
+  **422** — the id is not a UUID.
+url: "{{baseUrl}}/v1/packages/{{packageId}}"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('200 OK', () => pm.response.to.have.status(200));
+      const pkg = pm.response.json();
+
+      pm.test('Identity is the SHA-256 of the bytes (ADR-003)', function () {
+          pm.expect(pkg.sha256).to.match(/^[0-9a-f]{64}$/);
+      });
+
+      pm.test('Carries a terminal validation verdict', function () {
+          pm.expect(pkg.validation_state).to.be.oneOf(['validated', 'rejected']);
+      });
+
+      if (pkg.validation_state === 'validated') {
+          pm.test('A validated package exposes its manifest', function () {
+              pm.expect(pkg.manifest).to.not.eql(null);
+              pm.expect(pkg.manifest.forge_version).to.eql(1);
+              pm.expect(pkg.manifest.model.framework).to.eql('python-callable');
+          });
+          pm.test('A validated package has no findings', function () {
+              pm.expect(pkg.validation_findings).to.eql(null);
+          });
+          pm.test('manifest_version is set once the archive was parsed', function () {
+              pm.expect(pkg.manifest_version).to.eql(1);
+          });
+      } else {
+          pm.test('A rejected package explains itself with stable codes', function () {
+              pm.expect(pkg.validation_findings).to.be.an('array').that.is.not.empty;
+              pm.expect(pkg.validation_findings[0]).to.have.property('code');
+              pm.expect(pkg.validation_findings[0]).to.have.property('message');
+          });
+          console.log('Findings:', pkg.validation_findings.map(f => f.code).join(', '));
+      }
+    language: text/javascript
+settings: {}
+examples: ./.resources/Read package — GET -v1-packages-3d5d59e0-3a47-4a8a-ad12-e38d25.resources/examples
+order: 2000

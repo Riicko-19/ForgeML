@@ -1,0 +1,490 @@
+{
+  "info": {
+    "_postman_id": "f0r6e-m1c0-11ec-t10n-000000000001",
+    "name": "ForgeML Control Plane (v1)",
+    "description": "The ForgeML V1 control-plane API.\n\n**Before you start**\n\n1. PostgreSQL 16 must be running and migrated (`alembic upgrade head`).\n2. The backend must be running (`python -m forgeml`), by default on http://127.0.0.1:8000.\n3. You need a `.forge` file. Build one with:\n   `python3 scripts/forge_pack.py examples/hello-model`\n\n**Key concepts**\n\n- A package is identified by the SHA-256 of its bytes. Uploading identical bytes twice yields **one** package (ADR-003).\n- `POST /v1/packages` returns **202 and an operation**, not a package (ADR-006). Poll the operation, then read the package.\n- A **rejected** package still produces a **succeeded** operation: the validation ran, and the verdict lives on the package. An operation only *fails* when the platform could not do the work.\n- Every mutation requires an `Idempotency-Key`. Replaying a request returns the original operation and does no work twice.\n- Every response carries `X-Request-ID`, which is also the operation's `correlation_id`. The server generates it and ignores any you send (ADR-015).\n\n**There is no authentication.** Keep this on a trusted network.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [],
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Applies to every request in the collection.",
+          "pm.test('Server issued a correlation id (ADR-015)', function () {",
+          "    pm.response.to.have.header('X-Request-ID');",
+          "    const id = pm.response.headers.get('X-Request-ID');",
+          "    pm.expect(id).to.match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);",
+          "    pm.collectionVariables.set('correlationId', id);",
+          "});",
+          "",
+          "pm.test('Response is JSON', function () {",
+          "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+          "});",
+          "",
+          "// Any error must use the frozen ForgeML envelope (docs 12).",
+          "if (pm.response.code >= 400) {",
+          "    pm.test('Error uses the frozen envelope', function () {",
+          "        const body = pm.response.json();",
+          "        pm.expect(body).to.have.property('code');",
+          "        pm.expect(body).to.have.property('message');",
+          "        pm.expect(body).to.have.property('request_id');",
+          "        pm.expect(body).to.not.have.property('detail');",
+          "    });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "description": "Operational probes. Liveness answers \"is the process up\"; readiness answers \"can it actually serve\", which since Module 2 means PostgreSQL must answer.",
+      "item": [
+        {
+          "name": "Liveness — GET /healthz",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/healthz", "host": ["{{baseUrl}}"], "path": ["healthz"] },
+            "description": "**Is the process alive?**\n\nAnswers 200 as soon as the process is up. It does **not** check the database — that is what `/readyz` is for. An orchestrator should use this as its liveness probe, or it will kill a healthy process during a database blip.\n\n**200** — `{status: \"ok\", service, version}`"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/healthz" } },
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"status\": \"ok\",\n  \"service\": \"forgeml-control-plane\",\n  \"version\": \"0.1.0\"\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Reports ok', () => pm.expect(body.status).to.eql('ok'));",
+                  "pm.test('Identifies the service', () => pm.expect(body.service).to.eql('forgeml-control-plane'));",
+                  "pm.test('Exposes no extra fields', () => pm.expect(Object.keys(body).sort()).to.eql(['service','status','version']));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Readiness — GET /readyz",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/readyz", "host": ["{{baseUrl}}"], "path": ["readyz"] },
+            "description": "**Can this process actually serve?**\n\nExecutes `SELECT 1` against the metadata database.\n\n**200** — ready.\n\n**503 `dependency_unavailable`** — PostgreSQL is not reachable, or `FORGEML_DATABASE_URL` is not set. The control plane cannot serve a single package request in this state. Fix the database before going further; every other request in this collection will fail."
+          },
+          "response": [
+            {
+              "name": "200 Ready",
+              "originalRequest": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/readyz" } },
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"status\": \"ready\",\n  \"service\": \"forgeml-control-plane\",\n  \"version\": \"0.1.0\"\n}"
+            },
+            {
+              "name": "503 Database unavailable",
+              "originalRequest": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/readyz" } },
+              "status": "Service Unavailable",
+              "code": 503,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"code\": \"dependency_unavailable\",\n  \"message\": \"The metadata database is unavailable.\",\n  \"request_id\": \"1bc48560-aae5-4dbb-94ec-56f85b2ac581\"\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Ready (200). A 503 means PostgreSQL is unreachable — fix that first.', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Reports ready', () => pm.expect(pm.response.json().status).to.eql('ready'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "OpenAPI schema — GET /v1/openapi.json",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/v1/openapi.json", "host": ["{{baseUrl}}"], "path": ["v1", "openapi.json"] },
+            "description": "The published schema — the API's source of truth.\n\n**Swagger UI and ReDoc are deliberately disabled.** Docs 11 keeps the control plane on an administrative network until an authorization ADR exists, and a browsable console on an unauthenticated, code-executing control plane invites exactly the exposure that decision has not been made yet. The schema itself is published so you can generate a client."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const schema = pm.response.json();",
+                  "pm.test('Publishes the v1 surface', function () {",
+                  "    const paths = Object.keys(schema.paths);",
+                  "    pm.expect(paths).to.include('/v1/packages');",
+                  "    pm.expect(paths).to.include('/v1/operations/{operation_id}');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Packages",
+      "description": "Upload, list, and read packages.",
+      "item": [
+        {
+          "name": "Upload package — POST /v1/packages",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}",
+                "description": "Required. Replaying a request with the same key returns the original operation and does no work twice. Reusing a key for a different request is a 409."
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [],
+                  "description": "Your .forge archive. Build one with: python3 scripts/forge_pack.py examples/hello-model"
+                }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/v1/packages", "host": ["{{baseUrl}}"], "path": ["v1", "packages"] },
+            "description": "**Stream a .forge archive and validate it.**\n\n⚠️ **You must attach a file.** Postman cannot persist a file path in an exported collection, so open the *Body* tab and select your `.forge` file for the `file` field. Build one first:\n\n```\npython3 scripts/forge_pack.py examples/hello-model\n```\n\n**Returns 202 and an *operation*, not a package** (ADR-006). The `Location` header points at the operation. This test script saves `operationId` and `packageId` into the environment for you.\n\n**A rejected package still returns a *succeeded* operation.** The validation ran; the verdict is on the package. Read the package to see `validation_findings`. An operation only *fails* when the platform could not do the work (for example an unreadable artifact).\n\n**Responses**\n- `202` — operation created (and, today, already completed: validation runs inline).\n- `400 idempotency_key_required` — you omitted the header.\n- `409 idempotency_conflict` — you reused a key for a different request.\n- `422 archive_too_large` — the archive exceeds `FORGEML_PACKAGE_MAX_ARCHIVE_BYTES`.\n- `503 dependency_unavailable` — PostgreSQL is down."
+          },
+          "response": [
+            {
+              "name": "202 Accepted — validated",
+              "originalRequest": { "method": "POST", "header": [{ "key": "Idempotency-Key", "value": "demo-key-1" }], "url": { "raw": "{{baseUrl}}/v1/packages" } },
+              "status": "Accepted",
+              "code": 202,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" },
+                { "key": "Location", "value": "/v1/operations/bcc62980-3b71-43f4-bead-9eb35622d454" }
+              ],
+              "body": "{\n  \"id\": \"bcc62980-3b71-43f4-bead-9eb35622d454\",\n  \"type\": \"package_validate\",\n  \"target\": \"385952d3476e770eeba21943c7f041d51ce8e90a93de0d862835540403731c31\",\n  \"state\": \"succeeded\",\n  \"correlation_id\": \"2fa6515d-1523-4a1b-90bd-862ff9885c41\",\n  \"result\": {\n    \"package_id\": \"7be9afb4-3344-41cb-80a1-02d43b2e91ce\",\n    \"validation_state\": \"validated\"\n  },\n  \"failure\": null,\n  \"created_at\": \"2026-07-14T20:17:28.069603Z\",\n  \"updated_at\": \"2026-07-14T20:17:28.096915Z\",\n  \"completed_at\": \"2026-07-14T20:17:28.102517Z\"\n}"
+            },
+            {
+              "name": "202 Accepted — package rejected",
+              "originalRequest": { "method": "POST", "header": [{ "key": "Idempotency-Key", "value": "broken-1" }], "url": { "raw": "{{baseUrl}}/v1/packages" } },
+              "status": "Accepted",
+              "code": 202,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"id\": \"a1c2e3d4-0000-4000-8000-000000000001\",\n  \"type\": \"package_validate\",\n  \"target\": \"9f2c...\",\n  \"state\": \"succeeded\",\n  \"correlation_id\": \"11111111-2222-4333-8444-555555555555\",\n  \"result\": {\n    \"package_id\": \"c940ea06-961c-4c84-bb5f-95d8e5d6a7df\",\n    \"validation_state\": \"rejected\"\n  },\n  \"failure\": null,\n  \"created_at\": \"2026-07-14T20:19:02.000000Z\",\n  \"updated_at\": \"2026-07-14T20:19:02.010000Z\",\n  \"completed_at\": \"2026-07-14T20:19:02.012000Z\"\n}"
+            },
+            {
+              "name": "400 Idempotency-Key required",
+              "originalRequest": { "method": "POST", "header": [], "url": { "raw": "{{baseUrl}}/v1/packages" } },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"code\": \"idempotency_key_required\",\n  \"message\": \"An Idempotency-Key header is required.\",\n  \"request_id\": \"83b5f3ea-2e09-4733-ad6a-4995f353a989\"\n}"
+            },
+            {
+              "name": "409 Idempotency conflict",
+              "originalRequest": { "method": "POST", "header": [{ "key": "Idempotency-Key", "value": "demo-key-1" }], "url": { "raw": "{{baseUrl}}/v1/packages" } },
+              "status": "Conflict",
+              "code": 409,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"code\": \"idempotency_conflict\",\n  \"message\": \"this idempotency key was already used for a different request\",\n  \"request_id\": \"d02e6501-f4ea-43a9-9d5c-fbca8fb21e80\"\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 400) {",
+                  "    pm.test('400 means you did not attach an Idempotency-Key', function () {",
+                  "        pm.expect(pm.response.json().code).to.eql('idempotency_key_required');",
+                  "    });",
+                  "    return;",
+                  "}",
+                  "",
+                  "pm.test('202 Accepted (a long-running command returns an operation)', function () {",
+                  "    pm.response.to.have.status(202);",
+                  "});",
+                  "",
+                  "pm.test('Location points at the operation', function () {",
+                  "    pm.response.to.have.header('Location');",
+                  "});",
+                  "",
+                  "const operation = pm.response.json();",
+                  "",
+                  "pm.test('It is an operation resource, not a package', function () {",
+                  "    pm.expect(operation).to.have.property('state');",
+                  "    pm.expect(operation.type).to.eql('package_validate');",
+                  "});",
+                  "",
+                  "pm.test('The target is the archive checksum (ADR-003)', function () {",
+                  "    pm.expect(operation.target).to.match(/^[0-9a-f]{64}$/);",
+                  "});",
+                  "",
+                  "pm.test('correlation_id equals the response X-Request-ID (ADR-015)', function () {",
+                  "    pm.expect(operation.correlation_id).to.eql(pm.response.headers.get('X-Request-ID'));",
+                  "});",
+                  "",
+                  "// Extract the variables the rest of the collection needs.",
+                  "pm.environment.set('operationId', operation.id);",
+                  "if (operation.result && operation.result.package_id) {",
+                  "    pm.environment.set('packageId', operation.result.package_id);",
+                  "    console.log('validation_state =', operation.result.validation_state);",
+                  "}",
+                  "pm.environment.set('correlationId', operation.correlation_id);",
+                  "",
+                  "if (operation.state === 'failed') {",
+                  "    console.warn('The operation FAILED. That is a platform fault, not a bad package:', JSON.stringify(operation.failure));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Read package — GET /v1/packages/{id}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/packages/{{packageId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "packages", "{{packageId}}"]
+            },
+            "description": "**Read one package, with its manifest and validation findings.**\n\nThis is where the *verdict* lives. `validation_state` is `validated` or `rejected`; when rejected, `validation_findings` lists stable machine codes with a logical path (for example `dependency_not_pinned` at `[\"dependencies\", 0]`).\n\n`manifest` is populated only for a validated package — the platform will not report a manifest it did not accept. `manifest_version` is `null` until validation has actually parsed the archive.\n\n`{{packageId}}` is set automatically by the Upload request.\n\n**404 `package_not_found`** — unknown id.\n**422** — the id is not a UUID."
+          },
+          "response": [
+            {
+              "name": "200 OK — validated",
+              "originalRequest": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/v1/packages/{{packageId}}" } },
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"id\": \"7be9afb4-3344-41cb-80a1-02d43b2e91ce\",\n  \"sha256\": \"385952d3476e770eeba21943c7f041d51ce8e90a93de0d862835540403731c31\",\n  \"filename\": \"hello-model.forge\",\n  \"size_bytes\": 1057,\n  \"manifest_version\": 1,\n  \"validation_state\": \"validated\",\n  \"validation_findings\": null,\n  \"manifest\": {\n    \"forge_version\": 1,\n    \"model\": { \"name\": \"Hello Model\", \"framework\": \"python-callable\", \"version\": \"1.0.0\" },\n    \"runtime\": { \"python\": \"3.11\" },\n    \"entrypoint\": { \"module\": \"model\", \"callable\": \"predict\" }\n  },\n  \"created_at\": \"2026-07-14T20:17:28.069603Z\"\n}"
+            },
+            {
+              "name": "200 OK — rejected, with findings",
+              "originalRequest": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/v1/packages/{{packageId}}" } },
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"id\": \"c940ea06-961c-4c84-bb5f-95d8e5d6a7df\",\n  \"sha256\": \"9f2c...\",\n  \"filename\": \"broken.forge\",\n  \"size_bytes\": 1063,\n  \"manifest_version\": null,\n  \"validation_state\": \"rejected\",\n  \"validation_findings\": [\n    {\n      \"code\": \"dependency_not_pinned\",\n      \"message\": \"dependency must be an exact name==version pin\",\n      \"path\": [\"dependencies\", 0]\n    }\n  ],\n  \"manifest\": null,\n  \"created_at\": \"2026-07-14T20:19:02.000000Z\"\n}"
+            },
+            {
+              "name": "404 Not found",
+              "originalRequest": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/v1/packages/{{packageId}}" } },
+              "status": "Not Found",
+              "code": 404,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"code\": \"package_not_found\",\n  \"message\": \"the referenced package does not exist\",\n  \"request_id\": \"7c2b1a90-0000-4000-8000-000000000000\"\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const pkg = pm.response.json();",
+                  "",
+                  "pm.test('Identity is the SHA-256 of the bytes (ADR-003)', function () {",
+                  "    pm.expect(pkg.sha256).to.match(/^[0-9a-f]{64}$/);",
+                  "});",
+                  "",
+                  "pm.test('Carries a terminal validation verdict', function () {",
+                  "    pm.expect(pkg.validation_state).to.be.oneOf(['validated', 'rejected']);",
+                  "});",
+                  "",
+                  "if (pkg.validation_state === 'validated') {",
+                  "    pm.test('A validated package exposes its manifest', function () {",
+                  "        pm.expect(pkg.manifest).to.not.eql(null);",
+                  "        pm.expect(pkg.manifest.forge_version).to.eql(1);",
+                  "        pm.expect(pkg.manifest.model.framework).to.eql('python-callable');",
+                  "    });",
+                  "    pm.test('A validated package has no findings', function () {",
+                  "        pm.expect(pkg.validation_findings).to.eql(null);",
+                  "    });",
+                  "    pm.test('manifest_version is set once the archive was parsed', function () {",
+                  "        pm.expect(pkg.manifest_version).to.eql(1);",
+                  "    });",
+                  "} else {",
+                  "    pm.test('A rejected package explains itself with stable codes', function () {",
+                  "        pm.expect(pkg.validation_findings).to.be.an('array').that.is.not.empty;",
+                  "        pm.expect(pkg.validation_findings[0]).to.have.property('code');",
+                  "        pm.expect(pkg.validation_findings[0]).to.have.property('message');",
+                  "    });",
+                  "    console.log('Findings:', pkg.validation_findings.map(f => f.code).join(', '));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List packages — GET /v1/packages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/packages?limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "packages"],
+              "query": [
+                { "key": "limit", "value": "50", "description": "1–100. Default 50. Outside that range is a 422." },
+                { "key": "cursor", "value": "", "description": "Opaque cursor from a previous page's next_cursor. Disabled by default.", "disabled": true }
+              ]
+            },
+            "description": "**List packages, newest first.**\n\nKeyset pagination: pass the previous response's `next_cursor` back as `cursor`. The cursor is **opaque** — do not construct one by hand; it encodes internal ordering keys and its format is not a contract. `next_cursor` is `null` on the last page.\n\n**422** — `limit` outside 1–100.\n**400 `cursor_invalid`** — a cursor we did not issue."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/v1/packages?limit=50" } },
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"items\": [\n    {\n      \"id\": \"7be9afb4-3344-41cb-80a1-02d43b2e91ce\",\n      \"sha256\": \"385952d3476e770eeba21943c7f041d51ce8e90a93de0d862835540403731c31\",\n      \"filename\": \"hello-model.forge\",\n      \"size_bytes\": 1057,\n      \"validation_state\": \"validated\",\n      \"created_at\": \"2026-07-14T20:17:28.069603Z\"\n    }\n  ],\n  \"next_cursor\": null\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const page = pm.response.json();",
+                  "",
+                  "pm.test('Returns a page', function () {",
+                  "    pm.expect(page.items).to.be.an('array');",
+                  "    pm.expect(page).to.have.property('next_cursor');",
+                  "});",
+                  "",
+                  "pm.test('Ordered newest first', function () {",
+                  "    const times = page.items.map(i => Date.parse(i.created_at));",
+                  "    const sorted = [...times].sort((a, b) => b - a);",
+                  "    pm.expect(times).to.eql(sorted);",
+                  "});",
+                  "",
+                  "if (page.next_cursor) {",
+                  "    pm.environment.set('cursor', page.next_cursor);",
+                  "    console.log('More pages. Enable the cursor query param and re-send.');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Operations",
+      "description": "Poll durable operations (ADR-006).",
+      "item": [
+        {
+          "name": "Poll operation — GET /v1/operations/{id}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/operations/{{operationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "operations", "{{operationId}}"]
+            },
+            "description": "**Poll a durable operation.**\n\nStates: `pending` → `running` → `succeeded` | `failed`. The terminal states are **immutable** — the database enforces it — so a poll is always truthful.\n\nValidation currently runs inside the upload request, so an operation is usually already `succeeded` by the time you first poll it. That will stay true from the client's point of view when the work moves to a background worker: this contract exists precisely so that change is invisible to you.\n\n- `state: succeeded` → `result.package_id` and `result.validation_state`. **Note that `succeeded` says the validation *ran*, not that the package was accepted.** Read the package for the verdict.\n- `state: failed` → `failure.code` — the platform could not do the work (for example `artifact_unreadable`). This is *not* a bad package.\n\n`{{operationId}}` is set automatically by the Upload request.\n\n**404 `operation_not_found`** — unknown id."
+          },
+          "response": [
+            {
+              "name": "200 OK — succeeded",
+              "originalRequest": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/v1/operations/{{operationId}}" } },
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"id\": \"bcc62980-3b71-43f4-bead-9eb35622d454\",\n  \"type\": \"package_validate\",\n  \"target\": \"385952d3476e770eeba21943c7f041d51ce8e90a93de0d862835540403731c31\",\n  \"state\": \"succeeded\",\n  \"correlation_id\": \"2fa6515d-1523-4a1b-90bd-862ff9885c41\",\n  \"result\": {\n    \"package_id\": \"7be9afb4-3344-41cb-80a1-02d43b2e91ce\",\n    \"validation_state\": \"validated\"\n  },\n  \"failure\": null,\n  \"created_at\": \"2026-07-14T20:17:28.069603Z\",\n  \"updated_at\": \"2026-07-14T20:17:28.096915Z\",\n  \"completed_at\": \"2026-07-14T20:17:28.102517Z\"\n}"
+            },
+            {
+              "name": "200 OK — failed (platform fault)",
+              "originalRequest": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/v1/operations/{{operationId}}" } },
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"id\": \"bcc62980-3b71-43f4-bead-9eb35622d454\",\n  \"type\": \"package_validate\",\n  \"target\": \"385952d3...\",\n  \"state\": \"failed\",\n  \"correlation_id\": \"2fa6515d-1523-4a1b-90bd-862ff9885c41\",\n  \"result\": null,\n  \"failure\": {\n    \"code\": \"artifact_unreadable\",\n    \"message\": \"the stored artifact could not be read\"\n  },\n  \"created_at\": \"2026-07-14T20:17:28.069603Z\",\n  \"updated_at\": \"2026-07-14T20:17:28.096915Z\",\n  \"completed_at\": \"2026-07-14T20:17:28.102517Z\"\n}"
+            },
+            {
+              "name": "404 Not found",
+              "originalRequest": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/v1/operations/{{operationId}}" } },
+              "status": "Not Found",
+              "code": 404,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"code\": \"operation_not_found\",\n  \"message\": \"the referenced operation does not exist\",\n  \"request_id\": \"7c2b1a90-0000-4000-8000-000000000000\"\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const op = pm.response.json();",
+                  "",
+                  "pm.test('State is one of the four lifecycle states', function () {",
+                  "    pm.expect(op.state).to.be.oneOf(['pending', 'running', 'succeeded', 'failed']);",
+                  "});",
+                  "",
+                  "pm.test('A terminal operation has a completion time', function () {",
+                  "    if (op.state === 'succeeded' || op.state === 'failed') {",
+                  "        pm.expect(op.completed_at).to.not.eql(null);",
+                  "    }",
+                  "});",
+                  "",
+                  "if (op.state === 'succeeded') {",
+                  "    pm.test('Result references the package', function () {",
+                  "        pm.expect(op.result).to.have.property('package_id');",
+                  "        pm.expect(op.result).to.have.property('validation_state');",
+                  "    });",
+                  "    pm.test('A succeeded operation carries no failure', () => pm.expect(op.failure).to.eql(null));",
+                  "    pm.environment.set('packageId', op.result.package_id);",
+                  "    console.log('validation_state =', op.result.validation_state, '(read the package for findings)');",
+                  "}",
+                  "",
+                  "if (op.state === 'failed') {",
+                  "    pm.test('A failed operation explains the platform fault', function () {",
+                  "        pm.expect(op.failure).to.have.property('code');",
+                  "    });",
+                  "    console.warn('Platform fault, not a bad package:', op.failure.code);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
