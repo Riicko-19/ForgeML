@@ -25,6 +25,7 @@ from forgeml.domain.operations.models import (
     OperationState,
     OperationType,
 )
+from forgeml.domain.package.analyzer import analyze
 from forgeml.domain.package.models import (
     ManifestV1,
     PackageState,
@@ -85,6 +86,17 @@ def validated_with_manifest() -> PackageValidation:
         validator_version="1",
         findings=(),
         manifest=ManifestV1.model_validate(VALID_MANIFEST),
+    )
+
+
+def validated_with_contract() -> PackageValidation:
+    manifest = ManifestV1.model_validate(VALID_MANIFEST)
+    return PackageValidation(
+        state=ValidationState.VALIDATED,
+        validator_version="1",
+        findings=(),
+        manifest=manifest,
+        contract=analyze(manifest),
     )
 
 
@@ -192,6 +204,43 @@ def test_a_draft_package_claims_no_manifest_version(uow: UnitOfWork) -> None:
     assert stored.manifest_version == 1
     assert stored.manifest is not None
     assert stored.manifest.entrypoint.callable == "predict"
+
+
+def test_the_analyzed_contract_survives_a_round_trip(uow: UnitOfWork) -> None:
+    # Module 4's analyzed contract is persisted on the validation record and
+    # read back intact, against both the in-memory fake and real PostgreSQL.
+    with uow:
+        package = uow.packages.get_or_create(SHA, "m.forge", 10, f"artifact://{SHA}")
+        uow.commit()
+
+    with uow:
+        uow.packages.save_validation(package.id, validated_with_contract())
+        uow.commit()
+
+    with uow:
+        history = uow.packages.findings_for(package.id)
+
+    assert len(history) == 1
+    contract = history[0].contract
+    assert contract == analyze(ManifestV1.model_validate(VALID_MANIFEST))
+    # The dialect the manifest's output schema omits is present after analysis.
+    assert contract is not None
+    assert "$schema" in contract.output_schema
+
+
+def test_a_rejected_validation_persists_no_contract(uow: UnitOfWork) -> None:
+    with uow:
+        package = uow.packages.get_or_create(SHA, "m.forge", 10, f"artifact://{SHA}")
+        uow.commit()
+
+    with uow:
+        uow.packages.save_validation(package.id, rejected())
+        uow.commit()
+
+    with uow:
+        history = uow.packages.findings_for(package.id)
+
+    assert history[0].contract is None
 
 
 def test_validating_an_absent_package_is_not_found(uow: UnitOfWork) -> None:

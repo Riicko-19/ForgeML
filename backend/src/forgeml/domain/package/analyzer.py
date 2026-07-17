@@ -17,36 +17,17 @@ from __future__ import annotations
 
 import copy
 from collections.abc import Mapping
-from dataclasses import dataclass
 from typing import Any
 
-from forgeml.domain.package.models import ManifestV1, is_supported_schema_dialect
+from forgeml.domain.package.models import (
+    InferenceContract,
+    ManifestV1,
+    is_supported_schema_dialect,
+)
 
 ANALYZER_VERSION = "1"
 
 _SCHEMA_DIALECT = "https://json-schema.org/draft/2020-12/schema"
-
-
-@dataclass(frozen=True, slots=True)
-class InferenceContract:
-    """The normalized contract for serving one packaged model (docs 03/04).
-
-    Derived purely from a validated manifest. `dependencies` is sorted and the
-    schemas carry an explicit dialect, so two manifests that differ only in
-    dependency order or an omitted `$schema` produce the same contract -- which
-    is what lets the generator's identity be stable across cosmetic changes.
-    """
-
-    analyzer_version: str
-    framework: str
-    python: str
-    entrypoint_module: str
-    entrypoint_callable: str
-    dependencies: tuple[str, ...]
-    input_schema: Mapping[str, Any]
-    output_schema: Mapping[str, Any]
-    model_name: str
-    model_version: str
 
 
 def _normalized_schema(schema: Mapping[str, Any]) -> dict[str, Any]:

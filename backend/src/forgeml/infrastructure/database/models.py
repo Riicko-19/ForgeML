@@ -101,6 +101,9 @@ class PackageValidationRow(Base):
     state: Mapped[str] = mapped_column(String(16))
     findings: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, default=list)
     manifest: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    # Null unless the package validated: the Module 4 analyzed inference
+    # contract (docs 04). Added additively; a rejected row leaves it null.
+    contract: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     completed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

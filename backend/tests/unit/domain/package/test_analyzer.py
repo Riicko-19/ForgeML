@@ -2,12 +2,8 @@
 
 from __future__ import annotations
 
-from forgeml.domain.package.analyzer import (
-    ANALYZER_VERSION,
-    InferenceContract,
-    analyze,
-)
-from forgeml.domain.package.models import ManifestV1
+from forgeml.domain.package.analyzer import ANALYZER_VERSION, analyze
+from forgeml.domain.package.models import InferenceContract, ManifestV1
 from tests.packages import SCHEMA_DIALECT, VALID_MANIFEST, manifest
 
 

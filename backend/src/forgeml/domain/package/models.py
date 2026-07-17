@@ -243,6 +243,30 @@ class ArchiveInspection:
 
 
 @dataclass(frozen=True, slots=True)
+class InferenceContract:
+    """The normalized contract for serving one packaged model (docs 03/04).
+
+    Derived purely from a validated manifest by the Module 4 analyzer. It lives
+    here with the other domain records; the derivation itself is in analyzer.py,
+    the same split validate_package/rules.py already follows. `dependencies` is
+    sorted and the schemas carry an explicit dialect, so two manifests differing
+    only cosmetically produce the same contract -- the property the runtime
+    generator's artifact identity depends on.
+    """
+
+    analyzer_version: str
+    framework: str
+    python: str
+    entrypoint_module: str
+    entrypoint_callable: str
+    dependencies: tuple[str, ...]
+    input_schema: Mapping[str, Any]
+    output_schema: Mapping[str, Any]
+    model_name: str
+    model_version: str
+
+
+@dataclass(frozen=True, slots=True)
 class PackageValidation:
     """The result of validating one archive. Findings are ordered and stable."""
 
@@ -250,6 +274,9 @@ class PackageValidation:
     validator_version: str
     findings: tuple[ErrorDetail, ...]
     manifest: ManifestV1 | None = None
+    # Null unless the package validated: the analyzed inference contract (docs
+    # 04) is a fact about a valid manifest, so a rejected package never has one.
+    contract: InferenceContract | None = None
 
 
 @dataclass(frozen=True, slots=True)

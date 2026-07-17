@@ -274,6 +274,8 @@ def test_reference_matrix_rejects_with_stable_code(
 
     assert result.state is ValidationState.REJECTED
     assert result.manifest is None
+    # A rejected package is never analyzed, so it carries no inference contract.
+    assert result.contract is None
     assert expected.value in {finding.code for finding in result.findings}
 
 
@@ -285,6 +287,12 @@ def test_minimal_valid_package_is_accepted(validate: Validate) -> None:
     assert result.manifest is not None
     assert result.manifest.entrypoint.callable == "predict"
     assert result.manifest.model.framework == "python-callable"
+    # The validation service analyzes an accepted package (Module 4): the
+    # derived contract reflects the manifest it just validated.
+    assert result.contract is not None
+    assert result.contract.entrypoint_callable == "predict"
+    assert result.contract.framework == "python-callable"
+    assert result.contract.dependencies == ("numpy==2.1.0",)
 
 
 def test_valid_package_with_verified_asset_is_accepted(validate: Validate) -> None:

@@ -19,6 +19,7 @@ from forgeml.domain.operations.models import (
     OperationType,
 )
 from forgeml.domain.package.models import (
+    InferenceContract,
     ManifestV1,
     Package,
     PackageState,
@@ -71,6 +72,7 @@ def to_validation(row: PackageValidationRow) -> PackageValidation:
         validator_version=row.validator_version,
         findings=tuple(finding_from_json(item) for item in row.findings),
         manifest=ManifestV1.model_validate(row.manifest) if row.manifest else None,
+        contract=contract_from_json(row.contract),
     )
 
 
@@ -118,3 +120,37 @@ def manifest_to_json(manifest: ManifestV1 | None) -> dict[str, Any] | None:
     # by_alias keeps `schema` as the wire name; round-tripping through the field
     # name would produce a manifest the frozen model refuses to read back.
     return manifest.model_dump(mode="json", by_alias=True) if manifest else None
+
+
+def contract_to_json(contract: InferenceContract | None) -> dict[str, Any] | None:
+    if contract is None:
+        return None
+    return {
+        "analyzer_version": contract.analyzer_version,
+        "framework": contract.framework,
+        "python": contract.python,
+        "entrypoint_module": contract.entrypoint_module,
+        "entrypoint_callable": contract.entrypoint_callable,
+        "dependencies": list(contract.dependencies),
+        "input_schema": copy.deepcopy(dict(contract.input_schema)),
+        "output_schema": copy.deepcopy(dict(contract.output_schema)),
+        "model_name": contract.model_name,
+        "model_version": contract.model_version,
+    }
+
+
+def contract_from_json(document: dict[str, Any] | None) -> InferenceContract | None:
+    if document is None:
+        return None
+    return InferenceContract(
+        analyzer_version=document["analyzer_version"],
+        framework=document["framework"],
+        python=document["python"],
+        entrypoint_module=document["entrypoint_module"],
+        entrypoint_callable=document["entrypoint_callable"],
+        dependencies=tuple(document["dependencies"]),
+        input_schema=document["input_schema"],
+        output_schema=document["output_schema"],
+        model_name=document["model_name"],
+        model_version=document["model_version"],
+    )

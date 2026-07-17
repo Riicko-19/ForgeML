@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from forgeml.core.config import PackageLimits
+from forgeml.domain.package.analyzer import analyze
 from forgeml.domain.package.models import ArchiveUnreadable, PackageValidation
 from forgeml.domain.package.ports import ArchiveReader, ArtifactStore
 from forgeml.domain.package.rules import (
@@ -39,12 +42,20 @@ class PackageValidationService:
                 return unreadable_archive()
 
             validation = validate_package(inspection, self._limits)
-            if validation.manifest is None:
+            manifest = validation.manifest
+            if manifest is None:
                 return validation
+
+            # The manifest is only set on a VALIDATED result, so this is where
+            # the package first has a contract to analyze (docs 04, Module 4).
+            # If an asset checksum fails below, rejected_with rebuilds a fresh
+            # REJECTED record and the contract is dropped -- a rejected package
+            # never carries one.
+            validation = replace(validation, contract=analyze(manifest))
 
             expected = {
                 asset.path: asset.sha256
-                for asset in validation.manifest.assets
+                for asset in manifest.assets
                 if asset.sha256 is not None
             }
             if not expected:

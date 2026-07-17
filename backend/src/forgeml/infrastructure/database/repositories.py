@@ -121,6 +121,7 @@ class SqlAlchemyPackageCatalog:
 
         findings = [mappers.finding_to_json(item) for item in validation.findings]
         manifest = mappers.manifest_to_json(validation.manifest)
+        contract = mappers.contract_to_json(validation.contract)
 
         existing = self._session.execute(
             select(PackageValidationRow).where(
@@ -138,6 +139,7 @@ class SqlAlchemyPackageCatalog:
                     state=validation.state.value,
                     findings=findings,
                     manifest=manifest,
+                    contract=contract,
                 )
             )
         else:
@@ -146,6 +148,7 @@ class SqlAlchemyPackageCatalog:
             existing.state = validation.state.value
             existing.findings = findings
             existing.manifest = manifest
+            existing.contract = contract
             existing.completed_at = datetime.now(tz=UTC)
 
         package.state = PackageState.from_validation(validation.state).value
