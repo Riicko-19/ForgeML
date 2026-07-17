@@ -19,12 +19,15 @@ MAX_ATTEMPTS = 3
 class OperationType(StrEnum):
     """The kinds of durable work the control plane performs.
 
-    Only the package operations exist today. Build, start, stop, activate, and
-    reconcile arrive with the modules that own them (ADR-006 names them; they
-    are not declared here before they can be executed).
+    Package validation and the Module 5 deployment operations exist today.
+    Activation arrives with the routing module (Module 7); ADR-006 names it but
+    it is not declared here before it can be executed.
     """
 
     PACKAGE_VALIDATE = "package_validate"
+    DEPLOYMENT_VERSION_DEPLOY = "deployment_version_deploy"
+    DEPLOYMENT_VERSION_STOP = "deployment_version_stop"
+    DEPLOYMENT_RECONCILE = "deployment_reconcile"
 
 
 class OperationState(StrEnum):

@@ -14,12 +14,18 @@ from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import literal, select, tuple_
+from sqlalchemy import func, literal, select, tuple_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from forgeml.core.errors import AppError, ErrorCategory
 from forgeml.domain.audit.models import AuditEvent
+from forgeml.domain.deployment.models import (
+    Deployment,
+    DeploymentVersion,
+    DesiredState,
+)
+from forgeml.domain.deployment.ports import DeploymentPage
 from forgeml.domain.operations.models import (
     MAX_ATTEMPTS,
     Operation,
@@ -36,6 +42,8 @@ from forgeml.domain.package.ports import PackagePage
 from forgeml.infrastructure.database import mappers
 from forgeml.infrastructure.database.models import (
     AuditEventRow,
+    DeploymentRow,
+    DeploymentVersionRow,
     OperationRow,
     PackageRow,
     PackageValidationRow,
@@ -402,3 +410,121 @@ class SqlAlchemyAuditLog:
             .order_by(AuditEventRow.occurred_at)
         ).scalars()
         return [mappers.to_audit_event(row) for row in rows]
+
+
+class SqlAlchemyDeploymentRepository:
+    """Deployment and version records backed by PostgreSQL."""
+
+    def __init__(self, session: Session) -> None:
+        self._session = session
+
+    def create_deployment(self, name: str, desired_state: DesiredState) -> Deployment:
+        row = DeploymentRow(id=uuid4(), name=name, desired_state=desired_state.value)
+        try:
+            with self._session.begin_nested():
+                self._session.add(row)
+        except IntegrityError as error:
+            # The unique name index arbitrated: the name is already taken.
+            raise _conflict(
+                "deployment_name_taken",
+                "a deployment with this name already exists",
+            ) from error
+        return mappers.to_deployment(row)
+
+    def find_deployment(self, deployment_id: UUID) -> Deployment | None:
+        row = self._session.get(DeploymentRow, deployment_id)
+        return mappers.to_deployment(row) if row else None
+
+    def find_deployment_by_name(self, name: str) -> Deployment | None:
+        row = self._session.execute(
+            select(DeploymentRow).where(DeploymentRow.name == name)
+        ).scalar_one_or_none()
+        return mappers.to_deployment(row) if row else None
+
+    def list_deployments(self, limit: int, cursor: str | None = None) -> DeploymentPage:
+        query = select(DeploymentRow).order_by(
+            DeploymentRow.created_at.desc(), DeploymentRow.id.desc()
+        )
+        if cursor is not None:
+            created_at, identifier = _decode_cursor(cursor)
+            query = query.where(
+                tuple_(DeploymentRow.created_at, DeploymentRow.id)
+                < tuple_(literal(created_at), literal(identifier))
+            )
+        rows = list(self._session.execute(query.limit(limit + 1)).scalars())
+        has_more = len(rows) > limit
+        page = rows[:limit]
+        next_cursor = (
+            _encode_cursor(page[-1].created_at, page[-1].id) if has_more else None
+        )
+        return DeploymentPage(
+            items=tuple(mappers.to_deployment(row) for row in page),
+            next_cursor=next_cursor,
+        )
+
+    def lock_deployment(self, deployment_id: UUID) -> Deployment | None:
+        row = self._session.execute(
+            select(DeploymentRow)
+            .where(DeploymentRow.id == deployment_id)
+            .with_for_update()
+        ).scalar_one_or_none()
+        return mappers.to_deployment(row) if row else None
+
+    def save_deployment(self, deployment: Deployment) -> None:
+        row = self._session.get(DeploymentRow, deployment.id)
+        if row is None:
+            raise _not_found("deployment")
+        row.desired_state = deployment.desired_state.value
+        row.active_version_id = deployment.active_version_id
+        self._session.flush()
+
+    def add_version(self, version: DeploymentVersion) -> None:
+        self._session.add(
+            DeploymentVersionRow(
+                id=version.id,
+                deployment_id=version.deployment_id,
+                package_id=version.package_id,
+                attempt=version.attempt,
+                state=version.state.value,
+                resource_policy=mappers.resource_policy_to_json(
+                    version.resource_policy
+                ),
+                image_ref=version.image_ref,
+                container_id=version.container_id,
+                endpoint=version.endpoint,
+                failure=mappers.failure_to_json(version.failure),
+            )
+        )
+        self._session.flush()
+
+    def find_version(self, version_id: UUID) -> DeploymentVersion | None:
+        row = self._session.get(DeploymentVersionRow, version_id)
+        return mappers.to_version(row) if row else None
+
+    def list_versions(self, deployment_id: UUID) -> tuple[DeploymentVersion, ...]:
+        rows = self._session.execute(
+            select(DeploymentVersionRow)
+            .where(DeploymentVersionRow.deployment_id == deployment_id)
+            .order_by(DeploymentVersionRow.attempt.desc())
+        ).scalars()
+        return tuple(mappers.to_version(row) for row in rows)
+
+    def save_version(self, version: DeploymentVersion) -> None:
+        row = self._session.get(DeploymentVersionRow, version.id)
+        if row is None:
+            raise _not_found("deployment_version")
+        row.state = version.state.value
+        row.image_ref = version.image_ref
+        row.container_id = version.container_id
+        row.endpoint = version.endpoint
+        row.failure = mappers.failure_to_json(version.failure)
+        self._session.flush()
+
+    def next_attempt(self, deployment_id: UUID, package_id: UUID) -> int:
+        highest = self._session.execute(
+            select(func.max(DeploymentVersionRow.attempt)).where(
+                DeploymentVersionRow.deployment_id == deployment_id,
+                DeploymentVersionRow.package_id == package_id,
+            )
+        ).scalar_one()
+        return (highest or 0) + 1

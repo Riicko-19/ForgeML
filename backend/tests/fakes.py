@@ -19,6 +19,12 @@ from uuid import UUID, uuid4
 from forgeml.application.unit_of_work import UnitOfWork
 from forgeml.core.errors import AppError, ErrorCategory
 from forgeml.domain.audit.models import AuditEvent
+from forgeml.domain.deployment.models import (
+    Deployment,
+    DeploymentVersion,
+    DesiredState,
+)
+from forgeml.domain.deployment.ports import DeploymentPage
 from forgeml.domain.operations.models import (
     MAX_ATTEMPTS,
     Operation,
@@ -312,6 +318,99 @@ class InMemoryAuditLog:
         self._events.clear()
 
 
+class InMemoryDeploymentRepository:
+    def __init__(self, clock: _Clock) -> None:
+        self._clock = clock
+        self._deployments: dict[UUID, Deployment] = {}
+        self._versions: dict[UUID, DeploymentVersion] = {}
+
+    def create_deployment(self, name: str, desired_state: DesiredState) -> Deployment:
+        if any(item.name == name for item in self._deployments.values()):
+            raise AppError(
+                category=ErrorCategory.CONFLICT,
+                code="deployment_name_taken",
+                message="a deployment with this name already exists",
+            )
+        now = self._clock()
+        deployment = Deployment(
+            id=uuid4(),
+            name=name,
+            desired_state=desired_state,
+            created_at=now,
+            updated_at=now,
+        )
+        self._deployments[deployment.id] = deployment
+        return deployment
+
+    def find_deployment(self, deployment_id: UUID) -> Deployment | None:
+        return self._deployments.get(deployment_id)
+
+    def find_deployment_by_name(self, name: str) -> Deployment | None:
+        return next(
+            (item for item in self._deployments.values() if item.name == name), None
+        )
+
+    def list_deployments(self, limit: int, cursor: str | None = None) -> DeploymentPage:
+        ordered = sorted(
+            self._deployments.values(),
+            key=lambda item: (item.created_at, item.id),
+            reverse=True,
+        )
+        if cursor is not None:
+            timestamp, identifier = cursor.split("|", 1)
+            key = (datetime.fromisoformat(timestamp), UUID(identifier))
+            ordered = [item for item in ordered if (item.created_at, item.id) < key]
+        page = ordered[:limit]
+        has_more = len(ordered) > limit
+        next_cursor = (
+            f"{page[-1].created_at.isoformat()}|{page[-1].id}" if has_more else None
+        )
+        return DeploymentPage(items=tuple(page), next_cursor=next_cursor)
+
+    def lock_deployment(self, deployment_id: UUID) -> Deployment | None:
+        return self._deployments.get(deployment_id)
+
+    def save_deployment(self, deployment: Deployment) -> None:
+        if deployment.id not in self._deployments:
+            raise AppError(
+                category=ErrorCategory.NOT_FOUND,
+                code="deployment_not_found",
+                message="the referenced deployment does not exist",
+            )
+        self._deployments[deployment.id] = replace(deployment, updated_at=self._clock())
+
+    def add_version(self, version: DeploymentVersion) -> None:
+        self._versions[version.id] = version
+
+    def find_version(self, version_id: UUID) -> DeploymentVersion | None:
+        return self._versions.get(version_id)
+
+    def list_versions(self, deployment_id: UUID) -> tuple[DeploymentVersion, ...]:
+        versions = [
+            item
+            for item in self._versions.values()
+            if item.deployment_id == deployment_id
+        ]
+        return tuple(sorted(versions, key=lambda item: item.attempt, reverse=True))
+
+    def save_version(self, version: DeploymentVersion) -> None:
+        if version.id not in self._versions:
+            raise AppError(
+                category=ErrorCategory.NOT_FOUND,
+                code="deployment_version_not_found",
+                message="the referenced deployment version does not exist",
+            )
+        self._versions[version.id] = replace(version, updated_at=self._clock())
+
+    def next_attempt(self, deployment_id: UUID, package_id: UUID) -> int:
+        attempts = [
+            item.attempt
+            for item in self._versions.values()
+            if item.deployment_id == deployment_id and item.package_id == package_id
+        ]
+        return (max(attempts) if attempts else 0) + 1
+
+
 class InMemoryUnitOfWork(UnitOfWork):
     """A unit of work whose rollback really does discard writes.
 
@@ -323,20 +422,26 @@ class InMemoryUnitOfWork(UnitOfWork):
     def __init__(self) -> None:
         self._clock = _Clock()
         self._committed = self._new_state()
-        self.packages, self.operations, self.audit = self._committed
+        self.packages, self.operations, self.audit, self.deployments = self._committed
 
     def _new_state(
         self,
-    ) -> tuple[InMemoryPackageCatalog, InMemoryOperationStore, InMemoryAuditLog]:
+    ) -> tuple[
+        InMemoryPackageCatalog,
+        InMemoryOperationStore,
+        InMemoryAuditLog,
+        InMemoryDeploymentRepository,
+    ]:
         return (
             InMemoryPackageCatalog(self._clock),
             InMemoryOperationStore(self._clock),
             InMemoryAuditLog(self._clock),
+            InMemoryDeploymentRepository(self._clock),
         )
 
     def __enter__(self) -> InMemoryUnitOfWork:
         self._scratch = copy.deepcopy(self._committed)
-        self.packages, self.operations, self.audit = self._scratch
+        self.packages, self.operations, self.audit, self.deployments = self._scratch
         return self
 
     def __exit__(
@@ -345,11 +450,11 @@ class InMemoryUnitOfWork(UnitOfWork):
         exc: BaseException | None,
         traceback: TracebackType | None,
     ) -> None:
-        self.packages, self.operations, self.audit = self._committed
+        self.packages, self.operations, self.audit, self.deployments = self._committed
 
     def commit(self) -> None:
         self._committed = copy.deepcopy(self._scratch)
 
     def rollback(self) -> None:
         self._scratch = copy.deepcopy(self._committed)
-        self.packages, self.operations, self.audit = self._scratch
+        self.packages, self.operations, self.audit, self.deployments = self._scratch

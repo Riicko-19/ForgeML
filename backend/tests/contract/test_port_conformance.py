@@ -9,7 +9,9 @@ from __future__ import annotations
 
 import os
 from collections.abc import Iterator
-from uuid import uuid4
+from dataclasses import replace
+from datetime import UTC, datetime
+from uuid import UUID, uuid4
 
 import pytest
 from alembic import command
@@ -19,6 +21,13 @@ from sqlalchemy import Engine, create_engine, text
 from forgeml.application.unit_of_work import UnitOfWork
 from forgeml.core.errors import AppError, ErrorCategory, ErrorDetail
 from forgeml.domain.audit.models import ActorType, AuditEvent
+from forgeml.domain.deployment.models import (
+    DeploymentVersion,
+    DesiredState,
+    ResourcePolicy,
+    VersionState,
+)
+from forgeml.domain.deployment.rules import mark_built
 from forgeml.domain.operations.models import (
     MAX_ATTEMPTS,
     OperationFailure,
@@ -38,7 +47,14 @@ from tests.fakes import InMemoryUnitOfWork
 from tests.packages import VALID_MANIFEST
 
 DEFAULT_URL = "postgresql+psycopg://forgeml:forgeml@127.0.0.1:55432/forgeml"
-TABLES = ("audit_events", "package_validations", "operations", "packages")
+TABLES = (
+    "audit_events",
+    "package_validations",
+    "deployment_versions",
+    "deployments",
+    "operations",
+    "packages",
+)
 SHA = "a" * 64
 OTHER_SHA = "b" * 64
 VALIDATE = OperationType.PACKAGE_VALIDATE
@@ -597,3 +613,121 @@ def test_an_explicit_rollback_discards_writes(uow: UnitOfWork) -> None:
 
     with uow:
         assert uow.packages.find_by_checksum(SHA) is None
+
+
+# --- Deployment repository (Module 5) --------------------------------------
+
+
+def _package(uow: UnitOfWork) -> UUID:
+    # A version references a real package by foreign key, so create one first.
+    return uow.packages.get_or_create(SHA, "m.forge", 10, f"artifact://{SHA}").id
+
+
+def _building_version(
+    deployment_id: UUID, package_id: UUID, attempt: int = 1
+) -> DeploymentVersion:
+    now = datetime(2026, 7, 17, tzinfo=UTC)
+    return DeploymentVersion(
+        id=uuid4(),
+        deployment_id=deployment_id,
+        package_id=package_id,
+        attempt=attempt,
+        state=VersionState.BUILDING,
+        resource_policy=ResourcePolicy(cpu_millicores=500, memory_mib=256),
+        created_at=now,
+        updated_at=now,
+    )
+
+
+def test_a_deployment_can_be_created_and_read_back(uow: UnitOfWork) -> None:
+    with uow:
+        created = uow.deployments.create_deployment("scorer", DesiredState.RUNNING)
+        uow.commit()
+
+    with uow:
+        by_id = uow.deployments.find_deployment(created.id)
+        by_name = uow.deployments.find_deployment_by_name("scorer")
+
+    assert by_id is not None and by_id.name == "scorer"
+    assert by_name is not None and by_name.id == created.id
+    assert by_id.desired_state is DesiredState.RUNNING
+    assert by_id.active_version_id is None
+
+
+def test_a_duplicate_deployment_name_conflicts(uow: UnitOfWork) -> None:
+    with uow:
+        uow.deployments.create_deployment("scorer", DesiredState.RUNNING)
+        uow.commit()
+
+    with uow, pytest.raises(AppError) as captured:
+        uow.deployments.create_deployment("scorer", DesiredState.RUNNING)
+    assert captured.value.category is ErrorCategory.CONFLICT
+    assert captured.value.code == "deployment_name_taken"
+
+
+def test_a_version_persists_its_transition_and_runtime_identity(
+    uow: UnitOfWork,
+) -> None:
+    with uow:
+        package_id = _package(uow)
+        deployment = uow.deployments.create_deployment("scorer", DesiredState.RUNNING)
+        version = _building_version(deployment.id, package_id)
+        uow.deployments.add_version(version)
+        uow.commit()
+
+    with uow:
+        uow.deployments.save_version(mark_built(version, image_ref="sha256:abc"))
+        uow.commit()
+
+    with uow:
+        stored = uow.deployments.find_version(version.id)
+
+    assert stored is not None
+    assert stored.state is VersionState.STARTING
+    assert stored.image_ref == "sha256:abc"
+    assert stored.resource_policy.cpu_millicores == 500
+
+
+def test_attempts_are_monotonic_per_deployment_and_package(uow: UnitOfWork) -> None:
+    with uow:
+        package_id = _package(uow)
+        deployment = uow.deployments.create_deployment("scorer", DesiredState.RUNNING)
+        assert uow.deployments.next_attempt(deployment.id, package_id) == 1
+        uow.deployments.add_version(_building_version(deployment.id, package_id, 1))
+        uow.commit()
+
+    with uow:
+        assert uow.deployments.next_attempt(deployment.id, package_id) == 2
+
+
+def test_versions_of_a_deployment_list_newest_attempt_first(uow: UnitOfWork) -> None:
+    with uow:
+        package_id = _package(uow)
+        deployment = uow.deployments.create_deployment("scorer", DesiredState.RUNNING)
+        uow.deployments.add_version(_building_version(deployment.id, package_id, 1))
+        uow.deployments.add_version(_building_version(deployment.id, package_id, 2))
+        uow.commit()
+
+    with uow:
+        versions = uow.deployments.list_versions(deployment.id)
+
+    assert [item.attempt for item in versions] == [2, 1]
+
+
+def test_desired_state_can_be_saved(uow: UnitOfWork) -> None:
+    with uow:
+        deployment = uow.deployments.create_deployment("scorer", DesiredState.RUNNING)
+        uow.commit()
+
+    with uow:
+        locked = uow.deployments.lock_deployment(deployment.id)
+        assert locked is not None
+        uow.deployments.save_deployment(
+            replace(locked, desired_state=DesiredState.STOPPED)
+        )
+        uow.commit()
+
+    with uow:
+        stored = uow.deployments.find_deployment(deployment.id)
+
+    assert stored is not None and stored.desired_state is DesiredState.STOPPED

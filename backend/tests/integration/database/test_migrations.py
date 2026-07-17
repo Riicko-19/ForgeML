@@ -21,6 +21,8 @@ EXPECTED_TABLES = {
     "package_validations",
     "operations",
     "audit_events",
+    "deployments",
+    "deployment_versions",
     "alembic_version",
 }
 

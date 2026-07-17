@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from forgeml.application.unit_of_work import UnitOfWork
 from forgeml.infrastructure.database.repositories import (
     SqlAlchemyAuditLog,
+    SqlAlchemyDeploymentRepository,
     SqlAlchemyOperationStore,
     SqlAlchemyPackageCatalog,
 )
@@ -35,6 +36,7 @@ class SqlAlchemyUnitOfWork(UnitOfWork):
         self.packages = SqlAlchemyPackageCatalog(self._session)
         self.operations = SqlAlchemyOperationStore(self._session)
         self.audit = SqlAlchemyAuditLog(self._session)
+        self.deployments = SqlAlchemyDeploymentRepository(self._session)
         return self
 
     def __exit__(

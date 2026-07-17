@@ -12,6 +12,13 @@ from typing import Any
 
 from forgeml.core.errors import ErrorDetail
 from forgeml.domain.audit.models import ActorType, AuditEvent
+from forgeml.domain.deployment.models import (
+    Deployment,
+    DeploymentVersion,
+    DesiredState,
+    ResourcePolicy,
+    VersionState,
+)
 from forgeml.domain.operations.models import (
     Operation,
     OperationFailure,
@@ -28,6 +35,8 @@ from forgeml.domain.package.models import (
 )
 from forgeml.infrastructure.database.models import (
     AuditEventRow,
+    DeploymentRow,
+    DeploymentVersionRow,
     OperationRow,
     PackageRow,
     PackageValidationRow,
@@ -137,6 +146,58 @@ def contract_to_json(contract: InferenceContract | None) -> dict[str, Any] | Non
         "model_name": contract.model_name,
         "model_version": contract.model_version,
     }
+
+
+def to_deployment(row: DeploymentRow) -> Deployment:
+    return Deployment(
+        id=row.id,
+        name=row.name,
+        desired_state=DesiredState(row.desired_state),
+        active_version_id=row.active_version_id,
+        created_at=row.created_at,
+        updated_at=row.updated_at,
+    )
+
+
+def to_version(row: DeploymentVersionRow) -> DeploymentVersion:
+    policy = row.resource_policy or {}
+    failure = row.failure
+    return DeploymentVersion(
+        id=row.id,
+        deployment_id=row.deployment_id,
+        package_id=row.package_id,
+        attempt=row.attempt,
+        state=VersionState(row.state),
+        resource_policy=ResourcePolicy(
+            cpu_millicores=policy.get("cpu_millicores"),
+            memory_mib=policy.get("memory_mib"),
+            pids_limit=policy.get("pids_limit"),
+        ),
+        image_ref=row.image_ref,
+        container_id=row.container_id,
+        endpoint=row.endpoint,
+        failure=(
+            OperationFailure(code=failure["code"], message=failure["message"])
+            if failure
+            else None
+        ),
+        created_at=row.created_at,
+        updated_at=row.updated_at,
+    )
+
+
+def resource_policy_to_json(policy: ResourcePolicy) -> dict[str, Any]:
+    return {
+        "cpu_millicores": policy.cpu_millicores,
+        "memory_mib": policy.memory_mib,
+        "pids_limit": policy.pids_limit,
+    }
+
+
+def failure_to_json(failure: OperationFailure | None) -> dict[str, Any] | None:
+    if failure is None:
+        return None
+    return {"code": failure.code, "message": failure.message}
 
 
 def contract_from_json(document: dict[str, Any] | None) -> InferenceContract | None:

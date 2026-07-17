@@ -16,6 +16,7 @@ from types import TracebackType
 from typing import Protocol
 
 from forgeml.domain.audit.ports import AuditLog
+from forgeml.domain.deployment.ports import DeploymentRepository
 from forgeml.domain.operations.ports import OperationStore
 from forgeml.domain.package.ports import PackageCatalog
 
@@ -31,6 +32,7 @@ class UnitOfWork(Protocol):
     packages: PackageCatalog
     operations: OperationStore
     audit: AuditLog
+    deployments: DeploymentRepository
 
     def __enter__(self) -> UnitOfWork:
         """Begin the transaction."""

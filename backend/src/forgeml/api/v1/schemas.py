@@ -146,7 +146,12 @@ class OperationResource(_Wire):
     """A durable operation as clients poll it (ADR-006)."""
 
     id: UUID
-    type: Literal["package_validate"]
+    type: Literal[
+        "package_validate",
+        "deployment_version_deploy",
+        "deployment_version_stop",
+        "deployment_reconcile",
+    ]
     target: str
     state: Literal["pending", "running", "succeeded", "failed"]
     correlation_id: UUID

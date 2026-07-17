@@ -42,6 +42,8 @@ PACKAGE_STATES = ("draft", "validating", "validated", "rejected")
 VALIDATION_STATES = ("validated", "rejected")
 OPERATION_STATES = ("pending", "running", "succeeded", "failed")
 ACTOR_TYPES = ("operator", "system")
+DESIRED_STATES = ("running", "stopped")
+VERSION_STATES = ("building", "starting", "ready", "active", "failed", "stopped")
 
 
 def _in_check(column: str, values: tuple[str, ...]) -> str:
@@ -146,6 +148,59 @@ class OperationRow(Base):
     )
     completed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
+    )
+
+
+class DeploymentRow(Base):
+    __tablename__ = "deployments"
+    __table_args__ = (
+        CheckConstraint(_in_check("desired_state", DESIRED_STATES), name="desired"),
+        UniqueConstraint("name"),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True)
+    # DNS-label shaped and immutable after creation (docs 12).
+    name: Mapped[str] = mapped_column(String(63))
+    desired_state: Mapped[str] = mapped_column(String(16))
+    # Nullable; the routing module (Module 7) owns setting the active version, so
+    # no database foreign key is declared here yet -- it would be a forward
+    # reference to a row a later module activates.
+    active_version_id: Mapped[UUID | None] = mapped_column(nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+class DeploymentVersionRow(Base):
+    __tablename__ = "deployment_versions"
+    __table_args__ = (
+        CheckConstraint(_in_check("state", VERSION_STATES), name="state"),
+        CheckConstraint("attempt > 0", name="attempt_positive"),
+        # Attempt is monotonic per deployment and package: a retry of the same
+        # package is a new attempt, and no two attempts share a number.
+        UniqueConstraint("deployment_id", "package_id", "attempt"),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True)
+    deployment_id: Mapped[UUID] = mapped_column(
+        ForeignKey("deployments.id", ondelete="CASCADE"), index=True
+    )
+    package_id: Mapped[UUID] = mapped_column(ForeignKey("packages.id"))
+    attempt: Mapped[int] = mapped_column(Integer)
+    state: Mapped[str] = mapped_column(String(16))
+    resource_policy: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
+    image_ref: Mapped[str | None] = mapped_column(Text, nullable=True)
+    container_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    endpoint: Mapped[str | None] = mapped_column(Text, nullable=True)
+    failure: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
 
