@@ -239,7 +239,7 @@ def test_start_runs_and_waits_for_health() -> None:
     version = uuid4()
 
     def handler(call: list[str]) -> CliResult:
-        if call[0] == "rm":
+        if call[0] in ("network", "rm"):
             return ok()
         if call[0] == "run":
             return ok(stdout=b"the-container-id\n")
@@ -247,12 +247,14 @@ def test_start_runs_and_waits_for_health() -> None:
             return ok(stdout=inspect_json(running=True, health="healthy"))
         raise AssertionError(call)
 
-    manager, _ = make_manager(handler)
+    manager, cli = make_manager(handler)
     running = manager.start(
         version, BuiltImage(image_ref="forgeml/i"), ResourcePolicy()
     )
     assert running.container_id == "the-container-id"
     assert running.endpoint == f"http://{container_name(version)}:8000"
+    # The isolated runtime network is ensured before the container starts.
+    assert ["network", "create", "--internal", "forgeml-runtime"] in cli.calls
 
 
 def test_start_polls_until_healthy() -> None:

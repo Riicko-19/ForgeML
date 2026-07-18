@@ -310,6 +310,7 @@ class DockerRuntimeManager:
         self, version_id: UUID, image: BuiltImage, policy: ResourcePolicy
     ) -> RunningContainer:
         name = container_name(version_id)
+        self._ensure_network()
         # A retry reuses the deterministic name; clear any stale container first
         # so `run --name` cannot collide.
         self._safe_remove(name)
@@ -405,6 +406,16 @@ class DockerRuntimeManager:
                 )
             )
         return tuple(managed)
+
+    def _ensure_network(self) -> None:
+        # Idempotent: create the isolated, egress-free (ADR-011) runtime network
+        # if it is absent. Best-effort -- "already exists" is the steady state,
+        # and a genuinely unreachable daemon is surfaced by the run that follows.
+        with contextlib.suppress(RuntimeUnavailable, TimeoutError):
+            self._cli.run(
+                ["network", "create", "--internal", self._settings.network],
+                timeout=self._settings.stop_timeout_seconds,
+            )
 
     def _safe_remove(self, reference: str) -> None:
         # Best-effort cleanup; the caller already has a terminal outcome.

@@ -14,6 +14,13 @@ EXPECTED_PATHS = {
     "/v1/packages",
     "/v1/packages/{package_id}",
     "/v1/operations/{operation_id}",
+    # Module 6 mounts the deployment surface Module 5 defined but left unwired.
+    "/v1/deployments",
+    "/v1/deployments/{deployment_id}",
+    "/v1/deployments/{deployment_id}/versions",
+    "/v1/deployments/{deployment_id}/versions/{version_id}",
+    "/v1/deployments/{deployment_id}/versions/{version_id}/stop",
+    "/v1/admin/reconcile",
 }
 
 

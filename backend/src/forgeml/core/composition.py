@@ -10,13 +10,16 @@ from fastapi import FastAPI
 from forgeml.api.error_handlers import register_error_handlers
 from forgeml.api.health import create_health_router
 from forgeml.api.middleware import RequestContextMiddleware
+from forgeml.api.v1.deployments import create_admin_router, create_deployment_router
 from forgeml.api.v1.operations import create_operation_router
 from forgeml.api.v1.packages import create_package_router
+from forgeml.application.deployment.services import DeploymentService
 from forgeml.application.operations.services import OperationService
 from forgeml.application.package.services import PackageService
 from forgeml.core.config import AppSettings
 from forgeml.infrastructure.database.provider import DatabaseProvider
 from forgeml.infrastructure.package.zip_archive import ZipArchiveReader
+from forgeml.infrastructure.runtime.docker import DockerRuntimeManager
 from forgeml.infrastructure.storage.artifact_store import FilesystemArtifactStore
 
 API_PREFIX = "/v1"
@@ -27,13 +30,24 @@ class Container:
 
     def __init__(self, settings: AppSettings) -> None:
         self.database = DatabaseProvider(settings)
+        store = FilesystemArtifactStore(settings.artifact_root)
+        reader = ZipArchiveReader()
         self.packages = PackageService(
             unit_of_work=self.database.unit_of_work,
-            store=FilesystemArtifactStore(settings.artifact_root),
-            reader=ZipArchiveReader(),
+            store=store,
+            reader=reader,
             limits=settings.package_limits,
         )
         self.operations = OperationService(unit_of_work=self.database.unit_of_work)
+        # Module 6: the real runtime. The Docker adapter resolves the package
+        # archive through the same artifact store and reads its src/ into the
+        # build context; nothing above the RuntimeManager port changes.
+        self.deployments = DeploymentService(
+            unit_of_work=self.database.unit_of_work,
+            runtime=DockerRuntimeManager(
+                store=store, reader=reader, limits=settings.package_limits
+            ),
+        )
 
 
 def create_application(settings: AppSettings) -> FastAPI:
@@ -70,5 +84,9 @@ def create_application(settings: AppSettings) -> FastAPI:
     )
     app.include_router(create_package_router(container.packages), prefix=API_PREFIX)
     app.include_router(create_operation_router(container.operations), prefix=API_PREFIX)
+    app.include_router(
+        create_deployment_router(container.deployments), prefix=API_PREFIX
+    )
+    app.include_router(create_admin_router(container.deployments), prefix=API_PREFIX)
     app.add_middleware(RequestContextMiddleware)
     return app
