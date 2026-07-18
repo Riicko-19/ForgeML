@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Callable
+from dataclasses import replace
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
@@ -40,7 +41,9 @@ from forgeml.domain.deployment.ports import (
 )
 from forgeml.domain.deployment.rules import (
     can_transition,
+    mark_active,
     mark_built,
+    mark_deactivated,
     mark_failed,
     mark_ready,
     mark_stopped,
@@ -58,6 +61,11 @@ UnitOfWorkFactory = Callable[[], UnitOfWork]
 _UNAVAILABLE = OperationFailure(
     code="runtime_unavailable",
     message="the container runtime is unavailable; retry the operation",
+)
+
+_NOT_HEALTHY = OperationFailure(
+    code="candidate_not_healthy",
+    message="the candidate version's runtime is not healthy; activation refused",
 )
 
 
@@ -155,6 +163,46 @@ class DeploymentService:
             contract,
             checksum,
             correlation_id,
+        )
+
+    def activate_version(
+        self,
+        deployment_id: UUID,
+        version_id: UUID,
+        idempotency_key: str,
+        correlation_id: UUID,
+    ) -> Operation:
+        """Make a READY version the deployment's one ACTIVE version (docs 04).
+
+        Rollback is the same command aimed at an earlier version. Activation
+        rechecks the candidate's runtime health before it takes the route, so a
+        failed activation leaves the previous ACTIVE version in place.
+        """
+
+        with self._unit_of_work() as uow:
+            deployment = uow.deployments.find_deployment(deployment_id)
+            if deployment is None:
+                raise self._missing("deployment")
+            version = uow.deployments.find_version(version_id)
+            if version is None or version.deployment_id != deployment_id:
+                raise self._missing("deployment_version")
+            if version.state is not VersionState.ACTIVE and not can_transition(
+                version.state, VersionState.ACTIVE
+            ):
+                raise self._invalid_activation(version.state)
+            operation = uow.operations.begin(
+                idempotency_key=idempotency_key,
+                type=OperationType.DEPLOYMENT_VERSION_ACTIVATE,
+                target_id=str(version_id),
+                request_fingerprint=str(version_id),
+                correlation_id=correlation_id,
+            )
+            if operation.state.is_terminal:
+                return operation
+            uow.commit()
+
+        return self._execute_activate(
+            operation.id, deployment_id, version_id, correlation_id
         )
 
     def stop_version(
@@ -286,6 +334,75 @@ class DeploymentService:
             uow.commit()
             return version
 
+    def _execute_activate(
+        self,
+        operation_id: UUID,
+        deployment_id: UUID,
+        version_id: UUID,
+        correlation_id: UUID,
+    ) -> Operation:
+        with self._unit_of_work() as uow:
+            if uow.operations.claim(operation_id) is None:
+                return self._current(operation_id)
+            version = uow.deployments.find_version(version_id)
+            uow.commit()
+        if version is None:  # pragma: no cover - existence checked before begin
+            return self._fail_operation(operation_id, _UNAVAILABLE)
+
+        # Health is rechecked outside any transaction (docs 04): a version never
+        # becomes ACTIVE unless its runtime is present, running, and healthy.
+        if version.container_id is None:
+            return self._fail_operation(operation_id, _NOT_HEALTHY)
+        try:
+            status = self._runtime.inspect(version.container_id)
+        except RuntimeUnavailable:
+            return self._fail_operation(operation_id, _UNAVAILABLE)
+        if not (status.present and status.running and status.healthy):
+            return self._fail_operation(operation_id, _NOT_HEALTHY)
+
+        # The route change is atomic under the deployment lock (docs 04): the
+        # previous active version steps down and the candidate takes the route in
+        # one transaction, or neither does.
+        with self._unit_of_work() as uow:
+            deployment = uow.deployments.lock_deployment(deployment_id)
+            candidate = uow.deployments.find_version(version_id)
+            if deployment is None or candidate is None:  # pragma: no cover
+                return self._fail_operation(operation_id, _UNAVAILABLE)
+            if (
+                candidate.state is VersionState.ACTIVE
+                and deployment.active_version_id == version_id
+            ):
+                completed = uow.operations.complete(
+                    operation_id,
+                    {"version_id": str(version_id), "state": candidate.state.value},
+                )
+                uow.commit()
+                return completed
+            if not can_transition(candidate.state, VersionState.ACTIVE):
+                failure = OperationFailure(
+                    code="invalid_state_transition",
+                    message=f"a {candidate.state.value} version cannot be activated",
+                )
+                failed = uow.operations.fail(operation_id, failure)
+                uow.commit()
+                return failed
+            previous_id = deployment.active_version_id
+            if previous_id is not None and previous_id != version_id:
+                previous = uow.deployments.find_version(previous_id)
+                if previous is not None and previous.state is VersionState.ACTIVE:
+                    uow.deployments.save_version(mark_deactivated(previous))
+            uow.deployments.save_version(mark_active(candidate))
+            uow.deployments.save_deployment(
+                replace(deployment, active_version_id=version_id)
+            )
+            uow.audit.record(self._event("activated", candidate, correlation_id))
+            completed = uow.operations.complete(
+                operation_id,
+                {"version_id": str(version_id), "state": VersionState.ACTIVE.value},
+            )
+            uow.commit()
+            return completed
+
     def _execute_stop(
         self, operation_id: UUID, version_id: UUID, correlation_id: UUID
     ) -> Operation:
@@ -296,6 +413,17 @@ class DeploymentService:
             uow.commit()
         if version is None:  # pragma: no cover - existence checked before begin
             return self._fail_operation(operation_id, _UNAVAILABLE)
+
+        # Docs 04: the route is removed *before* the container stops, so a
+        # prediction never resolves to a version about to disappear. Clearing it
+        # takes the deployment lock and is a no-op unless this version holds it.
+        with self._unit_of_work() as uow:
+            deployment = uow.deployments.lock_deployment(version.deployment_id)
+            if deployment is not None and deployment.active_version_id == version_id:
+                uow.deployments.save_deployment(
+                    replace(deployment, active_version_id=None)
+                )
+            uow.commit()
 
         try:
             if version.container_id is not None:
@@ -426,6 +554,14 @@ class DeploymentService:
             category=ErrorCategory.CONFLICT,
             code="invalid_state_transition",
             message=f"a {state.value} version cannot be stopped",
+        )
+
+    @staticmethod
+    def _invalid_activation(state: VersionState) -> AppError:
+        return AppError(
+            category=ErrorCategory.CONFLICT,
+            code="invalid_state_transition",
+            message=f"a {state.value} version cannot be activated",
         )
 
 

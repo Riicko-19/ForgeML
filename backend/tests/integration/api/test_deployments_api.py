@@ -146,6 +146,34 @@ def test_a_version_deploys_to_ready_and_can_be_read(env: SimpleNamespace) -> Non
     assert version["resource_policy"]["cpu_millicores"] == 500
 
 
+def test_activating_a_version_returns_an_operation(env: SimpleNamespace) -> None:
+    package_id = _accept_package(env.uow)
+    deployment = _create_deployment(env.client)
+    deployed = _body(
+        _post(
+            env.client,
+            f"/v1/deployments/{deployment['id']}/versions",
+            {"package_id": str(package_id)},
+            "deploy-1",
+        )
+    )
+    version_id = deployed["result"]["version_id"]
+
+    response = _post(
+        env.client,
+        f"/v1/deployments/{deployment['id']}/versions/{version_id}/activate",
+        None,
+        "activate-1",
+    )
+    assert response.status_code == 202
+    operation = _body(response)
+    assert operation["type"] == "deployment_version_activate"
+    assert operation["state"] == "succeeded"
+
+    deployment_now = _body(env.client.get(f"/v1/deployments/{deployment['id']}"))
+    assert deployment_now["active_version_id"] == version_id
+
+
 def test_deploying_to_an_unknown_deployment_is_404(env: SimpleNamespace) -> None:
     package_id = _accept_package(env.uow)
     response = _post(

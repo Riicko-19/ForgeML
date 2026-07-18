@@ -218,6 +218,159 @@ def test_deploying_to_an_unknown_deployment_is_not_found(
     assert captured.value.category is ErrorCategory.NOT_FOUND
 
 
+# -- activation, rollback, and the route (Module 7) ---------------------------
+
+
+def _active_version_id(uow: InMemoryUnitOfWork, deployment_id: UUID) -> UUID | None:
+    with uow:
+        deployment = uow.deployments.find_deployment(deployment_id)
+    assert deployment is not None
+    return deployment.active_version_id
+
+
+def _state(uow: InMemoryUnitOfWork, version_id: UUID) -> VersionState:
+    with uow:
+        version = uow.deployments.find_version(version_id)
+    assert version is not None
+    return version.state
+
+
+def test_activation_makes_a_ready_version_the_route_target(
+    service: DeploymentService, uow: InMemoryUnitOfWork
+) -> None:
+    package_id = _accept_package(uow)
+    deployment_id = service.create_deployment("scorer", CORR).id
+    _deploy(service, deployment_id, package_id, "k1")
+    (ready,) = _versions(uow, deployment_id)
+
+    operation = service.activate_version(deployment_id, ready.id, "act-1", CORR)
+
+    assert operation.state is OperationState.SUCCEEDED
+    assert _state(uow, ready.id) is VersionState.ACTIVE
+    assert _active_version_id(uow, deployment_id) == ready.id
+
+
+def test_replacing_the_active_version_steps_the_previous_one_down(
+    service: DeploymentService, uow: InMemoryUnitOfWork
+) -> None:
+    package_id = _accept_package(uow)
+    deployment_id = service.create_deployment("scorer", CORR).id
+    _deploy(service, deployment_id, package_id, "k1")
+    _deploy(service, deployment_id, package_id, "k2")
+    v2, v1 = _versions(uow, deployment_id)  # newest attempt first
+
+    service.activate_version(deployment_id, v1.id, "act-1", CORR)
+    service.activate_version(deployment_id, v2.id, "act-2", CORR)
+
+    assert _state(uow, v2.id) is VersionState.ACTIVE
+    assert _state(uow, v1.id) is VersionState.READY  # stepped down, still runnable
+    assert _active_version_id(uow, deployment_id) == v2.id
+
+    # Rollback is simply activating the previous version again.
+    rollback = service.activate_version(deployment_id, v1.id, "act-3", CORR)
+    assert rollback.state is OperationState.SUCCEEDED
+    assert _state(uow, v1.id) is VersionState.ACTIVE
+    assert _state(uow, v2.id) is VersionState.READY
+    assert _active_version_id(uow, deployment_id) == v1.id
+
+
+def test_activation_is_refused_when_the_candidate_is_unhealthy(
+    service: DeploymentService, uow: InMemoryUnitOfWork, runtime: FakeRuntimeManager
+) -> None:
+    package_id = _accept_package(uow)
+    deployment_id = service.create_deployment("scorer", CORR).id
+    _deploy(service, deployment_id, package_id, "k1")
+    (v1,) = _versions(uow, deployment_id)
+    service.activate_version(deployment_id, v1.id, "act-1", CORR)
+
+    # A second version whose runtime never becomes healthy.
+    runtime.healthy = False
+    _deploy(service, deployment_id, package_id, "k2")
+    v2 = next(v for v in _versions(uow, deployment_id) if v.id != v1.id)
+
+    operation = service.activate_version(deployment_id, v2.id, "act-2", CORR)
+
+    assert operation.state is OperationState.FAILED
+    assert operation.failure is not None
+    assert operation.failure.code == "candidate_not_healthy"
+    # The previous active version is untouched; the candidate stays READY.
+    assert _active_version_id(uow, deployment_id) == v1.id
+    assert _state(uow, v1.id) is VersionState.ACTIVE
+    assert _state(uow, v2.id) is VersionState.READY
+
+
+def test_reactivating_the_active_version_is_idempotent(
+    service: DeploymentService, uow: InMemoryUnitOfWork
+) -> None:
+    package_id = _accept_package(uow)
+    deployment_id = service.create_deployment("scorer", CORR).id
+    _deploy(service, deployment_id, package_id, "k1")
+    (v1,) = _versions(uow, deployment_id)
+    service.activate_version(deployment_id, v1.id, "act-1", CORR)
+
+    # A distinct key against an already-active version succeeds without change.
+    again = service.activate_version(deployment_id, v1.id, "act-2", CORR)
+    assert again.state is OperationState.SUCCEEDED
+    assert _state(uow, v1.id) is VersionState.ACTIVE
+
+
+def test_activating_a_failed_version_conflicts(
+    service: DeploymentService, uow: InMemoryUnitOfWork, runtime: FakeRuntimeManager
+) -> None:
+    runtime.build_failure = OperationFailure(code="build_failed", message="x")
+    package_id = _accept_package(uow)
+    deployment_id = service.create_deployment("scorer", CORR).id
+    _deploy(service, deployment_id, package_id, "k1")
+    (failed,) = _versions(uow, deployment_id)
+
+    with pytest.raises(AppError) as captured:
+        service.activate_version(deployment_id, failed.id, "act-1", CORR)
+    assert captured.value.category is ErrorCategory.CONFLICT
+    assert captured.value.code == "invalid_state_transition"
+
+
+def test_runtime_unavailable_during_activation_preserves_state(
+    service: DeploymentService, uow: InMemoryUnitOfWork, runtime: FakeRuntimeManager
+) -> None:
+    package_id = _accept_package(uow)
+    deployment_id = service.create_deployment("scorer", CORR).id
+    _deploy(service, deployment_id, package_id, "k1")
+    (v1,) = _versions(uow, deployment_id)
+
+    runtime.available = False
+    operation = service.activate_version(deployment_id, v1.id, "act-1", CORR)
+
+    assert operation.state is OperationState.FAILED
+    assert operation.failure is not None
+    assert operation.failure.code == "runtime_unavailable"
+    assert _state(uow, v1.id) is VersionState.READY
+    assert _active_version_id(uow, deployment_id) is None
+
+
+def test_stopping_the_active_version_removes_the_route_first(
+    service: DeploymentService, uow: InMemoryUnitOfWork
+) -> None:
+    package_id = _accept_package(uow)
+    deployment_id = service.create_deployment("scorer", CORR).id
+    _deploy(service, deployment_id, package_id, "k1")
+    (v1,) = _versions(uow, deployment_id)
+    service.activate_version(deployment_id, v1.id, "act-1", CORR)
+
+    service.stop_version(v1.id, "stop-1", CORR)
+
+    assert _state(uow, v1.id) is VersionState.STOPPED
+    assert _active_version_id(uow, deployment_id) is None
+
+
+def test_activating_an_unknown_version_is_not_found(
+    service: DeploymentService, uow: InMemoryUnitOfWork
+) -> None:
+    deployment_id = service.create_deployment("scorer", CORR).id
+    with pytest.raises(AppError) as captured:
+        service.activate_version(deployment_id, uuid4(), "act-1", CORR)
+    assert captured.value.category is ErrorCategory.NOT_FOUND
+
+
 def test_deploying_an_unknown_package_is_not_found(
     service: DeploymentService, uow: InMemoryUnitOfWork
 ) -> None:

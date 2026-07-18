@@ -20,13 +20,13 @@ class OperationType(StrEnum):
     """The kinds of durable work the control plane performs.
 
     Package validation and the Module 5 deployment operations exist today.
-    Activation arrives with the routing module (Module 7); ADR-006 names it but
-    it is not declared here before it can be executed.
+    Activation (ADR-006) arrives with the routing module (Module 7).
     """
 
     PACKAGE_VALIDATE = "package_validate"
     DEPLOYMENT_VERSION_DEPLOY = "deployment_version_deploy"
     DEPLOYMENT_VERSION_STOP = "deployment_version_stop"
+    DEPLOYMENT_VERSION_ACTIVATE = "deployment_version_activate"
     DEPLOYMENT_RECONCILE = "deployment_reconcile"
 
 

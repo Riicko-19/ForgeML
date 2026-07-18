@@ -15,7 +15,9 @@ from forgeml.domain.deployment.models import (
 )
 from forgeml.domain.deployment.rules import (
     can_transition,
+    mark_active,
     mark_built,
+    mark_deactivated,
     mark_failed,
     mark_ready,
     mark_stopped,
@@ -99,6 +101,26 @@ def test_ready_active_edge_is_legal_but_module_5_never_drives_it() -> None:
     # Frozen for the routing module (Module 7); the rule permits the edge.
     assert can_transition(VersionState.READY, VersionState.ACTIVE)
     assert can_transition(VersionState.ACTIVE, VersionState.READY)
+
+
+def test_activation_and_deactivation_walk_the_route_edge() -> None:
+    active = mark_active(version(VersionState.READY))
+    assert active.state is VersionState.ACTIVE
+    assert mark_deactivated(active).state is VersionState.READY
+
+
+@pytest.mark.parametrize(
+    "call",
+    [
+        lambda v: mark_active(v),
+        lambda v: mark_deactivated(version(VersionState.READY)),
+    ],
+)
+def test_activation_from_an_illegal_state_conflicts(call: object) -> None:
+    # mark_active on a non-READY version, and mark_deactivated on a READY one.
+    with pytest.raises(AppError) as captured:
+        call(version(VersionState.BUILDING))  # type: ignore[operator]
+    assert captured.value.code == "invalid_state_transition"
 
 
 def test_transition_returns_a_new_value_and_does_not_mutate() -> None:

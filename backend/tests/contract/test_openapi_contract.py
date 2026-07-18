@@ -19,6 +19,7 @@ EXPECTED_PATHS = {
     "/v1/deployments/{deployment_id}",
     "/v1/deployments/{deployment_id}/versions",
     "/v1/deployments/{deployment_id}/versions/{version_id}",
+    "/v1/deployments/{deployment_id}/versions/{version_id}/activate",
     "/v1/deployments/{deployment_id}/versions/{version_id}/stop",
     "/v1/admin/reconcile",
 }

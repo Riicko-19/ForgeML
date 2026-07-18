@@ -135,6 +135,28 @@ def create_deployment_router(service: DeploymentService) -> APIRouter:
         return VersionResource.of(service.get_version(version_id))
 
     @router.post(
+        "/{deployment_id}/versions/{version_id}/activate",
+        response_model=OperationResource,
+        status_code=status.HTTP_202_ACCEPTED,
+        responses=_ERRORS,
+        summary="Activate a ready version as the deployment's route target",
+    )
+    def activate_version(
+        deployment_id: UUID,
+        version_id: UUID,
+        response: Response,
+        idempotency_key: Annotated[IdempotencyKey | None, Header()] = None,
+    ) -> OperationResource:
+        operation = service.activate_version(
+            deployment_id=deployment_id,
+            version_id=version_id,
+            idempotency_key=_require_key(idempotency_key),
+            correlation_id=_correlation_id(),
+        )
+        response.headers["Location"] = f"/v1/operations/{operation.id}"
+        return OperationResource.of(operation)
+
+    @router.post(
         "/{deployment_id}/versions/{version_id}/stop",
         response_model=OperationResource,
         status_code=status.HTTP_202_ACCEPTED,

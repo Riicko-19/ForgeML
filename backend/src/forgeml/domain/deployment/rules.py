@@ -5,9 +5,9 @@ state machine and its preconditions live here, not in the service or the ORM. An
 invalid transition raises a CONFLICT the API maps to 409 invalid_state_transition
 (docs 04); a Docker observation can never *drive* one of these, it only reports.
 
-Module 5 drives BUILDING -> STARTING -> READY and the FAILED/STOPPED branches.
-READY <-> ACTIVE is a legal edge in the table so the semantics are frozen for the
-routing module (Module 7), but nothing here transitions into ACTIVE.
+Module 5 drives BUILDING -> STARTING -> READY and the FAILED/STOPPED branches;
+the routing module (Module 7) drives READY <-> ACTIVE through `mark_active` and
+`mark_deactivated`, only after a candidate's runtime is confirmed healthy.
 """
 
 from __future__ import annotations
@@ -62,6 +62,28 @@ def mark_ready(
         container_id=container_id,
         endpoint=endpoint,
     )
+
+
+def mark_active(version: DeploymentVersion) -> DeploymentVersion:
+    """READY -> ACTIVE once the platform route points at this version (docs 04).
+
+    The routing module (Module 7) drives this only after the candidate's runtime
+    is confirmed healthy; a Docker observation never promotes a version itself.
+    """
+
+    _guard(version.state, VersionState.ACTIVE)
+    return replace(version, state=VersionState.ACTIVE)
+
+
+def mark_deactivated(version: DeploymentVersion) -> DeploymentVersion:
+    """ACTIVE -> READY when a replacement version takes the route (docs 04).
+
+    The previous active version stays runnable (READY), not stopped: a rollback
+    is simply activating it again.
+    """
+
+    _guard(version.state, VersionState.READY)
+    return replace(version, state=VersionState.READY)
 
 
 def mark_failed(

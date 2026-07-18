@@ -155,6 +155,7 @@ class OperationResource(_Wire):
         "package_validate",
         "deployment_version_deploy",
         "deployment_version_stop",
+        "deployment_version_activate",
         "deployment_reconcile",
     ]
     target: str
