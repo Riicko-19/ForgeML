@@ -21,7 +21,7 @@ from forgeml.api.error_handlers import register_error_handlers
 from forgeml.api.middleware import RequestContextMiddleware
 from forgeml.api.v1.deployments import create_admin_router, create_deployment_router
 from forgeml.api.v1.operations import create_operation_router
-from forgeml.application.deployment.services import DeploymentService
+from forgeml.application.deployment.services import DeploymentServices
 from forgeml.application.operations.services import OperationService
 from forgeml.domain.package.analyzer import analyze
 from forgeml.domain.package.models import (
@@ -39,13 +39,13 @@ from tests.support import ASGITestClient
 def env() -> SimpleNamespace:
     uow = InMemoryUnitOfWork()
     runtime = FakeRuntimeManager()
-    service = DeploymentService(lambda: uow, runtime)
+    service = DeploymentServices.create(lambda: uow, runtime)
     operations = OperationService(lambda: uow)
 
     app = FastAPI()
     register_error_handlers(app)
     app.include_router(create_deployment_router(service), prefix="/v1")
-    app.include_router(create_admin_router(service), prefix="/v1")
+    app.include_router(create_admin_router(service.reconciliation), prefix="/v1")
     app.include_router(create_operation_router(operations), prefix="/v1")
     app.add_middleware(RequestContextMiddleware)
     return SimpleNamespace(client=ASGITestClient(app), uow=uow, runtime=runtime)

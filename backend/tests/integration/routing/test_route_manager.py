@@ -15,7 +15,7 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from forgeml.application.deployment.services import DeploymentService
+from forgeml.application.deployment.services import DeploymentServices
 from forgeml.application.routing.services import RouteManager
 from forgeml.core.errors import AppError, ErrorCategory
 from forgeml.domain.deployment.models import ResourcePolicy
@@ -73,7 +73,7 @@ def _accept_package(uow: InMemoryUnitOfWork) -> UUID:
 @pytest.fixture
 def env() -> tuple[
     RouteManager,
-    DeploymentService,
+    DeploymentServices,
     InMemoryUnitOfWork,
     FakeRuntimeManager,
     FakeGateway,
@@ -81,25 +81,25 @@ def env() -> tuple[
     uow = InMemoryUnitOfWork()
     runtime = FakeRuntimeManager()
     gateway = FakeGateway()
-    deployments = DeploymentService(lambda: uow, runtime)
-    routing = RouteManager(deployments, runtime, gateway)
+    deployments = DeploymentServices.create(lambda: uow, runtime)
+    routing = RouteManager(deployments.queries, runtime, gateway)
     return routing, deployments, uow, runtime, gateway
 
 
-def _active_deployment(deployments: DeploymentService, uow: InMemoryUnitOfWork) -> str:
+def _active_deployment(deployments: DeploymentServices, uow: InMemoryUnitOfWork) -> str:
     package_id = _accept_package(uow)
-    deployment = deployments.create_deployment("scorer", CORR)
-    deployments.deploy_version(deployment.id, package_id, POLICY, "d1", CORR)
+    deployment = deployments.lifecycle.create_deployment("scorer", CORR)
+    deployments.lifecycle.deploy_version(deployment.id, package_id, POLICY, "d1", CORR)
     with uow:
         (version,) = uow.deployments.list_versions(deployment.id)
-    deployments.activate_version(deployment.id, version.id, "a1", CORR)
+    deployments.activation.activate_version(deployment.id, version.id, "a1", CORR)
     return deployment.name
 
 
 def test_prediction_reaches_the_active_runtime(
     env: tuple[
         RouteManager,
-        DeploymentService,
+        DeploymentServices,
         InMemoryUnitOfWork,
         FakeRuntimeManager,
         FakeGateway,
@@ -119,7 +119,7 @@ def test_prediction_reaches_the_active_runtime(
 def test_no_active_version_is_unavailable(
     env: tuple[
         RouteManager,
-        DeploymentService,
+        DeploymentServices,
         InMemoryUnitOfWork,
         FakeRuntimeManager,
         FakeGateway,
@@ -127,8 +127,8 @@ def test_no_active_version_is_unavailable(
 ) -> None:
     routing, deployments, uow, _runtime, _gateway = env
     package_id = _accept_package(uow)
-    deployment = deployments.create_deployment("scorer", CORR)
-    deployments.deploy_version(deployment.id, package_id, POLICY, "d1", CORR)
+    deployment = deployments.lifecycle.create_deployment("scorer", CORR)
+    deployments.lifecycle.deploy_version(deployment.id, package_id, POLICY, "d1", CORR)
     # Deployed but never activated: nothing to route to.
 
     with pytest.raises(AppError) as caught:
@@ -140,7 +140,7 @@ def test_no_active_version_is_unavailable(
 def test_unknown_deployment_is_unavailable(
     env: tuple[
         RouteManager,
-        DeploymentService,
+        DeploymentServices,
         InMemoryUnitOfWork,
         FakeRuntimeManager,
         FakeGateway,
@@ -155,7 +155,7 @@ def test_unknown_deployment_is_unavailable(
 def test_invalid_input_is_rejected_before_forwarding(
     env: tuple[
         RouteManager,
-        DeploymentService,
+        DeploymentServices,
         InMemoryUnitOfWork,
         FakeRuntimeManager,
         FakeGateway,
@@ -174,7 +174,7 @@ def test_invalid_input_is_rejected_before_forwarding(
 def test_unhealthy_runtime_is_unavailable(
     env: tuple[
         RouteManager,
-        DeploymentService,
+        DeploymentServices,
         InMemoryUnitOfWork,
         FakeRuntimeManager,
         FakeGateway,
@@ -200,7 +200,7 @@ def test_unhealthy_runtime_is_unavailable(
 def test_runtime_unavailable_is_unavailable(
     env: tuple[
         RouteManager,
-        DeploymentService,
+        DeploymentServices,
         InMemoryUnitOfWork,
         FakeRuntimeManager,
         FakeGateway,
@@ -218,7 +218,7 @@ def test_runtime_unavailable_is_unavailable(
 def test_unreachable_runtime_maps_to_unavailable(
     env: tuple[
         RouteManager,
-        DeploymentService,
+        DeploymentServices,
         InMemoryUnitOfWork,
         FakeRuntimeManager,
         FakeGateway,
@@ -236,7 +236,7 @@ def test_unreachable_runtime_maps_to_unavailable(
 def test_runtime_error_maps_to_prediction_runtime_failed(
     env: tuple[
         RouteManager,
-        DeploymentService,
+        DeploymentServices,
         InMemoryUnitOfWork,
         FakeRuntimeManager,
         FakeGateway,
@@ -255,7 +255,7 @@ def test_runtime_error_maps_to_prediction_runtime_failed(
 def test_output_that_violates_the_schema_is_a_runtime_failure(
     env: tuple[
         RouteManager,
-        DeploymentService,
+        DeploymentServices,
         InMemoryUnitOfWork,
         FakeRuntimeManager,
         FakeGateway,
@@ -273,7 +273,7 @@ def test_output_that_violates_the_schema_is_a_runtime_failure(
 def test_missing_result_envelope_is_a_runtime_failure(
     env: tuple[
         RouteManager,
-        DeploymentService,
+        DeploymentServices,
         InMemoryUnitOfWork,
         FakeRuntimeManager,
         FakeGateway,

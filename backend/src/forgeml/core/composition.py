@@ -14,7 +14,7 @@ from forgeml.api.v1.deployments import create_admin_router, create_deployment_ro
 from forgeml.api.v1.operations import create_operation_router
 from forgeml.api.v1.packages import create_package_router
 from forgeml.api.v1.predictions import create_prediction_router
-from forgeml.application.deployment.services import DeploymentService
+from forgeml.application.deployment.services import DeploymentServices
 from forgeml.application.operations.services import OperationService
 from forgeml.application.package.services import PackageService
 from forgeml.application.routing.services import RouteManager
@@ -48,15 +48,17 @@ class Container:
         runtime = DockerRuntimeManager(
             store=store, reader=reader, limits=settings.package_limits
         )
-        self.deployments = DeploymentService(
+        # ForgeML 0.9: the deployment use cases are four services -- queries,
+        # lifecycle, activation, reconciliation -- bundled here and wired once.
+        self.deployments = DeploymentServices.create(
             unit_of_work=self.database.unit_of_work, runtime=runtime
         )
         # Module 7: the platform routing layer. RouteManager resolves the active
-        # version through the deployment service, health-checks through the same
-        # runtime port, and forwards predictions through the HTTP gateway. It
-        # never touches Docker directly.
+        # version through the deployment read model, health-checks through the
+        # same runtime port, and forwards predictions through the HTTP gateway.
+        # It never touches Docker directly.
         self.routing = RouteManager(
-            deployments=self.deployments,
+            deployments=self.deployments.queries,
             runtime=runtime,
             gateway=HttpPredictionGateway(),
         )
@@ -99,7 +101,9 @@ def create_application(settings: AppSettings) -> FastAPI:
     app.include_router(
         create_deployment_router(container.deployments), prefix=API_PREFIX
     )
-    app.include_router(create_admin_router(container.deployments), prefix=API_PREFIX)
+    app.include_router(
+        create_admin_router(container.deployments.reconciliation), prefix=API_PREFIX
+    )
     app.include_router(create_prediction_router(container.routing), prefix=API_PREFIX)
     app.add_middleware(RequestContextMiddleware)
     return app

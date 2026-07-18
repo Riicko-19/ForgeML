@@ -21,7 +21,7 @@ from forgeml.api.error_handlers import register_error_handlers
 from forgeml.api.middleware import RequestContextMiddleware
 from forgeml.api.v1.deployments import create_deployment_router
 from forgeml.api.v1.predictions import create_prediction_router
-from forgeml.application.deployment.services import DeploymentService
+from forgeml.application.deployment.services import DeploymentServices
 from forgeml.application.routing.services import RouteManager
 from forgeml.domain.deployment.models import ResourcePolicy
 from forgeml.domain.package.analyzer import analyze
@@ -53,8 +53,8 @@ def env() -> SimpleNamespace:
     uow = InMemoryUnitOfWork()
     runtime = FakeRuntimeManager()
     gateway = FakeGateway()
-    deployments = DeploymentService(lambda: uow, runtime)
-    routing = RouteManager(deployments, runtime, gateway)
+    deployments = DeploymentServices.create(lambda: uow, runtime)
+    routing = RouteManager(deployments.queries, runtime, gateway)
 
     app = FastAPI()
     register_error_handlers(app)
@@ -62,7 +62,10 @@ def env() -> SimpleNamespace:
     app.include_router(create_prediction_router(routing), prefix="/v1")
     app.add_middleware(RequestContextMiddleware)
     return SimpleNamespace(
-        client=ASGITestClient(app), uow=uow, deployments=deployments, gateway=gateway
+        client=ASGITestClient(app),
+        uow=uow,
+        deployments=deployments,
+        gateway=gateway,
     )
 
 
@@ -92,13 +95,15 @@ def _activate_deployment(env: SimpleNamespace, name: str = "scorer") -> None:
             ),
         )
         env.uow.commit()
-    deployment = env.deployments.create_deployment(name, uuid4())
-    env.deployments.deploy_version(
+    deployment = env.deployments.lifecycle.create_deployment(name, uuid4())
+    env.deployments.lifecycle.deploy_version(
         deployment.id, package.id, ResourcePolicy(), "d1", uuid4()
     )
     with env.uow:
         (version,) = env.uow.deployments.list_versions(deployment.id)
-    env.deployments.activate_version(deployment.id, version.id, "a1", uuid4())
+    env.deployments.activation.activate_version(
+        deployment.id, version.id, "a1", uuid4()
+    )
 
 
 def test_prediction_returns_the_model_output(env: SimpleNamespace) -> None:

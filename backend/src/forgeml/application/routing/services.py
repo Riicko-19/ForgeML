@@ -17,7 +17,7 @@ from uuid import UUID
 
 from jsonschema import Draft202012Validator
 
-from forgeml.application.deployment.services import DeploymentService
+from forgeml.application.deployment.queries import DeploymentQueryService
 from forgeml.core.errors import AppError, ErrorCategory
 from forgeml.domain.deployment.ports import RuntimeManager, RuntimeUnavailable
 from forgeml.domain.routing.ports import (
@@ -32,7 +32,7 @@ class RouteManager:
 
     def __init__(
         self,
-        deployments: DeploymentService,
+        deployments: DeploymentQueryService,
         runtime: RuntimeManager,
         gateway: PredictionGateway,
     ) -> None:

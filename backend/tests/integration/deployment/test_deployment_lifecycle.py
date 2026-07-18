@@ -12,7 +12,7 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from forgeml.application.deployment.services import DeploymentService
+from forgeml.application.deployment.services import DeploymentServices
 from forgeml.core.errors import AppError, ErrorCategory
 from forgeml.domain.deployment.models import (
     DeploymentVersion,
@@ -50,8 +50,8 @@ def runtime() -> FakeRuntimeManager:
 
 
 @pytest.fixture
-def service(uow: InMemoryUnitOfWork, runtime: FakeRuntimeManager) -> DeploymentService:
-    return DeploymentService(lambda: uow, runtime)
+def service(uow: InMemoryUnitOfWork, runtime: FakeRuntimeManager) -> DeploymentServices:
+    return DeploymentServices.create(lambda: uow, runtime)
 
 
 def _accept_package(uow: InMemoryUnitOfWork, *, accepted: bool = True) -> UUID:
@@ -78,16 +78,18 @@ def _versions(
 
 
 def _deploy(
-    service: DeploymentService, deployment_id: UUID, package_id: UUID, key: str
+    service: DeploymentServices, deployment_id: UUID, package_id: UUID, key: str
 ) -> Operation:
-    return service.deploy_version(deployment_id, package_id, POLICY, key, CORR)
+    return service.lifecycle.deploy_version(
+        deployment_id, package_id, POLICY, key, CORR
+    )
 
 
 def test_deploy_walks_a_package_to_a_ready_version(
-    service: DeploymentService, uow: InMemoryUnitOfWork, runtime: FakeRuntimeManager
+    service: DeploymentServices, uow: InMemoryUnitOfWork, runtime: FakeRuntimeManager
 ) -> None:
     package_id = _accept_package(uow)
-    deployment_id = service.create_deployment("scorer", CORR).id
+    deployment_id = service.lifecycle.create_deployment("scorer", CORR).id
 
     operation = _deploy(service, deployment_id, package_id, "k1")
 
@@ -106,13 +108,13 @@ def test_deploy_walks_a_package_to_a_ready_version(
 
 
 def test_a_build_failure_fails_the_attempt(
-    service: DeploymentService, uow: InMemoryUnitOfWork, runtime: FakeRuntimeManager
+    service: DeploymentServices, uow: InMemoryUnitOfWork, runtime: FakeRuntimeManager
 ) -> None:
     runtime.build_failure = OperationFailure(
         code="build_failed", message="dependency install failed"
     )
     package_id = _accept_package(uow)
-    deployment_id = service.create_deployment("scorer", CORR).id
+    deployment_id = service.lifecycle.create_deployment("scorer", CORR).id
 
     operation = _deploy(service, deployment_id, package_id, "k1")
 
@@ -127,13 +129,13 @@ def test_a_build_failure_fails_the_attempt(
 
 
 def test_a_start_failure_fails_the_attempt_after_the_image_is_recorded(
-    service: DeploymentService, uow: InMemoryUnitOfWork, runtime: FakeRuntimeManager
+    service: DeploymentServices, uow: InMemoryUnitOfWork, runtime: FakeRuntimeManager
 ) -> None:
     runtime.start_failure = OperationFailure(
         code="readiness_timeout", message="the container never became healthy"
     )
     package_id = _accept_package(uow)
-    deployment_id = service.create_deployment("scorer", CORR).id
+    deployment_id = service.lifecycle.create_deployment("scorer", CORR).id
 
     operation = _deploy(service, deployment_id, package_id, "k1")
 
@@ -147,10 +149,10 @@ def test_a_start_failure_fails_the_attempt_after_the_image_is_recorded(
 
 
 def test_retry_after_a_failure_is_a_new_attempt_that_can_succeed(
-    service: DeploymentService, uow: InMemoryUnitOfWork, runtime: FakeRuntimeManager
+    service: DeploymentServices, uow: InMemoryUnitOfWork, runtime: FakeRuntimeManager
 ) -> None:
     package_id = _accept_package(uow)
-    deployment_id = service.create_deployment("scorer", CORR).id
+    deployment_id = service.lifecycle.create_deployment("scorer", CORR).id
 
     runtime.build_failure = OperationFailure(code="build_failed", message="install")
     first = _deploy(service, deployment_id, package_id, "k1")
@@ -167,14 +169,14 @@ def test_retry_after_a_failure_is_a_new_attempt_that_can_succeed(
 
 
 def test_a_ready_version_can_be_stopped(
-    service: DeploymentService, uow: InMemoryUnitOfWork, runtime: FakeRuntimeManager
+    service: DeploymentServices, uow: InMemoryUnitOfWork, runtime: FakeRuntimeManager
 ) -> None:
     package_id = _accept_package(uow)
-    deployment_id = service.create_deployment("scorer", CORR).id
+    deployment_id = service.lifecycle.create_deployment("scorer", CORR).id
     _deploy(service, deployment_id, package_id, "k1")
 
     (ready,) = _versions(uow, deployment_id)
-    operation = service.stop_version(ready.id, "stop-1", CORR)
+    operation = service.lifecycle.stop_version(ready.id, "stop-1", CORR)
 
     assert operation.state is OperationState.SUCCEEDED
     (version,) = _versions(uow, deployment_id)
@@ -184,25 +186,25 @@ def test_a_ready_version_can_be_stopped(
 
 
 def test_stopping_a_failed_version_is_an_invalid_transition(
-    service: DeploymentService, uow: InMemoryUnitOfWork, runtime: FakeRuntimeManager
+    service: DeploymentServices, uow: InMemoryUnitOfWork, runtime: FakeRuntimeManager
 ) -> None:
     runtime.build_failure = OperationFailure(code="build_failed", message="x")
     package_id = _accept_package(uow)
-    deployment_id = service.create_deployment("scorer", CORR).id
+    deployment_id = service.lifecycle.create_deployment("scorer", CORR).id
     _deploy(service, deployment_id, package_id, "k1")
     (failed,) = _versions(uow, deployment_id)
 
     with pytest.raises(AppError) as captured:
-        service.stop_version(failed.id, "stop-1", CORR)
+        service.lifecycle.stop_version(failed.id, "stop-1", CORR)
     assert captured.value.category is ErrorCategory.CONFLICT
     assert captured.value.code == "invalid_state_transition"
 
 
 def test_only_an_accepted_package_can_be_deployed(
-    service: DeploymentService, uow: InMemoryUnitOfWork
+    service: DeploymentServices, uow: InMemoryUnitOfWork
 ) -> None:
     package_id = _accept_package(uow, accepted=False)
-    deployment_id = service.create_deployment("scorer", CORR).id
+    deployment_id = service.lifecycle.create_deployment("scorer", CORR).id
 
     with pytest.raises(AppError) as captured:
         _deploy(service, deployment_id, package_id, "k1")
@@ -210,7 +212,7 @@ def test_only_an_accepted_package_can_be_deployed(
 
 
 def test_deploying_to_an_unknown_deployment_is_not_found(
-    service: DeploymentService, uow: InMemoryUnitOfWork
+    service: DeploymentServices, uow: InMemoryUnitOfWork
 ) -> None:
     package_id = _accept_package(uow)
     with pytest.raises(AppError) as captured:
@@ -236,14 +238,16 @@ def _state(uow: InMemoryUnitOfWork, version_id: UUID) -> VersionState:
 
 
 def test_activation_makes_a_ready_version_the_route_target(
-    service: DeploymentService, uow: InMemoryUnitOfWork
+    service: DeploymentServices, uow: InMemoryUnitOfWork
 ) -> None:
     package_id = _accept_package(uow)
-    deployment_id = service.create_deployment("scorer", CORR).id
+    deployment_id = service.lifecycle.create_deployment("scorer", CORR).id
     _deploy(service, deployment_id, package_id, "k1")
     (ready,) = _versions(uow, deployment_id)
 
-    operation = service.activate_version(deployment_id, ready.id, "act-1", CORR)
+    operation = service.activation.activate_version(
+        deployment_id, ready.id, "act-1", CORR
+    )
 
     assert operation.state is OperationState.SUCCEEDED
     assert _state(uow, ready.id) is VersionState.ACTIVE
@@ -251,23 +255,23 @@ def test_activation_makes_a_ready_version_the_route_target(
 
 
 def test_replacing_the_active_version_steps_the_previous_one_down(
-    service: DeploymentService, uow: InMemoryUnitOfWork
+    service: DeploymentServices, uow: InMemoryUnitOfWork
 ) -> None:
     package_id = _accept_package(uow)
-    deployment_id = service.create_deployment("scorer", CORR).id
+    deployment_id = service.lifecycle.create_deployment("scorer", CORR).id
     _deploy(service, deployment_id, package_id, "k1")
     _deploy(service, deployment_id, package_id, "k2")
     v2, v1 = _versions(uow, deployment_id)  # newest attempt first
 
-    service.activate_version(deployment_id, v1.id, "act-1", CORR)
-    service.activate_version(deployment_id, v2.id, "act-2", CORR)
+    service.activation.activate_version(deployment_id, v1.id, "act-1", CORR)
+    service.activation.activate_version(deployment_id, v2.id, "act-2", CORR)
 
     assert _state(uow, v2.id) is VersionState.ACTIVE
     assert _state(uow, v1.id) is VersionState.READY  # stepped down, still runnable
     assert _active_version_id(uow, deployment_id) == v2.id
 
     # Rollback is simply activating the previous version again.
-    rollback = service.activate_version(deployment_id, v1.id, "act-3", CORR)
+    rollback = service.activation.activate_version(deployment_id, v1.id, "act-3", CORR)
     assert rollback.state is OperationState.SUCCEEDED
     assert _state(uow, v1.id) is VersionState.ACTIVE
     assert _state(uow, v2.id) is VersionState.READY
@@ -275,20 +279,20 @@ def test_replacing_the_active_version_steps_the_previous_one_down(
 
 
 def test_activation_is_refused_when_the_candidate_is_unhealthy(
-    service: DeploymentService, uow: InMemoryUnitOfWork, runtime: FakeRuntimeManager
+    service: DeploymentServices, uow: InMemoryUnitOfWork, runtime: FakeRuntimeManager
 ) -> None:
     package_id = _accept_package(uow)
-    deployment_id = service.create_deployment("scorer", CORR).id
+    deployment_id = service.lifecycle.create_deployment("scorer", CORR).id
     _deploy(service, deployment_id, package_id, "k1")
     (v1,) = _versions(uow, deployment_id)
-    service.activate_version(deployment_id, v1.id, "act-1", CORR)
+    service.activation.activate_version(deployment_id, v1.id, "act-1", CORR)
 
     # A second version whose runtime never becomes healthy.
     runtime.healthy = False
     _deploy(service, deployment_id, package_id, "k2")
     v2 = next(v for v in _versions(uow, deployment_id) if v.id != v1.id)
 
-    operation = service.activate_version(deployment_id, v2.id, "act-2", CORR)
+    operation = service.activation.activate_version(deployment_id, v2.id, "act-2", CORR)
 
     assert operation.state is OperationState.FAILED
     assert operation.failure is not None
@@ -300,45 +304,45 @@ def test_activation_is_refused_when_the_candidate_is_unhealthy(
 
 
 def test_reactivating_the_active_version_is_idempotent(
-    service: DeploymentService, uow: InMemoryUnitOfWork
+    service: DeploymentServices, uow: InMemoryUnitOfWork
 ) -> None:
     package_id = _accept_package(uow)
-    deployment_id = service.create_deployment("scorer", CORR).id
+    deployment_id = service.lifecycle.create_deployment("scorer", CORR).id
     _deploy(service, deployment_id, package_id, "k1")
     (v1,) = _versions(uow, deployment_id)
-    service.activate_version(deployment_id, v1.id, "act-1", CORR)
+    service.activation.activate_version(deployment_id, v1.id, "act-1", CORR)
 
     # A distinct key against an already-active version succeeds without change.
-    again = service.activate_version(deployment_id, v1.id, "act-2", CORR)
+    again = service.activation.activate_version(deployment_id, v1.id, "act-2", CORR)
     assert again.state is OperationState.SUCCEEDED
     assert _state(uow, v1.id) is VersionState.ACTIVE
 
 
 def test_activating_a_failed_version_conflicts(
-    service: DeploymentService, uow: InMemoryUnitOfWork, runtime: FakeRuntimeManager
+    service: DeploymentServices, uow: InMemoryUnitOfWork, runtime: FakeRuntimeManager
 ) -> None:
     runtime.build_failure = OperationFailure(code="build_failed", message="x")
     package_id = _accept_package(uow)
-    deployment_id = service.create_deployment("scorer", CORR).id
+    deployment_id = service.lifecycle.create_deployment("scorer", CORR).id
     _deploy(service, deployment_id, package_id, "k1")
     (failed,) = _versions(uow, deployment_id)
 
     with pytest.raises(AppError) as captured:
-        service.activate_version(deployment_id, failed.id, "act-1", CORR)
+        service.activation.activate_version(deployment_id, failed.id, "act-1", CORR)
     assert captured.value.category is ErrorCategory.CONFLICT
     assert captured.value.code == "invalid_state_transition"
 
 
 def test_runtime_unavailable_during_activation_preserves_state(
-    service: DeploymentService, uow: InMemoryUnitOfWork, runtime: FakeRuntimeManager
+    service: DeploymentServices, uow: InMemoryUnitOfWork, runtime: FakeRuntimeManager
 ) -> None:
     package_id = _accept_package(uow)
-    deployment_id = service.create_deployment("scorer", CORR).id
+    deployment_id = service.lifecycle.create_deployment("scorer", CORR).id
     _deploy(service, deployment_id, package_id, "k1")
     (v1,) = _versions(uow, deployment_id)
 
     runtime.available = False
-    operation = service.activate_version(deployment_id, v1.id, "act-1", CORR)
+    operation = service.activation.activate_version(deployment_id, v1.id, "act-1", CORR)
 
     assert operation.state is OperationState.FAILED
     assert operation.failure is not None
@@ -348,33 +352,33 @@ def test_runtime_unavailable_during_activation_preserves_state(
 
 
 def test_stopping_the_active_version_removes_the_route_first(
-    service: DeploymentService, uow: InMemoryUnitOfWork
+    service: DeploymentServices, uow: InMemoryUnitOfWork
 ) -> None:
     package_id = _accept_package(uow)
-    deployment_id = service.create_deployment("scorer", CORR).id
+    deployment_id = service.lifecycle.create_deployment("scorer", CORR).id
     _deploy(service, deployment_id, package_id, "k1")
     (v1,) = _versions(uow, deployment_id)
-    service.activate_version(deployment_id, v1.id, "act-1", CORR)
+    service.activation.activate_version(deployment_id, v1.id, "act-1", CORR)
 
-    service.stop_version(v1.id, "stop-1", CORR)
+    service.lifecycle.stop_version(v1.id, "stop-1", CORR)
 
     assert _state(uow, v1.id) is VersionState.STOPPED
     assert _active_version_id(uow, deployment_id) is None
 
 
 def test_activating_an_unknown_version_is_not_found(
-    service: DeploymentService, uow: InMemoryUnitOfWork
+    service: DeploymentServices, uow: InMemoryUnitOfWork
 ) -> None:
-    deployment_id = service.create_deployment("scorer", CORR).id
+    deployment_id = service.lifecycle.create_deployment("scorer", CORR).id
     with pytest.raises(AppError) as captured:
-        service.activate_version(deployment_id, uuid4(), "act-1", CORR)
+        service.activation.activate_version(deployment_id, uuid4(), "act-1", CORR)
     assert captured.value.category is ErrorCategory.NOT_FOUND
 
 
 def test_deploying_an_unknown_package_is_not_found(
-    service: DeploymentService, uow: InMemoryUnitOfWork
+    service: DeploymentServices, uow: InMemoryUnitOfWork
 ) -> None:
-    deployment_id = service.create_deployment("scorer", CORR).id
+    deployment_id = service.lifecycle.create_deployment("scorer", CORR).id
     with pytest.raises(AppError) as captured:
         _deploy(service, deployment_id, uuid4(), "k1")
     assert captured.value.category is ErrorCategory.NOT_FOUND
@@ -382,35 +386,35 @@ def test_deploying_an_unknown_package_is_not_found(
 
 
 def test_stop_fails_the_operation_when_docker_is_unavailable(
-    service: DeploymentService, uow: InMemoryUnitOfWork, runtime: FakeRuntimeManager
+    service: DeploymentServices, uow: InMemoryUnitOfWork, runtime: FakeRuntimeManager
 ) -> None:
     package_id = _accept_package(uow)
-    deployment_id = service.create_deployment("scorer", CORR).id
+    deployment_id = service.lifecycle.create_deployment("scorer", CORR).id
     _deploy(service, deployment_id, package_id, "k1")
     (ready,) = _versions(uow, deployment_id)
 
     runtime.available = False
-    operation = service.stop_version(ready.id, "stop-1", CORR)
+    operation = service.lifecycle.stop_version(ready.id, "stop-1", CORR)
     assert operation.state is OperationState.FAILED
     assert operation.failure is not None
     assert operation.failure.code == "runtime_unavailable"
 
 
 def test_reconcile_fails_the_operation_when_docker_is_unavailable(
-    service: DeploymentService, runtime: FakeRuntimeManager
+    service: DeploymentServices, runtime: FakeRuntimeManager
 ) -> None:
     runtime.available = False
-    operation = service.reconcile("rec-1", CORR)
+    operation = service.reconciliation.reconcile("rec-1", CORR)
     assert operation.state is OperationState.FAILED
     assert operation.failure is not None
     assert operation.failure.code == "runtime_unavailable"
 
 
 def test_a_replayed_deploy_returns_one_operation_and_one_version(
-    service: DeploymentService, uow: InMemoryUnitOfWork
+    service: DeploymentServices, uow: InMemoryUnitOfWork
 ) -> None:
     package_id = _accept_package(uow)
-    deployment_id = service.create_deployment("scorer", CORR).id
+    deployment_id = service.lifecycle.create_deployment("scorer", CORR).id
 
     first = _deploy(service, deployment_id, package_id, "same-key")
     second = _deploy(service, deployment_id, package_id, "same-key")
@@ -420,11 +424,11 @@ def test_a_replayed_deploy_returns_one_operation_and_one_version(
 
 
 def test_docker_unavailable_fails_the_operation_retriably(
-    service: DeploymentService, uow: InMemoryUnitOfWork, runtime: FakeRuntimeManager
+    service: DeploymentServices, uow: InMemoryUnitOfWork, runtime: FakeRuntimeManager
 ) -> None:
     runtime.available = False
     package_id = _accept_package(uow)
-    deployment_id = service.create_deployment("scorer", CORR).id
+    deployment_id = service.lifecycle.create_deployment("scorer", CORR).id
 
     operation = _deploy(service, deployment_id, package_id, "k1")
 
@@ -434,39 +438,39 @@ def test_docker_unavailable_fails_the_operation_retriably(
 
 
 def test_reconcile_reports_a_healthy_known_runtime_as_clean(
-    service: DeploymentService, uow: InMemoryUnitOfWork
+    service: DeploymentServices, uow: InMemoryUnitOfWork
 ) -> None:
     package_id = _accept_package(uow)
-    deployment_id = service.create_deployment("scorer", CORR).id
+    deployment_id = service.lifecycle.create_deployment("scorer", CORR).id
     _deploy(service, deployment_id, package_id, "k1")
 
-    operation = service.reconcile("rec-1", CORR)
+    operation = service.reconciliation.reconcile("rec-1", CORR)
 
     assert operation.state is OperationState.SUCCEEDED
     assert operation.result == {"observed": "1", "mismatches": "0"}
 
 
 def test_reconcile_flags_an_unhealthy_runtime(
-    service: DeploymentService, uow: InMemoryUnitOfWork, runtime: FakeRuntimeManager
+    service: DeploymentServices, uow: InMemoryUnitOfWork, runtime: FakeRuntimeManager
 ) -> None:
     runtime.healthy = False
     package_id = _accept_package(uow)
-    deployment_id = service.create_deployment("scorer", CORR).id
+    deployment_id = service.lifecycle.create_deployment("scorer", CORR).id
     _deploy(service, deployment_id, package_id, "k1")
 
-    operation = service.reconcile("rec-1", CORR)
+    operation = service.reconciliation.reconcile("rec-1", CORR)
 
     assert operation.result is not None
     assert operation.result["mismatches"] == "1"
 
 
 def test_reconcile_flags_an_unknown_runtime(
-    service: DeploymentService, uow: InMemoryUnitOfWork, runtime: FakeRuntimeManager
+    service: DeploymentServices, uow: InMemoryUnitOfWork, runtime: FakeRuntimeManager
 ) -> None:
     # A container the runtime reports but the database has never heard of.
     runtime.start(uuid4(), runtime.build(uuid4(), _context(), "a" * 64, POLICY), POLICY)
 
-    operation = service.reconcile("rec-1", CORR)
+    operation = service.reconciliation.reconcile("rec-1", CORR)
 
     assert operation.result is not None
     assert operation.result["mismatches"] == "1"
