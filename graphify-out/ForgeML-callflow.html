@@ -60,7 +60,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
 <div class="container">
 
 <h1>ForgeML — Complete Call Flow &amp; Architecture Documentation</h1>
-<p class="subtitle">Generated from graphify knowledge graph: 2184 nodes, 4048 edges, 185 communities. Commit: 6c4b92c</p>
+<p class="subtitle">Generated from graphify knowledge graph: 2184 nodes, 4034 edges, 178 communities. Commit: 04775b8</p>
 
 <div class="nav">
     <a href="#overview">Architecture Overview</a>
@@ -72,12 +72,12 @@ hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
     <a href="#serve-api">Serving API</a>
     <a href="#security-global">Security &amp; Global Graph</a>
     <a href="#tests-fixtures">Tests &amp; Fixtures</a>
+    <a href="#test-application-boot-py">test_application_boot.py</a>
     <a href="#session">Session</a>
     <a href="#reject-wildcard-host">_reject_wildcard_host</a>
     <a href="#repositories-py">repositories.py</a>
     <a href="#low-level-design">Low Level Design</a>
     <a href="#validated">validated</a>
-    <a href="#appsettings">AppSettings</a>
     <a href="#other">Other</a>
 </div>
 
@@ -88,7 +88,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
 
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    EXTRACT_PIPELINE_5F350230("Extraction Pipeline<br/><small>56 nodes</small>")
+    EXTRACT_PIPELINE_5F350230("Extraction Pipeline<br/><small>57 nodes</small>")
     class EXTRACT_PIPELINE_5F350230 module;
     BUILD_GRAPH_321CBB04("Graph Build<br/><small>117 nodes</small>")
     class BUILD_GRAPH_321CBB04 module;
@@ -100,10 +100,12 @@ flowchart LR
     class INGEST_CACHE_UPDATE_FF457338 module;
     SERVE_API_35EC8E86("Serving API<br/><small>193 nodes</small>")
     class SERVE_API_35EC8E86 module;
-    SECURITY_GLOBAL_5B9C6A04("Security &amp; Global Graph<br/><small>65 nodes</small>")
+    SECURITY_GLOBAL_5B9C6A04("Security &amp; Global Graph<br/><small>60 nodes</small>")
     class SECURITY_GLOBAL_5B9C6A04 module;
     TESTS_FIXTURES_B84B1DCC("Tests &amp; Fixtures<br/><small>915 nodes</small>")
     class TESTS_FIXTURES_B84B1DCC module;
+    TEST_APPLICATION_BOOT_PY_467C51C5("test_application_boot.py<br/><small>38 nodes</small>")
+    class TEST_APPLICATION_BOOT_PY_467C51C5 module;
     SESSION_FCBDC4C2("Session<br/><small>29 nodes</small>")
     class SESSION_FCBDC4C2 module;
     REJECT_WILDCARD_HOST_C1F34125("_reject_wildcard_host<br/><small>25 nodes</small>")
@@ -114,22 +116,20 @@ flowchart LR
     class LOW_LEVEL_DESIGN_90E65AC2 module;
     VALIDATED_CB35C602("validated<br/><small>20 nodes</small>")
     class VALIDATED_CB35C602 module;
-    APPSETTINGS_501D8CAB("AppSettings<br/><small>15 nodes</small>")
-    class APPSETTINGS_501D8CAB module;
-    OTHER_D0941E68("Other<br/><small>587 nodes</small>")
+    OTHER_D0941E68("Other<br/><small>568 nodes</small>")
     class OTHER_D0941E68 module;
     BUILD_GRAPH_321CBB04 -->|references x64| TESTS_FIXTURES_B84B1DCC
     TESTS_FIXTURES_B84B1DCC -->|method x36| BUILD_GRAPH_321CBB04
     TESTS_FIXTURES_B84B1DCC -->|references x18| SECURITY_GLOBAL_5B9C6A04
     SERVE_API_35EC8E86 -->|references x17| TESTS_FIXTURES_B84B1DCC
-    SECURITY_GLOBAL_5B9C6A04 -->|contains x17| OTHER_D0941E68
     TESTS_FIXTURES_B84B1DCC -->|references x14| REPOSITORIES_PY_E0866271
+    TESTS_FIXTURES_B84B1DCC -->|references x13| OTHER_D0941E68
     REPOSITORIES_PY_E0866271 -->|calls x12| TESTS_FIXTURES_B84B1DCC
     EXTRACT_PIPELINE_5F350230 -->|references x11| TESTS_FIXTURES_B84B1DCC
     BUILD_GRAPH_321CBB04 -->|references x9| REPOSITORIES_PY_E0866271
-    TESTS_FIXTURES_B84B1DCC -->|references x8| APPSETTINGS_501D8CAB
+    SECURITY_GLOBAL_5B9C6A04 -->|contains x8| OTHER_D0941E68
     INGEST_CACHE_UPDATE_FF457338 -->|contains x7| TESTS_FIXTURES_B84B1DCC
-    BUILD_GRAPH_321CBB04 -->|references x6| VALIDATED_CB35C602
+    OTHER_D0941E68 -->|references x6| SECURITY_GLOBAL_5B9C6A04
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
@@ -146,19 +146,19 @@ flowchart LR
     <h4>Architecture Layers</h4>
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>Layer</th><th>Nodes</th><th>Communities</th></tr>
-      <tr><td>Extraction Pipeline</td><td>56</td><td><code>19, 18, 36</code></td></tr><tr><td>Graph Build</td><td>117</td><td><code>69, 28, 70, 66, 173, 113</code></td></tr><tr><td>Outputs &amp; Docs</td><td>76</td><td><code>20, 22, 135, 149, 38, 39, 40, 46</code></td></tr><tr><td>CLI &amp; Skill Installers</td><td>14</td><td><code>72, 59</code></td></tr><tr><td>Ingestion &amp; Updates</td><td>24</td><td><code>79, 80</code></td></tr><tr><td>Serving API</td><td>193</td><td><code>53, 2, 178, 118, 95, 168, 82, 90, 96, 144, 133, 175, 100, 13, 182</code></td></tr><tr><td>Security &amp; Global Graph</td><td>65</td><td><code>5, 24, 91, 112, 141, 174</code></td></tr><tr><td>Tests &amp; Fixtures</td><td>915</td><td><code>11, 27, 12, 67, 73, 62, 7, 85, 0, 1, 105, 104, 3, 23, 65, 109, 92, 93, 52, 77, 4, 76, 81, 78, 8, 103, 9, 134, 145, 98, 110, 121, 164, 74, 165, 111, 126, 71, 116, 123, 106, 156, 169, 179, 159, 167, 94, 114, 16</code></td></tr><tr><td>Session</td><td>29</td><td><code>162</code></td></tr><tr><td>_reject_wildcard_host</td><td>25</td><td><code>10</code></td></tr><tr><td>repositories.py</td><td>25</td><td><code>153</code></td></tr><tr><td>Low Level Design</td><td>23</td><td><code>30</code></td></tr><tr><td>validated</td><td>20</td><td><code>108</code></td></tr><tr><td>AppSettings</td><td>15</td><td><code>68</code></td></tr><tr><td>Other</td><td>587</td><td><code>21, 63, 64, 161, 6, 122, 89, 75, 107, 117, 124, 136, 25, 26, 102, 120, 125, 137, 138, 139, 140, 142, 143, 29, 31, 33, 83, 97, 146, 147, 148, 150, 151, 152, 158, 32, 34, 35, 37, 154, 155, 160, 163, 166, 41, 42, 43, 44, 45, 47, 48, 49, 50, 51, 115, 131, 157, 170, 172, 127, 171, 177, 180, 132, 176, 181, 84, 119, 128, 130, 14, 15, 184, 54, 55, 56, 57, 58, 61, 86, 87, 88, 101, 129, 17, 183, 60, 99</code></td></tr>
+      <tr><td>Extraction Pipeline</td><td>57</td><td><code>19, 18, 36</code></td></tr><tr><td>Graph Build</td><td>117</td><td><code>69, 28, 70, 66, 173, 113</code></td></tr><tr><td>Outputs &amp; Docs</td><td>76</td><td><code>20, 22, 135, 149, 38, 39, 40, 46</code></td></tr><tr><td>CLI &amp; Skill Installers</td><td>14</td><td><code>72, 59</code></td></tr><tr><td>Ingestion &amp; Updates</td><td>24</td><td><code>79, 80</code></td></tr><tr><td>Serving API</td><td>193</td><td><code>53, 2, 178, 118, 95, 168, 82, 90, 96, 144, 133, 175, 100, 13, 182</code></td></tr><tr><td>Security &amp; Global Graph</td><td>60</td><td><code>5, 24, 91, 141, 112</code></td></tr><tr><td>Tests &amp; Fixtures</td><td>915</td><td><code>11, 27, 12, 4, 73, 62, 85, 0, 1, 67, 105, 7, 104, 3, 23, 65, 109, 92, 93, 77, 76, 81, 52, 78, 8, 103, 9, 145, 98, 110, 134, 164, 169, 74, 165, 111, 126, 71, 116, 123, 106, 156, 179, 159, 167, 94, 121, 114, 16</code></td></tr><tr><td>test_application_boot.py</td><td>38</td><td><code>6</code></td></tr><tr><td>Session</td><td>29</td><td><code>162</code></td></tr><tr><td>_reject_wildcard_host</td><td>25</td><td><code>10</code></td></tr><tr><td>repositories.py</td><td>25</td><td><code>153</code></td></tr><tr><td>Low Level Design</td><td>23</td><td><code>30</code></td></tr><tr><td>validated</td><td>20</td><td><code>108</code></td></tr><tr><td>Other</td><td>568</td><td><code>137, 157, 68, 21, 63, 64, 161, 122, 89, 124, 75, 107, 136, 25, 26, 102, 120, 125, 138, 139, 142, 143, 29, 31, 32, 33, 83, 97, 146, 147, 148, 150, 151, 152, 34, 35, 37, 140, 154, 155, 166, 41, 42, 43, 44, 45, 47, 48, 49, 50, 51, 115, 117, 131, 132, 163, 172, 127, 180, 176, 84, 119, 128, 130, 14, 15, 184, 54, 55, 56, 57, 58, 61, 86, 87, 88, 101, 129, 17, 183, 60, 99</code></td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Core Flow</h4>
-    <div class="arrow-chain">Outputs &amp; Docs -&gt; Extraction Pipeline -&gt; Tests &amp; Fixtures -&gt; Graph Build -&gt; repositories.py -&gt; AppSettings -&gt; Session</div>
+    <div class="arrow-chain">Outputs &amp; Docs -&gt; Extraction Pipeline -&gt; Tests &amp; Fixtures -&gt; Graph Build -&gt; repositories.py -&gt; Other -&gt; Security &amp; Global Graph</div>
   </div>
 </div>
 <div class="grid">
   <div class="card">
     <h4>Graph Report Highlights</h4>
     <ul>
-      <li>2184 nodes · 4048 edges · 185 communities (162 shown, 23 thin omitted)</li>
+      <li>2184 nodes · 4034 edges · 178 communities (154 shown, 24 thin omitted)</li>
       <li>Extraction: 82% EXTRACTED · 18% INFERRED · 0% AMBIGUOUS · INFERRED: 710 edges (avg confidence: 0.71)</li>
       <li>Token cost: 0 input · 0 output</li>
       <li>1. `AppError` - 89 edges</li>
@@ -170,12 +170,12 @@ flowchart LR
 <hr>
 <!-- ====== 2. Extraction Pipeline ====== -->
 <h2 id="extract-pipeline">2. Extraction Pipeline</h2>
-<p>Extraction Pipeline groups implementation around forgeml, backend, engineering, kit, mostly in domain/package/ports.py, ForgeML_Engineering_Kit_Phase0/docs/10_ARCHITECTURE_DECISIONS.md, ForgeML_Engineering_Kit_Phase0/docs/08_CODING_GUIDELINES.md. This section covers 56 nodes and 68 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>Extraction Pipeline groups implementation around forgeml, backend, engineering, kit, mostly in ForgeML_Engineering_Kit_Phase0/docs/10_ARCHITECTURE_DECISIONS.md, domain/package/ports.py, ForgeML_Engineering_Kit_Phase0/docs/08_CODING_GUIDELINES.md. This section covers 57 nodes and 69 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Extraction Pipeline (56 nodes, 68 edges)
+    %% Section: Extraction Pipeline (57 nodes, 69 edges)
     subgraph extract_pipeline_domain_package_ports_py_19c7a14e["domain/package/ports.py"]
         backend_src_forgeml_domain_package_ports_archive_5b05a183("ArchiveReader<br/><small>domain/package/ports.py</small>")
         backend_src_forgeml_domain_package_ports_artifac_7f88b526("ArtifactStore<br/><small>domain/package/ports.py</small>")
@@ -209,7 +209,7 @@ flowchart LR
     backend_src_forgeml_domain_package_ports_archive_5b05a183 -->|method| backend_src_forgeml_domain_package_ports_archive_2d06e106
     backend_src_forgeml_domain_package_ports_archive_5b05a183 -->|method| backend_src_forgeml_domain_package_ports_archive_aad349e2
     backend_src_forgeml_domain_package_ports_archive_5b05a183 -->|method| backend_src_forgeml_domain_package_ports_archive_af2c5e0f
-    %% Omitted for readability: 38 nodes, 0 edges
+    %% Omitted for readability: 39 nodes, 0 edges
     class backend_src_forgeml_domain_package_ports_archive_5b05a183 klass;
     class backend_src_forgeml_domain_package_ports_artifac_7f88b526 ui;
     class backend_src_forgeml_domain_package_ports_artifac_91fbf7a1 function;
@@ -496,7 +496,7 @@ flowchart LR
     <h4>Key Files</h4>
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>File</th><th>Coverage</th></tr>
-      <tr><td><code>ForgeML_Engineering_Kit_Phase0/docs/10_ARCHITECTURE_DECISIONS.md</code></td><td>18 nodes</td></tr>
+      <tr><td><code>ForgeML_Engineering_Kit_Phase0/docs/10_ARCHITECTURE_DECISIONS.md</code></td><td>19 nodes</td></tr>
 <tr><td><code>domain/package/ports.py</code></td><td>18 nodes</td></tr>
 <tr><td><code>ForgeML_Engineering_Kit_Phase0/docs/08_CODING_GUIDELINES.md</code></td><td>8 nodes</td></tr>
 <tr><td><code>application/package/validate_package.py</code></td><td>5 nodes</td></tr>
@@ -506,7 +506,7 @@ flowchart LR
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: contains x25, references x18, explains x12, method x7. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x26, references x18, explains x12, method x7. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
@@ -2046,12 +2046,12 @@ flowchart LR
 
 <!-- ====== 8. Security & Global Graph ====== -->
 <h2 id="security-global">8. Security &amp; Global Graph</h2>
-<p>Security &amp; Global Graph groups implementation around forgeml, engineering, package, docs, mostly in domain/package/rules.py, ForgeML_Engineering_Kit_Phase0/docs/11_OPERATIONS_AND_SECURITY.md, ForgeML_Engineering_Kit_Phase0/docs/33_MODULE3_ENGINEERING_DECISIONS.md. This section covers 65 nodes and 97 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>Security &amp; Global Graph groups implementation around forgeml, engineering, package, docs, mostly in domain/package/rules.py, ForgeML_Engineering_Kit_Phase0/docs/11_OPERATIONS_AND_SECURITY.md, ForgeML_Engineering_Kit_Phase0/docs/33_MODULE3_ENGINEERING_DECISIONS.md. This section covers 60 nodes and 89 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Security &amp; Global Graph (65 nodes, 97 edges)
+    %% Section: Security &amp; Global Graph (60 nodes, 89 edges)
     subgraph security_global_domain_package_rules_py_28a75c2d["domain/package/rules.py"]
         backend_src_forgeml_domain_package_rules_detail_240df9d2("_detail()<br/><small>domain/package/rules.py</small>")
         backend_src_forgeml_domain_package_rules_normali_b76a31eb("_normalize()<br/><small>domain/package/rules.py</small>")
@@ -2068,7 +2068,7 @@ flowchart LR
         backend_src_forgeml_domain_package_rules_validat_d25aa8fa("validate_package()<br/><small>domain/package/rules.py</small>")
         backend_src_forgeml_domain_package_rules_31bd2cf2("rules.py")
     end
-    forgeos_constitution_02_principles_9117cae3("02_principles.md")
+    forgeos_constitution_04_module_lifecycle_a92f6ae9("04_module_lifecycle.md")
     backend_src_forgeml_domain_package_rules_py_vali_1a3deffa("ValidationError")
     backend_src_forgeml_domain_package_models_manife_99e4caad("ManifestV1<br/><small>domain/package/models.py</small>")
     backend_tests_unit_domain_package_test_rules_tes_1f8f5f94("and mismatched assets()<br/><small>domain/package/test_rules.py</small>")
@@ -2096,7 +2096,7 @@ flowchart LR
     backend_src_forgeml_domain_package_rules_matrix_886c2cc9 -->|calls| backend_src_forgeml_domain_package_rules_validat_d25aa8fa
     backend_src_forgeml_domain_package_rules_entrypo_67d194ae -->|calls| backend_src_forgeml_domain_package_rules_validat_d25aa8fa
     backend_src_forgeml_domain_package_rules_depende_23d2835b -->|calls| backend_src_forgeml_domain_package_rules_validat_d25aa8fa
-    %% Omitted for readability: 47 nodes, 2 edges
+    %% Omitted for readability: 42 nodes, 2 edges
     class backend_src_forgeml_domain_package_rules_detail_240df9d2 function;
     class backend_src_forgeml_domain_package_rules_normali_b76a31eb function;
     class backend_src_forgeml_domain_package_rules_safe_se_c328f203 function;
@@ -2111,7 +2111,7 @@ flowchart LR
     class backend_src_forgeml_domain_package_rules_schema_a1095c2d function;
     class backend_src_forgeml_domain_package_rules_validat_d25aa8fa function;
     class backend_src_forgeml_domain_package_rules_31bd2cf2 module;
-    class forgeos_constitution_02_principles_9117cae3 concept;
+    class forgeos_constitution_04_module_lifecycle_a92f6ae9 concept;
     class backend_src_forgeml_domain_package_rules_py_vali_1a3deffa klass;
     class backend_src_forgeml_domain_package_models_manife_99e4caad klass;
     class backend_tests_unit_domain_package_test_rules_tes_1f8f5f94 test;
@@ -2314,6 +2314,14 @@ flowchart LR
 </tr>
 <tr>
   <td>23</td>
+  <td><code>11_OPERATIONS_AND_SECURITY.md</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/11_OPERATIONS_AND_SECURITY.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 11_OPERATIONS_AND_SECURITY.md.</td>
+</tr>
+<tr>
+  <td>24</td>
   <td><code>Operations and Security</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/11_OPERATIONS_AND_SECURITY.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -2321,7 +2329,7 @@ flowchart LR
   <td>Documentation node describing Operations and Security.</td>
 </tr>
 <tr>
-  <td>24</td>
+  <td>25</td>
   <td><code>Supported topology</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/11_OPERATIONS_AND_SECURITY.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -2329,7 +2337,7 @@ flowchart LR
   <td>Documentation node describing Supported topology.</td>
 </tr>
 <tr>
-  <td>25</td>
+  <td>26</td>
   <td><code>Configuration inventory</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/11_OPERATIONS_AND_SECURITY.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -2337,7 +2345,7 @@ flowchart LR
   <td>Documentation node describing Configuration inventory.</td>
 </tr>
 <tr>
-  <td>26</td>
+  <td>27</td>
   <td><code>Default limits and operator policy</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/11_OPERATIONS_AND_SECURITY.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -2345,7 +2353,7 @@ flowchart LR
   <td>Documentation node describing Default limits and operator policy.</td>
 </tr>
 <tr>
-  <td>27</td>
+  <td>28</td>
   <td><code>Runtime hardening</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/11_OPERATIONS_AND_SECURITY.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -2353,7 +2361,7 @@ flowchart LR
   <td>Documentation node describing Runtime hardening.</td>
 </tr>
 <tr>
-  <td>28</td>
+  <td>29</td>
   <td><code>Package/build safety</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/11_OPERATIONS_AND_SECURITY.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -2361,20 +2369,12 @@ flowchart LR
   <td>Documentation node describing Package/build safety.</td>
 </tr>
 <tr>
-  <td>29</td>
+  <td>30</td>
   <td><code>Backup/restore</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/11_OPERATIONS_AND_SECURITY.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
   <td>Documentation node describing Backup/restore.</td>
-</tr>
-<tr>
-  <td>30</td>
-  <td><code>Reconciliation/incidents</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/11_OPERATIONS_AND_SECURITY.md</small></td>
-  <td><span class="tag tag-func">Concept</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Documentation node describing Reconciliation/incidents.</td>
 </tr>
 </table>
 
@@ -2388,14 +2388,14 @@ flowchart LR
 <tr><td><code>.forgeos/roles/security_reviewer.md</code></td><td>10 nodes</td></tr>
 <tr><td><code>ForgeML_Engineering_Kit_Phase0/docs/33_MODULE3_ENGINEERING_DECISIONS.md</code></td><td>10 nodes</td></tr>
 <tr><td><code>domain/package/models.py</code></td><td>2 nodes</td></tr>
-<tr><td><code>.forgeos/constitution/02_principles.md</code></td><td>1 nodes</td></tr>
 <tr><td><code>.forgeos/constitution/04_module_lifecycle.md</code></td><td>1 nodes</td></tr>
 <tr><td><code>.forgeos/constitution/05_engineering_standards.md</code></td><td>1 nodes</td></tr>
+<tr><td><code>.forgeos/roles/implementation_engineer.md</code></td><td>1 nodes</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: contains x41, calls x26, references x24, explains x5. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x41, calls x26, references x16, explains x5. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
@@ -2749,8 +2749,356 @@ flowchart LR
 </div>
 <hr>
 
-<!-- ====== 10. Session ====== -->
-<h2 id="session">10. Session</h2>
+<!-- ====== 10. test_application_boot.py ====== -->
+<h2 id="test-application-boot-py">10. test_application_boot.py</h2>
+<p>test_application_boot.py groups implementation around readmemd, project, statusmd, backend, mostly in PROJECT_STATUS.md, backend/README.md, README.md. This section covers 38 nodes and 37 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: test_application_boot.py (38 nodes, 37 edges)
+    subgraph test_application_boot_py_PROJECT_STATUS_md_d5303e61["PROJECT_STATUS.md"]
+        project_status_forgeml_project_status_7a9f7b6c("ForgeML Project Status<br/><small>PROJECT_STATUS.md</small>")
+        project_status_frozen_modules_c9a6e10e("Frozen Modules<br/><small>PROJECT_STATUS.md</small>")
+        project_status_57856ced("PROJECT_STATUS.md")
+        project_status_ci_status_cd3f4890("CI Status<br/><small>PROJECT_STATUS.md</small>")
+        project_status_current_development_stage_27a4e257("Current Development Stage<br/><small>PROJECT_STATUS.md</small>")
+        project_status_current_module_77e78647("Current Module<br/><small>PROJECT_STATUS.md</small>")
+        project_status_current_version_60671f9e("Current Version<br/><small>PROJECT_STATUS.md</small>")
+        project_status_engineering_authority_24c45063("Engineering Authority<br/><small>PROJECT_STATUS.md</small>")
+        project_status_last_frozen_milestone_b27f7e23("Last Frozen Milestone<br/><small>PROJECT_STATUS.md</small>")
+        project_status_module_0_foundation_6ed11203("Module 0 — Foundation<br/><small>PROJECT_STATUS.md</small>")
+        project_status_module_1_forge_package_system_0dad4537("Module 1 — Forge Package System<br/><small>PROJECT_STATUS.md</small>")
+        project_status_module_2_metadata_layer_7aa7c878("Module 2 — Metadata Layer<br/><small>PROJECT_STATUS.md</small>")
+        project_status_notes_704bfbb3("Notes<br/><small>PROJECT_STATUS.md</small>")
+        project_status_overall_progress_36501eb9("Overall Progress<br/><small>PROJECT_STATUS.md</small>")
+    end
+    subgraph test_application_boot_py_README_md_3c1f90f2["README.md"]
+        readme_forgeml_7135f57e("ForgeML<br/><small>README.md</small>")
+        readme_f78a71af("README.md")
+    end
+    subgraph test_application_boot_py_backend_README_md_cda26189["backend/README.md"]
+        backend_readme_forgeml_backend_module_0_foundati_0e7b8e27("ForgeML Backend — Module 0 Foundation,...<br/><small>backend/README.md</small>")
+        backend_readme_b6179e7d("README.md")
+    end
+    project_status_57856ced -->|references| readme_f78a71af
+    readme_f78a71af -->|references| backend_readme_b6179e7d
+    project_status_57856ced -->|contains| project_status_forgeml_project_status_7a9f7b6c
+    project_status_forgeml_project_status_7a9f7b6c -->|contains| project_status_ci_status_cd3f4890
+    project_status_forgeml_project_status_7a9f7b6c -->|contains| project_status_current_development_stage_27a4e257
+    project_status_forgeml_project_status_7a9f7b6c -->|contains| project_status_current_module_77e78647
+    project_status_forgeml_project_status_7a9f7b6c -->|contains| project_status_current_version_60671f9e
+    project_status_forgeml_project_status_7a9f7b6c -->|contains| project_status_engineering_authority_24c45063
+    project_status_forgeml_project_status_7a9f7b6c -->|contains| project_status_frozen_modules_c9a6e10e
+    project_status_forgeml_project_status_7a9f7b6c -->|contains| project_status_last_frozen_milestone_b27f7e23
+    project_status_forgeml_project_status_7a9f7b6c -->|contains| project_status_notes_704bfbb3
+    project_status_forgeml_project_status_7a9f7b6c -->|contains| project_status_overall_progress_36501eb9
+    project_status_frozen_modules_c9a6e10e -->|contains| project_status_module_0_foundation_6ed11203
+    project_status_frozen_modules_c9a6e10e -->|contains| project_status_module_1_forge_package_system_0dad4537
+    project_status_frozen_modules_c9a6e10e -->|contains| project_status_module_2_metadata_layer_7aa7c878
+    readme_f78a71af -->|contains| readme_forgeml_7135f57e
+    backend_readme_b6179e7d -->|contains| backend_readme_forgeml_backend_module_0_foundati_0e7b8e27
+    %% Omitted for readability: 20 nodes, 0 edges
+    class project_status_forgeml_project_status_7a9f7b6c concept;
+    class project_status_frozen_modules_c9a6e10e concept;
+    class project_status_57856ced concept;
+    class project_status_ci_status_cd3f4890 concept;
+    class project_status_current_development_stage_27a4e257 concept;
+    class project_status_current_module_77e78647 concept;
+    class project_status_current_version_60671f9e concept;
+    class project_status_engineering_authority_24c45063 concept;
+    class project_status_last_frozen_milestone_b27f7e23 concept;
+    class project_status_module_0_foundation_6ed11203 concept;
+    class project_status_module_1_forge_package_system_0dad4537 concept;
+    class project_status_module_2_metadata_layer_7aa7c878 concept;
+    class project_status_notes_704bfbb3 concept;
+    class project_status_overall_progress_36501eb9 concept;
+    class readme_forgeml_7135f57e concept;
+    class readme_f78a71af concept;
+    class backend_readme_forgeml_backend_module_0_foundati_0e7b8e27 concept;
+    class backend_readme_b6179e7d concept;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>PROJECT_STATUS.md</code><br><small style="color:var(--muted)">PROJECT_STATUS.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing PROJECT_STATUS.md.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>ForgeML Project Status</code><br><small style="color:var(--muted)">PROJECT_STATUS.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing ForgeML Project Status.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>Current Version</code><br><small style="color:var(--muted)">PROJECT_STATUS.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Current Version.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>Current Development Stage</code><br><small style="color:var(--muted)">PROJECT_STATUS.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Current Development Stage.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>Overall Progress</code><br><small style="color:var(--muted)">PROJECT_STATUS.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Overall Progress.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>Frozen Modules</code><br><small style="color:var(--muted)">PROJECT_STATUS.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Frozen Modules.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>Module 0 — Foundation</code><br><small style="color:var(--muted)">PROJECT_STATUS.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Module 0 — Foundation.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>Module 1 — Forge Package System</code><br><small style="color:var(--muted)">PROJECT_STATUS.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Module 1 — Forge Package System.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>Module 2 — Metadata Layer</code><br><small style="color:var(--muted)">PROJECT_STATUS.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Module 2 — Metadata Layer.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>Current Module</code><br><small style="color:var(--muted)">PROJECT_STATUS.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Current Module.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>Upcoming Roadmap</code><br><small style="color:var(--muted)">PROJECT_STATUS.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Upcoming Roadmap.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>Engineering Authority</code><br><small style="color:var(--muted)">PROJECT_STATUS.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Engineering Authority.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>CI Status</code><br><small style="color:var(--muted)">PROJECT_STATUS.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing CI Status.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>Last Frozen Milestone</code><br><small style="color:var(--muted)">PROJECT_STATUS.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Last Frozen Milestone.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>Notes</code><br><small style="color:var(--muted)">PROJECT_STATUS.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Notes.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><code>README.md</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing README.md.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><code>ForgeML</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing ForgeML.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td><code>Quickstart</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Quickstart.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td><code>Postman</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Postman.</td>
+</tr>
+<tr>
+  <td>20</td>
+  <td><code>Configuration</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Configuration.</td>
+</tr>
+<tr>
+  <td>21</td>
+  <td><code>What a .forge package is</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing What a .forge package is.</td>
+</tr>
+<tr>
+  <td>22</td>
+  <td><code>Security</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Security.</td>
+</tr>
+<tr>
+  <td>23</td>
+  <td><code>Documentation</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Documentation.</td>
+</tr>
+<tr>
+  <td>24</td>
+  <td><code>Development</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Development.</td>
+</tr>
+<tr>
+  <td>25</td>
+  <td><code>README.md</code><br><small style="color:var(--muted)">backend/README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing README.md.</td>
+</tr>
+<tr>
+  <td>26</td>
+  <td><code>ForgeML Backend — Module 0 Foundation, Module 1 Forge Package System</code><br><small style="color:var(--muted)">backend/README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing ForgeML Backend — Module 0 Foundation, Module 1 Forge Package System.</td>
+</tr>
+<tr>
+  <td>27</td>
+  <td><code>Requirements</code><br><small style="color:var(--muted)">backend/README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Requirements.</td>
+</tr>
+<tr>
+  <td>28</td>
+  <td><code>Configuration</code><br><small style="color:var(--muted)">backend/README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Configuration.</td>
+</tr>
+<tr>
+  <td>29</td>
+  <td><code>Running</code><br><small style="color:var(--muted)">backend/README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Running.</td>
+</tr>
+<tr>
+  <td>30</td>
+  <td><code>Frozen HTTP and correlation contracts</code><br><small style="color:var(--muted)">backend/README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Frozen HTTP and correlation contracts.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>PROJECT_STATUS.md</code></td><td>15 nodes</td></tr>
+<tr><td><code>backend/README.md</code></td><td>14 nodes</td></tr>
+<tr><td><code>README.md</code></td><td>9 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x35, references x2. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 11. Session ====== -->
+<h2 id="session">11. Session</h2>
 <p>Session groups implementation around backend, forgeml, audit, domain, mostly in domain/audit/ports.py, domain/audit/models.py, infrastructure/database/repositories.py. This section covers 29 nodes and 40 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
@@ -3087,8 +3435,8 @@ flowchart LR
 </div>
 <hr>
 
-<!-- ====== 11. _reject_wildcard_host ====== -->
-<h2 id="reject-wildcard-host">11. _reject_wildcard_host</h2>
+<!-- ====== 12. _reject_wildcard_host ====== -->
+<h2 id="reject-wildcard-host">12. _reject_wildcard_host</h2>
 <p>_reject_wildcard_host groups implementation around foundation, module0, designmd, forgeml, mostly in ForgeML_Engineering_Kit_Phase0/docs/13_MODULE0_FOUNDATION_DESIGN.md. This section covers 25 nodes and 24 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
@@ -3387,8 +3735,8 @@ flowchart LR
 </div>
 <hr>
 
-<!-- ====== 12. repositories.py ====== -->
-<h2 id="repositories-py">12. repositories.py</h2>
+<!-- ====== 13. repositories.py ====== -->
+<h2 id="repositories-py">13. repositories.py</h2>
 <p>repositories.py groups implementation around backend, forgeml, infrastructure, database, mostly in infrastructure/database/repositories.py, infrastructure/database/mappers.py, infrastructure/database/models.py. This section covers 25 nodes and 47 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
@@ -3692,8 +4040,8 @@ flowchart LR
 </div>
 <hr>
 
-<!-- ====== 13. Low Level Design ====== -->
-<h2 id="low-level-design">13. Low Level Design</h2>
+<!-- ====== 14. Low Level Design ====== -->
+<h2 id="low-level-design">14. Low Level Design</h2>
 <p>Low Level Design groups implementation around designmd, engineering, forgeml, kit, mostly in ForgeML_Engineering_Kit_Phase0/docs/04_LOW_LEVEL_DESIGN.md, ForgeML_Engineering_Kit_Phase0/docs/20_MODULE2_METADATA_DESIGN.md, ForgeML_Engineering_Kit_Phase0/docs/34_MODULE4_ANALYZER_DESIGN.md. This section covers 23 nodes and 22 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
@@ -3984,8 +4332,8 @@ flowchart LR
 </div>
 <hr>
 
-<!-- ====== 14. validated ====== -->
-<h2 id="validated">14. validated</h2>
+<!-- ====== 15. validated ====== -->
+<h2 id="validated">15. validated</h2>
 <p>validated groups implementation around operations, portspy, backend, forgeml, mostly in domain/operations/ports.py. This section covers 20 nodes and 24 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
@@ -4239,238 +4587,23 @@ flowchart LR
 </div>
 <hr>
 
-<!-- ====== 15. AppSettings ====== -->
-<h2 id="appsettings">15. AppSettings</h2>
-<p>AppSettings groups implementation around forgeml, backend, infrastructure, database, mostly in infrastructure/database/repositories.py, infrastructure/database/models.py. This section covers 15 nodes and 23 internal edges; the diagram shows only representative relationships to stay readable.</p>
-
-<div class="mermaid">
-%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
-flowchart LR
-    %% Section: AppSettings (15 nodes, 23 edges)
-    subgraph appsettings_infrastructure_database_repositories_8922c177["infrastructure/database/repositories.py"]
-        backend_src_forgeml_infrastructure_database_repo_ae77e3d8("SqlAlchemyPackageCatalog<br/><small>infrastructure/database/repositories.py</small>")
-        backend_src_forgeml_infrastructure_database_repo_9098fc3b("find_by_checksum()<br/><small>infrastructure/database/repositories.py</small>")
-        backend_src_forgeml_infrastructure_database_repo_bd350b90("get_or_create()<br/><small>infrastructure/database/repositories.py</small>")
-        backend_src_forgeml_infrastructure_database_repo_88c19c01("_by_checksum()<br/><small>infrastructure/database/repositories.py</small>")
-        backend_src_forgeml_infrastructure_database_repo_e92654e5("find_by_id()<br/><small>infrastructure/database/repositories.py</small>")
-        backend_src_forgeml_infrastructure_database_repo_fc089330("findings_for()<br/><small>infrastructure/database/repositories.py</small>")
-        backend_src_forgeml_infrastructure_database_repo_f1be5afb("save_validation()<br/><small>infrastructure/database/repositories.py</small>")
-        backend_src_forgeml_infrastructure_database_repo_94ff3516("Package records backed by PostgreSQL.<br/><small>infrastructure/database/repositories.py</small>")
-    end
-    subgraph appsettings_infrastructure_database_models_py_7b5c302b["infrastructure/database/models.py"]
-        backend_src_forgeml_infrastructure_database_mode_7c9597ae("PackageRow<br/><small>infrastructure/database/models.py</small>")
-        backend_src_forgeml_infrastructure_database_mode_5d592caa("Base<br/><small>infrastructure/database/models.py</small>")
-        backend_src_forgeml_infrastructure_database_mode_71cd7d5c("PackageValidationRow<br/><small>infrastructure/database/models.py</small>")
-        backend_src_forgeml_infrastructure_database_mode_baad5c42("_in_check()<br/><small>infrastructure/database/models.py</small>")
-        backend_src_forgeml_infrastructure_database_mode_b9d26c24("models.py")
-        backend_src_forgeml_infrastructure_database_mode_e5080687("SQLAlchemy mappings. The only ORM class...<br/><small>infrastructure/database/models.py</small>")
-    end
-    declarativebase_9605719f("DeclarativeBase")
-    backend_src_forgeml_infrastructure_database_mode_7c9597ae -->|calls| backend_src_forgeml_infrastructure_database_repo_bd350b90
-    backend_src_forgeml_infrastructure_database_repo_ae77e3d8 -->|method| backend_src_forgeml_infrastructure_database_repo_88c19c01
-    backend_src_forgeml_infrastructure_database_repo_ae77e3d8 -->|method| backend_src_forgeml_infrastructure_database_repo_9098fc3b
-    backend_src_forgeml_infrastructure_database_repo_ae77e3d8 -->|method| backend_src_forgeml_infrastructure_database_repo_e92654e5
-    backend_src_forgeml_infrastructure_database_repo_ae77e3d8 -->|method| backend_src_forgeml_infrastructure_database_repo_fc089330
-    backend_src_forgeml_infrastructure_database_repo_ae77e3d8 -->|method| backend_src_forgeml_infrastructure_database_repo_bd350b90
-    backend_src_forgeml_infrastructure_database_repo_ae77e3d8 -->|method| backend_src_forgeml_infrastructure_database_repo_f1be5afb
-    backend_src_forgeml_infrastructure_database_repo_bd350b90 -->|calls| backend_src_forgeml_infrastructure_database_repo_88c19c01
-    backend_src_forgeml_infrastructure_database_repo_9098fc3b -->|calls| backend_src_forgeml_infrastructure_database_repo_88c19c01
-    class backend_src_forgeml_infrastructure_database_repo_ae77e3d8 klass;
-    class backend_src_forgeml_infrastructure_database_repo_9098fc3b function;
-    class backend_src_forgeml_infrastructure_database_repo_bd350b90 function;
-    class backend_src_forgeml_infrastructure_database_repo_88c19c01 function;
-    class backend_src_forgeml_infrastructure_database_repo_e92654e5 function;
-    class backend_src_forgeml_infrastructure_database_repo_fc089330 function;
-    class backend_src_forgeml_infrastructure_database_repo_f1be5afb function;
-    class backend_src_forgeml_infrastructure_database_repo_94ff3516 concept;
-    class backend_src_forgeml_infrastructure_database_mode_7c9597ae klass;
-    class backend_src_forgeml_infrastructure_database_mode_5d592caa klass;
-    class backend_src_forgeml_infrastructure_database_mode_71cd7d5c klass;
-    class backend_src_forgeml_infrastructure_database_mode_baad5c42 function;
-    class backend_src_forgeml_infrastructure_database_mode_b9d26c24 module;
-    class backend_src_forgeml_infrastructure_database_mode_e5080687 concept;
-    class declarativebase_9605719f klass;
-    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
-    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
-    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
-    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
-    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
-    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
-    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
-    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
-    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
-</div>
-
-<h3>Call Details</h3>
-<table class="call-table">
-<tr>
-  <th style="width:5%">#</th>
-  <th style="width:28%">Node</th>
-  <th style="width:10%">Type</th>
-  <th style="width:17%">Caller</th>
-  <th style="width:20%">Callees</th>
-  <th style="width:20%">Description</th>
-</tr>
-<tr>
-  <td>1</td>
-  <td><code>models.py</code><br><small style="color:var(--muted)">infrastructure/database/models.py</small></td>
-  <td><span class="tag tag-class">Module</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Module file in infrastructure/database/models.py.</td>
-</tr>
-<tr>
-  <td>2</td>
-  <td><code>_in_check()</code><br><small style="color:var(--muted)">infrastructure/database/models.py</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>_in_check() node in infrastructure/database/models.py.</td>
-</tr>
-<tr>
-  <td>3</td>
-  <td><code>Base</code><br><small style="color:var(--muted)">infrastructure/database/models.py</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Base node in infrastructure/database/models.py.</td>
-</tr>
-<tr>
-  <td>4</td>
-  <td><code>DeclarativeBase</code><br><small style="color:var(--muted)"></small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>DeclarativeBase node in project.</td>
-</tr>
-<tr>
-  <td>5</td>
-  <td><code>PackageRow</code><br><small style="color:var(--muted)">infrastructure/database/models.py</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>get_or_create()</code><br><small style="color:var(--muted)">infrastructure/database/repositories.py</small></td>
-  <td>PackageRow node in infrastructure/database/models.py.</td>
-</tr>
-<tr>
-  <td>6</td>
-  <td><code>PackageValidationRow</code><br><small style="color:var(--muted)">infrastructure/database/models.py</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>PackageValidationRow node in infrastructure/database/models.py.</td>
-</tr>
-<tr>
-  <td>7</td>
-  <td><code>SQLAlchemy mappings. The only ORM classes in ForgeML.  Nothing here leaves this</code><br><small style="color:var(--muted)">infrastructure/database/models.py</small></td>
-  <td><span class="tag tag-func">Concept</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Design note for SQLAlchemy mappings. The only ORM classes in ForgeML.  Nothing here leaves this.</td>
-</tr>
-<tr>
-  <td>8</td>
-  <td><code>SqlAlchemyPackageCatalog</code><br><small style="color:var(--muted)">infrastructure/database/repositories.py</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>_by_checksum()</code><br><small style="color:var(--muted)">infrastructure/database/repositories.py</small><br><code>find_by_checksum()</code><br><small style="color:var(--muted)">infrastructure/database/repositories.py</small><br><code>find_by_id()</code><br><small style="color:var(--muted)">infrastructure/database/repositories.py</small><br>+3 more</td>
-  <td>SqlAlchemyPackageCatalog node in infrastructure/database/repositories.py.</td>
-</tr>
-<tr>
-  <td>9</td>
-  <td><code>.get_or_create()</code><br><small style="color:var(--muted)">infrastructure/database/repositories.py</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>PackageRow</code><br><small style="color:var(--muted)">infrastructure/database/models.py</small><br><code>SqlAlchemyPackageCatalog</code><br><small style="color:var(--muted)">infrastructure/database/repositories.py</small></td>
-  <td><code>_by_checksum()</code><br><small style="color:var(--muted)">infrastructure/database/repositories.py</small></td>
-  <td>.get_or_create() node in infrastructure/database/repositories.py.</td>
-</tr>
-<tr>
-  <td>10</td>
-  <td><code>.find_by_id()</code><br><small style="color:var(--muted)">infrastructure/database/repositories.py</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>SqlAlchemyPackageCatalog</code><br><small style="color:var(--muted)">infrastructure/database/repositories.py</small></td>
-  <td>No direct outbound edge</td>
-  <td>.find_by_id() node in infrastructure/database/repositories.py.</td>
-</tr>
-<tr>
-  <td>11</td>
-  <td><code>.find_by_checksum()</code><br><small style="color:var(--muted)">infrastructure/database/repositories.py</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>SqlAlchemyPackageCatalog</code><br><small style="color:var(--muted)">infrastructure/database/repositories.py</small></td>
-  <td><code>_by_checksum()</code><br><small style="color:var(--muted)">infrastructure/database/repositories.py</small></td>
-  <td>.find_by_checksum() node in infrastructure/database/repositories.py.</td>
-</tr>
-<tr>
-  <td>12</td>
-  <td><code>.save_validation()</code><br><small style="color:var(--muted)">infrastructure/database/repositories.py</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>SqlAlchemyPackageCatalog</code><br><small style="color:var(--muted)">infrastructure/database/repositories.py</small></td>
-  <td>No direct outbound edge</td>
-  <td>.save_validation() node in infrastructure/database/repositories.py.</td>
-</tr>
-<tr>
-  <td>13</td>
-  <td><code>.findings_for()</code><br><small style="color:var(--muted)">infrastructure/database/repositories.py</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>SqlAlchemyPackageCatalog</code><br><small style="color:var(--muted)">infrastructure/database/repositories.py</small></td>
-  <td>No direct outbound edge</td>
-  <td>.findings_for() node in infrastructure/database/repositories.py.</td>
-</tr>
-<tr>
-  <td>14</td>
-  <td><code>._by_checksum()</code><br><small style="color:var(--muted)">infrastructure/database/repositories.py</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>find_by_checksum()</code><br><small style="color:var(--muted)">infrastructure/database/repositories.py</small><br><code>get_or_create()</code><br><small style="color:var(--muted)">infrastructure/database/repositories.py</small><br><code>SqlAlchemyPackageCatalog</code><br><small style="color:var(--muted)">infrastructure/database/repositories.py</small></td>
-  <td>No direct outbound edge</td>
-  <td>._by_checksum() node in infrastructure/database/repositories.py.</td>
-</tr>
-<tr>
-  <td>15</td>
-  <td><code>Package records backed by PostgreSQL.</code><br><small style="color:var(--muted)">infrastructure/database/repositories.py</small></td>
-  <td><span class="tag tag-func">Concept</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Design note for Package records backed by PostgreSQL..</td>
-</tr>
-</table>
-
-<div class="grid">
-  <div class="card">
-    <h4>Key Files</h4>
-    <table style="width:100%;font-size:0.85rem;">
-      <tr><th>File</th><th>Coverage</th></tr>
-      <tr><td><code>infrastructure/database/repositories.py</code></td><td>8 nodes</td></tr>
-<tr><td><code>infrastructure/database/models.py</code></td><td>6 nodes</td></tr>
-    </table>
-  </div>
-  <div class="card">
-    <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: method x6, contains x4, inherits x3, calls x3. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
-  </div>
-</div>
-<hr>
-
 <!-- ====== 16. Other ====== -->
 <h2 id="other">16. Other</h2>
-<p>Other groups implementation around engineering, forgeml, kit, phase0, mostly in PROJECT_STATUS.md, ForgeML_Engineering_Kit_Phase0/docs/19_MODULE1_PACKAGE_DESIGN.md, ForgeML_Engineering_Kit_Phase0/docs/21_MODULE2_IMPLEMENTATION.md. This section covers 587 nodes and 525 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>Other groups implementation around forgeml, engineering, kit, phase0, mostly in ForgeML_Engineering_Kit_Phase0/docs/19_MODULE1_PACKAGE_DESIGN.md, ForgeML_Engineering_Kit_Phase0/docs/21_MODULE2_IMPLEMENTATION.md, .forgeos/constitution/02_principles.md. This section covers 568 nodes and 518 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Other (587 nodes, 525 edges)
-    subgraph other_infrastructure_database_unit_of_work_py_03191c6f["infrastructure/database/unit_of_work.py"]
-        backend_src_forgeml_infrastructure_database_unit_7ad239bc("SqlAlchemyUnitOfWork<br/><small>infrastructure/database/unit_of_work.py</small>")
-        backend_src_forgeml_infrastructure_database_unit_59cbd0d2("__exit__()<br/><small>infrastructure/database/unit_of_work.py</small>")
-        backend_src_forgeml_infrastructure_database_unit_16af1c46("_active()<br/><small>infrastructure/database/unit_of_work.py</small>")
-        backend_src_forgeml_infrastructure_database_unit_135ec099("commit()<br/><small>infrastructure/database/unit_of_work.py</small>")
-        backend_src_forgeml_infrastructure_database_unit_90d91e3a("__init__()<br/><small>infrastructure/database/unit_of_work.py</small>")
-        backend_src_forgeml_infrastructure_database_unit_db127d07("rollback()<br/><small>infrastructure/database/unit_of_work.py</small>")
-    end
-    subgraph other_External_generated_9e8859fa["External / generated"]
-        backend_src_forgeml_infrastructure_database_unit_8323dd89("BaseException")
-        backend_tests_fakes_py_baseexception_31bee9b1("BaseException")
-        scripts_forge_pack_py_path_64f0323d("Path")
-        backend_src_forgeml_infrastructure_database_unit_7def9db0("Session")
-        backend_src_forgeml_infrastructure_database_repo_b6a19c45("Session")
+    %% Section: Other (568 nodes, 518 edges)
+    subgraph other_infrastructure_database_repositories_py_e220bb8d["infrastructure/database/repositories.py"]
+        backend_src_forgeml_infrastructure_database_repo_ae77e3d8("SqlAlchemyPackageCatalog<br/><small>infrastructure/database/repositories.py</small>")
+        backend_src_forgeml_infrastructure_database_repo_bd350b90("get_or_create()<br/><small>infrastructure/database/repositories.py</small>")
+        backend_src_forgeml_infrastructure_database_repo_88c19c01("_by_checksum()<br/><small>infrastructure/database/repositories.py</small>")
+        backend_src_forgeml_infrastructure_database_repo_9098fc3b("find_by_checksum()<br/><small>infrastructure/database/repositories.py</small>")
+        backend_src_forgeml_infrastructure_database_repo_e92654e5("find_by_id()<br/><small>infrastructure/database/repositories.py</small>")
+        backend_src_forgeml_infrastructure_database_repo_fc089330("findings_for()<br/><small>infrastructure/database/repositories.py</small>")
+        backend_src_forgeml_infrastructure_database_repo_d5880db8("__init__()<br/><small>infrastructure/database/repositories.py</small>")
+        backend_src_forgeml_infrastructure_database_repo_f1be5afb("save_validation()<br/><small>infrastructure/database/repositories.py</small>")
     end
     subgraph other_forgeml_core_errors_py_354b9485["forgeml/core/errors.py"]
         backend_src_forgeml_core_errors_validate_code_19f57f71("_validate_code()<br/><small>forgeml/core/errors.py</small>")
@@ -4478,42 +4611,50 @@ flowchart LR
         backend_src_forgeml_core_errors_apperror_post_in_6e261514("__post_init__()<br/><small>forgeml/core/errors.py</small>")
         backend_src_forgeml_core_errors_errordetail_post_f08503c6("__post_init__()<br/><small>forgeml/core/errors.py</small>")
     end
-    subgraph other_scripts_forge_pack_py_6e7ad6ae["scripts/forge_pack.py"]
-        scripts_forge_pack_members_892c23b9("_members()<br/><small>scripts/forge_pack.py</small>")
-        scripts_forge_pack_pack_069fbb5c("pack()<br/><small>scripts/forge_pack.py</small>")
-        scripts_forge_pack_main_9d4accb9("main()<br/><small>scripts/forge_pack.py</small>")
+    subgraph other_infrastructure_database_unit_of_work_py_03191c6f["infrastructure/database/unit_of_work.py"]
+        backend_src_forgeml_infrastructure_database_unit_7ad239bc("SqlAlchemyUnitOfWork<br/><small>infrastructure/database/unit_of_work.py</small>")
+        backend_src_forgeml_infrastructure_database_unit_16af1c46("_active()<br/><small>infrastructure/database/unit_of_work.py</small>")
+        backend_src_forgeml_infrastructure_database_unit_135ec099("commit()<br/><small>infrastructure/database/unit_of_work.py</small>")
+        backend_src_forgeml_infrastructure_database_unit_59cbd0d2("__exit__()<br/><small>infrastructure/database/unit_of_work.py</small>")
     end
+    backend_src_forgeml_infrastructure_database_mode_7c9597ae("PackageRow<br/><small>infrastructure/database/models.py</small>")
+    scripts_forge_pack_members_892c23b9("_members()<br/><small>scripts/forge_pack.py</small>")
     backend_src_forgeml_core_errors_validate_code_19f57f71 -->|calls| backend_src_forgeml_core_errors_apperror_post_in_6e261514
     backend_src_forgeml_core_errors_validate_code_19f57f71 -->|calls| backend_src_forgeml_core_errors_errordetail_post_f08503c6
     backend_src_forgeml_core_errors_validate_message_2ee1ec9b -->|calls| backend_src_forgeml_core_errors_apperror_post_in_6e261514
     backend_src_forgeml_core_errors_validate_message_2ee1ec9b -->|calls| backend_src_forgeml_core_errors_errordetail_post_f08503c6
+    backend_src_forgeml_infrastructure_database_mode_7c9597ae -->|calls| backend_src_forgeml_infrastructure_database_repo_bd350b90
+    backend_src_forgeml_infrastructure_database_repo_ae77e3d8 -->|method| backend_src_forgeml_infrastructure_database_repo_88c19c01
+    backend_src_forgeml_infrastructure_database_repo_ae77e3d8 -->|method| backend_src_forgeml_infrastructure_database_repo_9098fc3b
+    backend_src_forgeml_infrastructure_database_repo_ae77e3d8 -->|method| backend_src_forgeml_infrastructure_database_repo_e92654e5
+    backend_src_forgeml_infrastructure_database_repo_ae77e3d8 -->|method| backend_src_forgeml_infrastructure_database_repo_fc089330
+    backend_src_forgeml_infrastructure_database_repo_ae77e3d8 -->|method| backend_src_forgeml_infrastructure_database_repo_bd350b90
+    backend_src_forgeml_infrastructure_database_repo_ae77e3d8 -->|method| backend_src_forgeml_infrastructure_database_repo_d5880db8
+    backend_src_forgeml_infrastructure_database_repo_ae77e3d8 -->|method| backend_src_forgeml_infrastructure_database_repo_f1be5afb
+    backend_src_forgeml_infrastructure_database_repo_bd350b90 -->|calls| backend_src_forgeml_infrastructure_database_repo_88c19c01
+    backend_src_forgeml_infrastructure_database_repo_9098fc3b -->|calls| backend_src_forgeml_infrastructure_database_repo_88c19c01
     backend_src_forgeml_infrastructure_database_unit_7ad239bc -->|method| backend_src_forgeml_infrastructure_database_unit_16af1c46
     backend_src_forgeml_infrastructure_database_unit_7ad239bc -->|method| backend_src_forgeml_infrastructure_database_unit_135ec099
     backend_src_forgeml_infrastructure_database_unit_7ad239bc -->|method| backend_src_forgeml_infrastructure_database_unit_59cbd0d2
-    backend_src_forgeml_infrastructure_database_unit_7ad239bc -->|method| backend_src_forgeml_infrastructure_database_unit_90d91e3a
-    backend_src_forgeml_infrastructure_database_unit_7ad239bc -->|method| backend_src_forgeml_infrastructure_database_unit_db127d07
-    backend_src_forgeml_infrastructure_database_unit_59cbd0d2 -->|calls| backend_src_forgeml_infrastructure_database_unit_db127d07
-    scripts_forge_pack_members_892c23b9 -->|calls| scripts_forge_pack_pack_069fbb5c
-    scripts_forge_pack_pack_069fbb5c -->|calls| scripts_forge_pack_main_9d4accb9
-    %% Omitted for readability: 569 nodes, 0 edges
-    class backend_src_forgeml_infrastructure_database_unit_7ad239bc klass;
-    class backend_src_forgeml_infrastructure_database_unit_59cbd0d2 function;
-    class backend_src_forgeml_infrastructure_database_unit_16af1c46 function;
-    class backend_src_forgeml_infrastructure_database_unit_135ec099 function;
-    class backend_src_forgeml_infrastructure_database_unit_90d91e3a function;
-    class backend_src_forgeml_infrastructure_database_unit_db127d07 function;
-    class backend_src_forgeml_infrastructure_database_unit_8323dd89 klass;
-    class backend_tests_fakes_py_baseexception_31bee9b1 klass;
-    class scripts_forge_pack_py_path_64f0323d klass;
-    class backend_src_forgeml_infrastructure_database_unit_7def9db0 klass;
-    class backend_src_forgeml_infrastructure_database_repo_b6a19c45 klass;
+    %% Omitted for readability: 550 nodes, 0 edges
+    class backend_src_forgeml_infrastructure_database_repo_ae77e3d8 klass;
+    class backend_src_forgeml_infrastructure_database_repo_bd350b90 function;
+    class backend_src_forgeml_infrastructure_database_repo_88c19c01 function;
+    class backend_src_forgeml_infrastructure_database_repo_9098fc3b function;
+    class backend_src_forgeml_infrastructure_database_repo_e92654e5 function;
+    class backend_src_forgeml_infrastructure_database_repo_fc089330 function;
+    class backend_src_forgeml_infrastructure_database_repo_d5880db8 function;
+    class backend_src_forgeml_infrastructure_database_repo_f1be5afb function;
     class backend_src_forgeml_core_errors_validate_code_19f57f71 function;
     class backend_src_forgeml_core_errors_validate_message_2ee1ec9b function;
     class backend_src_forgeml_core_errors_apperror_post_in_6e261514 function;
     class backend_src_forgeml_core_errors_errordetail_post_f08503c6 function;
+    class backend_src_forgeml_infrastructure_database_unit_7ad239bc klass;
+    class backend_src_forgeml_infrastructure_database_unit_16af1c46 function;
+    class backend_src_forgeml_infrastructure_database_unit_135ec099 function;
+    class backend_src_forgeml_infrastructure_database_unit_59cbd0d2 function;
+    class backend_src_forgeml_infrastructure_database_mode_7c9597ae klass;
     class scripts_forge_pack_members_892c23b9 function;
-    class scripts_forge_pack_pack_069fbb5c function;
-    class scripts_forge_pack_main_9d4accb9 function;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
@@ -4537,243 +4678,243 @@ flowchart LR
 </tr>
 <tr>
   <td>1</td>
-  <td><code>19_MODULE1_PACKAGE_DESIGN.md</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/19_MODULE1_PACKAGE_DESIGN.md</small></td>
+  <td><code>README.md</code><br><small style="color:var(--muted)">.forgeos/README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing 19_MODULE1_PACKAGE_DESIGN.md.</td>
+  <td>Documentation node describing README.md.</td>
 </tr>
 <tr>
   <td>2</td>
-  <td><code>Module 1 — Forge Package System Design</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/19_MODULE1_PACKAGE_DESIGN.md</small></td>
+  <td><code>ForgeOS — ForgeML Engineering Operating System</code><br><small style="color:var(--muted)">.forgeos/README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing Module 1 — Forge Package System Design.</td>
+  <td>Documentation node describing ForgeOS — ForgeML Engineering Operating System.</td>
 </tr>
 <tr>
   <td>3</td>
-  <td><code>Scope</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/19_MODULE1_PACKAGE_DESIGN.md</small></td>
+  <td><code>Mission</code><br><small style="color:var(--muted)">.forgeos/README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing Scope.</td>
+  <td>Documentation node describing Mission.</td>
 </tr>
 <tr>
   <td>4</td>
-  <td><code>Scope audit</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/19_MODULE1_PACKAGE_DESIGN.md</small></td>
+  <td><code>Philosophy</code><br><small style="color:var(--muted)">.forgeos/README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing Scope audit.</td>
+  <td>Documentation node describing Philosophy.</td>
 </tr>
 <tr>
   <td>5</td>
-  <td><code>Layering</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/19_MODULE1_PACKAGE_DESIGN.md</small></td>
+  <td><code>Directory structure</code><br><small style="color:var(--muted)">.forgeos/README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing Layering.</td>
+  <td>Documentation node describing Directory structure.</td>
 </tr>
 <tr>
   <td>6</td>
-  <td><code>Dependencies added</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/19_MODULE1_PACKAGE_DESIGN.md</small></td>
+  <td><code>How to use ForgeOS</code><br><small style="color:var(--muted)">.forgeos/README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing Dependencies added.</td>
+  <td>Documentation node describing How to use ForgeOS.</td>
 </tr>
 <tr>
   <td>7</td>
-  <td><code>Artifact identity and storage</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/19_MODULE1_PACKAGE_DESIGN.md</small></td>
+  <td><code>If you are a new human contributor</code><br><small style="color:var(--muted)">.forgeos/README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing Artifact identity and storage.</td>
+  <td>Documentation node describing If you are a new human contributor.</td>
 </tr>
 <tr>
   <td>8</td>
-  <td><code>Validation</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/19_MODULE1_PACKAGE_DESIGN.md</small></td>
+  <td><code>If you are an AI system</code><br><small style="color:var(--muted)">.forgeos/README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing Validation.</td>
+  <td>Documentation node describing If you are an AI system.</td>
 </tr>
 <tr>
   <td>9</td>
-  <td><code>Resource bounds</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/19_MODULE1_PACKAGE_DESIGN.md</small></td>
+  <td><code>If you are reviewing or releasing</code><br><small style="color:var(--muted)">.forgeos/README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing Resource bounds.</td>
+  <td>Documentation node describing If you are reviewing or releasing.</td>
 </tr>
 <tr>
   <td>10</td>
-  <td><code>Security review</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/19_MODULE1_PACKAGE_DESIGN.md</small></td>
+  <td><code>Relationship with the repository</code><br><small style="color:var(--muted)">.forgeos/README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing Security review.</td>
+  <td>Documentation node describing Relationship with the repository.</td>
 </tr>
 <tr>
   <td>11</td>
-  <td><code>Tests</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/19_MODULE1_PACKAGE_DESIGN.md</small></td>
+  <td><code>01_governance.md</code><br><small style="color:var(--muted)">.forgeos/constitution/01_governance.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing Tests.</td>
+  <td>Documentation node describing 01_governance.md.</td>
 </tr>
 <tr>
   <td>12</td>
-  <td><code>Known limitations</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/19_MODULE1_PACKAGE_DESIGN.md</small></td>
+  <td><code>Engineering Governance</code><br><small style="color:var(--muted)">.forgeos/constitution/01_governance.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing Known limitations.</td>
+  <td>Documentation node describing Engineering Governance.</td>
 </tr>
 <tr>
   <td>13</td>
-  <td><code>Acceptance checklist</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/19_MODULE1_PACKAGE_DESIGN.md</small></td>
+  <td><code>Authority order</code><br><small style="color:var(--muted)">.forgeos/constitution/01_governance.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing Acceptance checklist.</td>
+  <td>Documentation node describing Authority order.</td>
 </tr>
 <tr>
   <td>14</td>
-  <td><code>Freeze status</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/19_MODULE1_PACKAGE_DESIGN.md</small></td>
+  <td><code>What a frozen contract means</code><br><small style="color:var(--muted)">.forgeos/constitution/01_governance.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing Freeze status.</td>
+  <td>Documentation node describing What a frozen contract means.</td>
 </tr>
 <tr>
   <td>15</td>
-  <td><code>21_MODULE2_IMPLEMENTATION.md</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/21_MODULE2_IMPLEMENTATION.md</small></td>
+  <td><code>Roles hold authority; vendors do not</code><br><small style="color:var(--muted)">.forgeos/constitution/01_governance.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing 21_MODULE2_IMPLEMENTATION.md.</td>
+  <td>Documentation node describing Roles hold authority; vendors do not.</td>
 </tr>
 <tr>
   <td>16</td>
-  <td><code>Module 2 — Metadata Layer Implementation</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/21_MODULE2_IMPLEMENTATION.md</small></td>
+  <td><code>How governance changes</code><br><small style="color:var(--muted)">.forgeos/constitution/01_governance.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing Module 2 — Metadata Layer Implementation.</td>
+  <td>Documentation node describing How governance changes.</td>
 </tr>
 <tr>
   <td>17</td>
-  <td><code>What was implemented</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/21_MODULE2_IMPLEMENTATION.md</small></td>
+  <td><code>Scope discipline</code><br><small style="color:var(--muted)">.forgeos/constitution/01_governance.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing What was implemented.</td>
+  <td>Documentation node describing Scope discipline.</td>
 </tr>
 <tr>
   <td>18</td>
-  <td><code>Files created</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/21_MODULE2_IMPLEMENTATION.md</small></td>
+  <td><code>03_decision_process.md</code><br><small style="color:var(--muted)">.forgeos/constitution/03_decision_process.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing Files created.</td>
+  <td>Documentation node describing 03_decision_process.md.</td>
 </tr>
 <tr>
   <td>19</td>
-  <td><code>Files modified</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/21_MODULE2_IMPLEMENTATION.md</small></td>
+  <td><code>README.md</code><br><small style="color:var(--muted)">.forgeos/decisions/README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing Files modified.</td>
+  <td>Documentation node describing README.md.</td>
 </tr>
 <tr>
   <td>20</td>
-  <td><code>Public interfaces</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/21_MODULE2_IMPLEMENTATION.md</small></td>
+  <td><code>Architecture Decision Records</code><br><small style="color:var(--muted)">.forgeos/decisions/README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing Public interfaces.</td>
+  <td>Documentation node describing Architecture Decision Records.</td>
 </tr>
 <tr>
   <td>21</td>
-  <td><code>Database schema</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/21_MODULE2_IMPLEMENTATION.md</small></td>
+  <td><code>Where the ADRs live</code><br><small style="color:var(--muted)">.forgeos/decisions/README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing Database schema.</td>
+  <td>Documentation node describing Where the ADRs live.</td>
 </tr>
 <tr>
   <td>22</td>
-  <td><code>Migrations</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/21_MODULE2_IMPLEMENTATION.md</small></td>
+  <td><code>How to add an ADR</code><br><small style="color:var(--muted)">.forgeos/decisions/README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing Migrations.</td>
+  <td>Documentation node describing How to add an ADR.</td>
 </tr>
 <tr>
   <td>23</td>
-  <td><code>Engineering decisions</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/21_MODULE2_IMPLEMENTATION.md</small></td>
+  <td><code>Index</code><br><small style="color:var(--muted)">.forgeos/decisions/README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing Engineering decisions.</td>
+  <td>Documentation node describing Index.</td>
 </tr>
 <tr>
   <td>24</td>
-  <td><code>Tradeoffs</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/21_MODULE2_IMPLEMENTATION.md</small></td>
+  <td><code>Known decisions still owed</code><br><small style="color:var(--muted)">.forgeos/decisions/README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing Tradeoffs.</td>
+  <td>Documentation node describing Known decisions still owed.</td>
 </tr>
 <tr>
   <td>25</td>
-  <td><code>Technical debt</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/21_MODULE2_IMPLEMENTATION.md</small></td>
+  <td><code>adr_template.md</code><br><small style="color:var(--muted)">.forgeos/decisions/adr_template.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing Technical debt.</td>
+  <td>Documentation node describing adr_template.md.</td>
 </tr>
 <tr>
   <td>26</td>
-  <td><code>Known limitations</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/21_MODULE2_IMPLEMENTATION.md</small></td>
+  <td><code>ADR-NNN — &lt;short decision title&gt;</code><br><small style="color:var(--muted)">.forgeos/decisions/adr_template.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing Known limitations.</td>
+  <td>Documentation node describing ADR-NNN — &lt;short decision title&gt;.</td>
 </tr>
 <tr>
   <td>27</td>
-  <td><code>CI evidence</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/21_MODULE2_IMPLEMENTATION.md</small></td>
+  <td><code>Context</code><br><small style="color:var(--muted)">.forgeos/decisions/adr_template.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing CI evidence.</td>
+  <td>Documentation node describing Context.</td>
 </tr>
 <tr>
   <td>28</td>
-  <td><code>Amendment after freeze (Module 3)</code><br><small style="color:var(--muted)">ForgeML_Engineering_Kit_Phase0/docs/21_MODULE2_IMPLEMENTATION.md</small></td>
+  <td><code>Decision</code><br><small style="color:var(--muted)">.forgeos/decisions/adr_template.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing Amendment after freeze (Module 3).</td>
+  <td>Documentation node describing Decision.</td>
 </tr>
 <tr>
   <td>29</td>
-  <td><code>unit_of_work.py</code><br><small style="color:var(--muted)">infrastructure/database/unit_of_work.py</small></td>
-  <td><span class="tag tag-class">Module</span></td>
+  <td><code>Consequences</code><br><small style="color:var(--muted)">.forgeos/decisions/adr_template.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Module file in infrastructure/database/unit_of_work.py.</td>
+  <td>Documentation node describing Consequences.</td>
 </tr>
 <tr>
   <td>30</td>
-  <td><code>SqlAlchemyUnitOfWork</code><br><small style="color:var(--muted)">infrastructure/database/unit_of_work.py</small></td>
-  <td><span class="tag tag-class">Class</span></td>
+  <td><code>Alternatives</code><br><small style="color:var(--muted)">.forgeos/decisions/adr_template.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
-  <td><code>__exit__()</code><br><small style="color:var(--muted)">infrastructure/database/unit_of_work.py</small><br><code>__init__()</code><br><small style="color:var(--muted)">infrastructure/database/unit_of_work.py</small><br><code>_active()</code><br><small style="color:var(--muted)">infrastructure/database/unit_of_work.py</small><br>+2 more</td>
-  <td>SqlAlchemyUnitOfWork node in infrastructure/database/unit_of_work.py.</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Alternatives.</td>
 </tr>
 </table>
 
@@ -4782,19 +4923,19 @@ flowchart LR
     <h4>Key Files</h4>
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>File</th><th>Coverage</th></tr>
-      <tr><td><code>PROJECT_STATUS.md</code></td><td>15 nodes</td></tr>
+      <tr><td><code>.forgeos/constitution/02_principles.md</code></td><td>14 nodes</td></tr>
 <tr><td><code>ForgeML_Engineering_Kit_Phase0/docs/19_MODULE1_PACKAGE_DESIGN.md</code></td><td>14 nodes</td></tr>
 <tr><td><code>ForgeML_Engineering_Kit_Phase0/docs/21_MODULE2_IMPLEMENTATION.md</code></td><td>14 nodes</td></tr>
-<tr><td><code>backend/README.md</code></td><td>14 nodes</td></tr>
-<tr><td><code>.forgeos/constitution/02_principles.md</code></td><td>13 nodes</td></tr>
 <tr><td><code>.forgeos/constitution/04_module_lifecycle.md</code></td><td>12 nodes</td></tr>
 <tr><td><code>ForgeML_Engineering_Kit_Phase0/docs/24_MODULE2_HANDOFF.md</code></td><td>12 nodes</td></tr>
+<tr><td><code>infrastructure/database/repositories.py</code></td><td>12 nodes</td></tr>
 <tr><td><code>.forgeos/templates/module_plan.md</code></td><td>11 nodes</td></tr>
+<tr><td><code>ForgeML_Engineering_Kit_Phase0/docs/22_MODULE2_REVIEW_GUIDE.md</code></td><td>11 nodes</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: contains x464, references x32, explains x17, calls x7. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x438, references x30, explains x19, method x12. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
@@ -4806,16 +4947,16 @@ flowchart LR
     <h4>Graph</h4>
     <table style="width:100%;font-size:0.85rem;">
       <tr><td>Nodes</td><td>2184</td></tr>
-      <tr><td>Edges</td><td>4048</td></tr>
+      <tr><td>Edges</td><td>4034</td></tr>
       <tr><td>Hyperedges</td><td>0</td></tr>
-      <tr><td>Communities</td><td>185</td></tr>
+      <tr><td>Communities</td><td>178</td></tr>
       <tr><td>Documented Sections</td><td>15</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Edge Confidence</h4>
     <table style="width:100%;font-size:0.85rem;">
-      <tr><td>EXTRACTED</td><td>3338</td></tr>
+      <tr><td>EXTRACTED</td><td>3324</td></tr>
       <tr><td>INFERRED</td><td>710</td></tr>
       <tr><td>AMBIGUOUS</td><td>0</td></tr>
     </table>
@@ -4824,7 +4965,7 @@ flowchart LR
 
 <div style="text-align:center; padding:40px 0; color: var(--muted); font-size:0.9rem;">
   <p>ForgeML — Architecture Documentation</p>
-  <p>Generated: 2026-07-18 05:35 UTC · graphify callflow-html</p>
+  <p>Generated: 2026-07-18 05:43 UTC · graphify callflow-html</p>
 </div>
 
 </div><!-- .container -->

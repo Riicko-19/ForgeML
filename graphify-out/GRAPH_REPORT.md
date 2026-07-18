@@ -5,12 +5,12 @@
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2184 nodes · 4048 edges · 185 communities (162 shown, 23 thin omitted)
+- 2184 nodes · 4034 edges · 178 communities (154 shown, 24 thin omitted)
 - Extraction: 82% EXTRACTED · 18% INFERRED · 0% AMBIGUOUS · INFERRED: 710 edges (avg confidence: 0.71)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `6c4b92c6`
+- Built from commit: `04775b85`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -128,7 +128,6 @@
 - .rollback
 - .__exit__
 - test_engine.py
-- unit_of_work.py
 - Session
 - .__enter__
 - Package
@@ -166,7 +165,6 @@
 - Workflow — Implementation Review
 - test_two_simultaneous_uploads_resolve_to_one_package
 - ADR-NNN — <short decision title>
-- ForgeML
 - runtime
 - _EnvironmentSettings
 - Session
@@ -177,16 +175,13 @@
 - validated
 - OperationService
 - test_error_handling.py
-- Engineering Governance
 - errors.py
 - _EnvironmentSettings
 - packages.py
 - augment_dockerfile
-- Architecture Decision Records
 - reset_request_id
 - test_engine.py
 - _building_version
-- .request
 - decode_cursor
 - .__exit__
 
@@ -217,7 +212,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (185 total, 23 thin omitted)
+## Communities (178 total, 24 thin omitted)
 
 ### Community 0 - "AppSettings"
 Cohesion: 0.12
@@ -236,20 +231,20 @@ Cohesion: 0.17
 Nodes (21): ConfigurationFailure, Exception, Resolve and validate the installed ForgeML distribution version., Fail-closed configuration error safe to classify at bootstrap., resolve_service_version(), MonkeyPatch, Configuration contract tests., test_explicit_mapping_is_not_supplemented_by_process_environment() (+13 more)
 
 ### Community 4 - "JsonEventFormatter"
-Cohesion: 0.22
-Nodes (15): JsonEventFormatter, Render a strict allowlisted JSON event., BaseException, LogRecord, TracebackType, Structured logging policy tests., _record(), test_event_and_fields_are_bounded() (+7 more)
+Cohesion: 0.11
+Nodes (30): AppSettings, Immutable settings consumed by composition and bootstrap., _bounded(), configure_logging(), JsonEventFormatter, LoggingConfigurationConflict, LogRecord, Bounded structured process logging. (+22 more)
 
 ### Community 5 - "AppError"
 Cohesion: 0.21
 Nodes (21): ManifestV1, forge.yaml for format version 1., asset_checksum_findings(), _asset_findings(), _dependency_findings(), _detail(), _entry_findings(), _entrypoint_findings() (+13 more)
 
 ### Community 6 - "test_application_boot.py"
-Cohesion: 0.15
-Nodes (13): Configuration, Dependency locks and package smoke, Forge package contract, ForgeML Backend — Module 0 Foundation, Module 1 Forge Package System, Frozen HTTP and correlation contracts, HTTP API (v1), Known limitations, Logging contract (+5 more)
+Cohesion: 0.05
+Nodes (35): Configuration, Dependency locks and package smoke, Forge package contract, ForgeML Backend — Module 0 Foundation, Module 1 Forge Package System, Frozen HTTP and correlation contracts, HTTP API (v1), Known limitations, Logging contract (+27 more)
 
 ### Community 7 - "_run_handler"
-Cohesion: 0.12
-Nodes (24): Container, create_application(), FastAPI, FastAPI application composition root., The dependency graph, wired once and shared by the routes., Create the control-plane application with its dependencies wired., AppSettings, Immutable settings consumed by composition and bootstrap. (+16 more)
+Cohesion: 0.11
+Nodes (21): Container, create_application(), FastAPI, FastAPI application composition root., The dependency graph, wired once and shared by the routes., Create the control-plane application with its dependencies wired., Frozen HTTP wire contract tests., test_framework_error_wire_shape_omits_empty_details() (+13 more)
 
 ### Community 8 - "session_factory"
 Cohesion: 0.21
@@ -296,7 +291,7 @@ Cohesion: 0.29
 Nodes (20): _accept_package(), _body(), _create_deployment(), _post(), Any, Response, UUID, HTTP contract for the deployment routes (docs 12).  The deployment router is not (+12 more)
 
 ### Community 24 - "Operations and Security"
-Cohesion: 0.20
+Cohesion: 0.18
 Nodes (10): Acceptance criteria, Backup/restore, Configuration inventory, Default limits and operator policy, Monitoring/retention, Operations and Security, Package/build safety, Reconciliation/incidents (+2 more)
 
 ### Community 25 - "Project Charter"
@@ -328,7 +323,7 @@ Cohesion: 0.22
 Nodes (8): Acceptance criteria, Deferred milestones, Definition of done, Delivery rule, Implementation Roadmap, Phases and gates, Reference test matrix, Required order
 
 ### Community 32 - "Engineering Standards"
-Cohesion: 0.25
+Cohesion: 0.22
 Nodes (8): Acceptance criteria, API/data standards, Core standards, Design rules, Engineering Standards, Observability/security, Reliability standards, Testing/review
 
 ### Community 33 - "External Contracts"
@@ -408,8 +403,8 @@ Cohesion: 0.29
 Nodes (6): Acceptance / handoff, Mission, Owned areas, Required tests, Responsibilities, runtime-engineer
 
 ### Community 52 - "test_application_boot.py"
-Cohesion: 0.18
-Nodes (16): LoggingConfigurationConflict, Raised when process logging is reconfigured incompatibly., FakeServer, BaseException, LogCaptureFixture, MonkeyPatch, Bootstrap and composition integration tests., test_configuration_failure_is_safe_and_exits_two() (+8 more)
+Cohesion: 0.22
+Nodes (13): FakeServer, BaseException, LogCaptureFixture, MonkeyPatch, Bootstrap and composition integration tests., test_configuration_failure_is_safe_and_exits_two(), test_logging_conflict_exits_one(), test_module_entrypoint_returns_bootstrap_exit_code() (+5 more)
 
 ### Community 53 - "test_openapi_contract.py"
 Cohesion: 0.11
@@ -436,8 +431,8 @@ Cohesion: 0.14
 Nodes (17): AssetSpec, EntrypointSection, is_supported_schema_dialect(), ModelSection, BaseModel, Immutable .forge format model for package format version 1.  The manifest models, Display identity of the packaged model. Not a deployment key., Runtime the package requires; the ADR-008 matrix pins this to 3.11. (+9 more)
 
 ### Community 67 - "SqlAlchemyPackageCatalog"
-Cohesion: 0.13
-Nodes (31): body(), client(), Any, MonkeyPatch, Path, Response, The package and operation HTTP surface, end to end.  A real application, a real, test_a_malformed_identifier_is_a_validation_error() (+23 more)
+Cohesion: 0.19
+Nodes (27): body(), client(), Any, MonkeyPatch, Path, Response, The package and operation HTTP surface, end to end.  A real application, a real, test_a_malformed_identifier_is_a_validation_error() (+19 more)
 
 ### Community 68 - "AppSettings"
 Cohesion: 0.22
@@ -599,10 +594,6 @@ Nodes (5): Frozen semantics for Module 7, Module 5 — Deployment (engineering n
 Cohesion: 0.33
 Nodes (8): PackageValidation, The result of validating one archive. Findings are ordered and stable., Reject bytes that are not a readable archive container at all., Reject an otherwise valid package because a content check failed., _reject(), rejected_with(), unreadable_archive(), test_unreadable_archive_reports_one_stable_finding()
 
-### Community 117 - "unit_of_work.py"
-Cohesion: 0.20
-Nodes (10): CI Status, Current Development Stage, Current Module, Current Version, Engineering Authority, ForgeML Project Status, Last Frozen Milestone, Notes (+2 more)
-
 ### Community 118 - "Session"
 Cohesion: 0.18
 Nodes (12): _fingerprint(), is_accepted(), _latest(), PackageService, BinaryIO, UUID, Package upload, validation, and read use cases.  Validation runs inside the requ, Claim the operation, validate, and record the verdict atomically. (+4 more)
@@ -610,10 +601,6 @@ Nodes (12): _fingerprint(), is_accepted(), _latest(), PackageService, BinaryIO, 
 ### Community 120 - ".__enter__"
 Cohesion: 0.22
 Nodes (8): Deferred to later modules, Docker assumptions, Module 6 — Docker Runtime (engineering note), Prerequisite correction (ADR-017), Runtime behaviour, Security (ADR-001), The adapter speaks CLI, behind one seam, What this module delivers
-
-### Community 121 - "Package"
-Cohesion: 0.21
-Nodes (8): _bounded(), configure_logging(), LogRecord, Bounded structured process logging., Configure process logging once for an immutable settings fingerprint., _strip_controls(), MonkeyPatch, test_configure_logging_is_idempotent_and_rejects_conflict()
 
 ### Community 122 - "event"
 Cohesion: 0.17
@@ -624,7 +611,7 @@ Cohesion: 0.28
 Nodes (7): database_url(), migrated(), Shared database setup for the HTTP integration tests., Bring the schema to head once, via the migration the operator would run., _available_loopback_port(), Real-process signal and graceful-shutdown integration., test_sigterm_stops_installed_process_without_traceback()
 
 ### Community 124 - "repositories.py"
-Cohesion: 0.20
+Cohesion: 0.18
 Nodes (10): Applicable ADRs, Deferrals, Domain model, Exit-gate evidence, Frozen upstream contract, Module Plan — <module number> <module name>, Ports introduced, Scope (+2 more)
 
 ### Community 125 - "ArtifactStore"
@@ -640,7 +627,7 @@ Cohesion: 0.33
 Nodes (6): Exit criteria, Failure handling, Inputs, Required artifacts, Steps and gates, Workflow — Module Development
 
 ### Community 132 - ".__exit__"
-Cohesion: 0.50
+Cohesion: 0.33
 Nodes (4): Decisions still owed, Key Engineering Decisions, Reserved for future updates, The decisions that shape everything
 
 ### Community 133 - "APIRouter"
@@ -648,8 +635,8 @@ Cohesion: 0.25
 Nodes (7): create_package_router(), APIRouter, Create the package routes bound to the package use cases., PackageResource, A package as clients see it (docs 12)., PackageDetail, A package together with its most recent validation verdict.
 
 ### Community 134 - "BaseModel"
-Cohesion: 0.22
-Nodes (11): Exception, Handler, JSONResponse, Direct error-mapping branch tests., _run_handler(), test_mismatched_registered_handler_inputs_fail_safe(), test_non_json_validation_error_without_location_is_safe(), test_terminal_error_handlers_are_generic() (+3 more)
+Cohesion: 0.24
+Nodes (10): Exception, Handler, JSONResponse, Direct error-mapping branch tests., _run_handler(), test_mismatched_registered_handler_inputs_fail_safe(), test_non_json_validation_error_without_location_is_safe(), test_terminal_error_handlers_are_generic() (+2 more)
 
 ### Community 135 - "UnitOfWorkFactory"
 Cohesion: 0.20
@@ -660,8 +647,8 @@ Cohesion: 0.20
 Nodes (9): Common mistakes, Entry gate for the next module — satisfied?, Handoff — <module number> <module name>, How it fits together, Invariants and how they are enforced, Public contracts, The one idea, What the next module may depend upon (+1 more)
 
 ### Community 137 - "Response"
-Cohesion: 0.22
-Nodes (9): Directory structure, ForgeOS — ForgeML Engineering Operating System, How to use ForgeOS, If you are a new human contributor, If you are an AI system, If you are reviewing or releasing, Mission, Philosophy (+1 more)
+Cohesion: 0.12
+Nodes (15): Authority order, Engineering Governance, How governance changes, Roles hold authority; vendors do not, Scope discipline, What a frozen contract means, Directory structure, ForgeOS — ForgeML Engineering Operating System (+7 more)
 
 ### Community 138 - "unit_of_work.py"
 Cohesion: 0.22
@@ -672,7 +659,7 @@ Cohesion: 0.22
 Nodes (9): Authority, Inputs, Mission, Must never do, Outputs, Quality expectations, Responsibilities, Role — Senior Implementation Engineer (+1 more)
 
 ### Community 140 - ".commit"
-Cohesion: 0.22
+Cohesion: 0.29
 Nodes (7): Decision gates, Exit criteria, Failure handling, Inputs, Note on scope, Outputs, Workflow — Release Process
 
 ### Community 141 - ".rollback"
@@ -740,12 +727,8 @@ Cohesion: 0.39
 Nodes (7): BaseException, Session, sessionmaker, True insert races, forced rather than hoped for.  The sequential tests never rea, _run_racing(), test_two_simultaneous_retries_resolve_to_one_operation(), test_two_simultaneous_uploads_resolve_to_one_package()
 
 ### Community 157 - "ADR-NNN — <short decision title>"
-Cohesion: 0.33
-Nodes (6): ADR-NNN — <short decision title>, Alternatives, Consequences, Context, Decision, Supersession
-
-### Community 158 - "ForgeML"
-Cohesion: 0.25
-Nodes (8): Configuration, Development, Documentation, ForgeML, Postman, Quickstart, Security, What a .forge package is
+Cohesion: 0.15
+Nodes (11): ADR-NNN — <short decision title>, Alternatives, Consequences, Context, Decision, Supersession, Architecture Decision Records, How to add an ADR (+3 more)
 
 ### Community 159 - "runtime"
 Cohesion: 0.33
@@ -760,7 +743,7 @@ Cohesion: 0.10
 Nodes (19): ActorType, AuditEvent, StrEnum, Audit events (docs 04: append-only; no payloads, no secrets)., Who caused a state change., One append-only record of a state change.      Metadata is bounded and redacted, _safe_text(), AuditLog (+11 more)
 
 ### Community 163 - "Architecture Evolution"
-Cohesion: 0.29
+Cohesion: 0.33
 Nodes (6): Architecture Evolution, Contracts frozen so far, Recurring patterns that emerged, Reserved for future updates, Standing architectural risks, The layering, in the order it was built
 
 ### Community 164 - "analyze"
@@ -784,12 +767,8 @@ Cohesion: 0.17
 Nodes (9): create_operation_router(), APIRouter, Operation polling route (ADR-006)., Create the operation routes bound to the operation use cases., OperationService, UnitOfWorkFactory, UUID, Reading durable operations (ADR-006: clients poll an operation resource). (+1 more)
 
 ### Community 169 - "test_error_handling.py"
-Cohesion: 0.36
-Nodes (7): _client_with_failure_routes(), LogCaptureFixture, HTTP error normalization tests., test_404_and_405_use_frozen_envelope(), test_expected_application_error_is_mapped(), test_request_validation_is_sanitized(), test_unexpected_error_is_opaque()
-
-### Community 170 - "Engineering Governance"
-Cohesion: 0.33
-Nodes (6): Authority order, Engineering Governance, How governance changes, Roles hold authority; vendors do not, Scope discipline, What a frozen contract means
+Cohesion: 0.21
+Nodes (9): _client_with_failure_routes(), LogCaptureFixture, HTTP error normalization tests., test_404_and_405_use_frozen_envelope(), test_expected_application_error_is_mapped(), test_request_validation_is_sanitized(), test_unexpected_error_is_opaque(), FastAPI (+1 more)
 
 ### Community 172 - "errors.py"
 Cohesion: 0.47
@@ -803,10 +782,6 @@ Nodes (6): _correlation_id(), UUID, Package routes (docs 12)., The client-suppli
 Cohesion: 0.50
 Nodes (3): augment_dockerfile(), The in-container serving harness Module 6 adds around Module 4's adapter.  Modul, Append the serving layer the frozen generated Dockerfile leaves to us.      The
 
-### Community 177 - "Architecture Decision Records"
-Cohesion: 0.40
-Nodes (5): Architecture Decision Records, How to add an ADR, Index, Known decisions still owed, Where the ADRs live
-
 ### Community 178 - "reset_request_id"
 Cohesion: 0.12
 Nodes (20): _request_id(), _correlation_id(), UUID, current_request_id(), new_request_id(), Request-local server correlation context., Create a canonical server-owned request identifier., Set a request identifier and return the reset token. (+12 more)
@@ -819,24 +794,20 @@ Nodes (7): database_url(), engine(), Session, sessionmaker, A real PostgreSQL 16
 Cohesion: 0.70
 Nodes (4): main(), _members(), pack(), Path
 
-### Community 181 - ".request"
-Cohesion: 0.50
-Nodes (4): Frozen Modules, Module 0 — Foundation, Module 1 — Forge Package System, Module 2 — Metadata Layer
-
 ## Knowledge Gaps
-- **556 isolated node(s):** `forgeml`, `Mission`, `Philosophy`, `Directory structure`, `If you are a new human contributor` (+551 more)
+- **556 isolated node(s):** `Mission`, `Philosophy`, `Directory structure`, `If you are a new human contributor`, `If you are an AI system` (+551 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **23 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **24 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `AppError` connect `configure_logging` to `error_handlers.py`, `test_request_logging.py`, `APIRouter`, `_EnvironmentSettings`, `VanishingArtifactStore`, `repositories.py`, `UnitOfWork`, `SqlAlchemyOperationStore`, `Session`, `analyze`, `OperationService`, `errors.py`, `test_openapi_contract.py`, `decode_cursor`, `AppSettings`, `SqlAlchemyUnitOfWork`, `PackageCatalog`, `ArchiveReader`, `MonkeyPatch`, `test_artifact_store.py`, `errors.py`, `.inspect`, `packages.py`, `Session`?**
-  _High betweenness centrality (0.102) - this node is a cross-community bridge._
+  _High betweenness centrality (0.109) - this node is a cross-community bridge._
+- **Why does `AppSettings` connect `JsonEventFormatter` to `ConfigurationFailure`, `create_session_factory`, `_run_handler`, `test_error_handling.py`, `test_package_limits.py`, `_EnvironmentSettings`, `event`, `_reject_wildcard_host`, `_EnvironmentSettings`, `test_application_boot.py`, `configure_logging`, `MonkeyPatch`, `OperationService`?**
+  _High betweenness centrality (0.073) - this node is a cross-community bridge._
 - **Why does `PackageLimits` connect `AuditEvent` to `AppSettings`, `APIRouter`, `AppError`, `_EnvironmentSettings`, `VanishingArtifactStore`, `runtime`, `_EnvironmentSettings`, `OperationStore`, `config.py`, `SqlAlchemyUnitOfWork`, `ArtifactStore`, `test_package_limits.py`, `_database_url`, `event`, `configure_logging`, `VanishingArtifactStore`, `packages.py`, `create_operation_router`, `Session`?**
-  _High betweenness centrality (0.058) - this node is a cross-community bridge._
-- **Why does `AppSettings` connect `_run_handler` to `ConfigurationFailure`, `JsonEventFormatter`, `create_session_factory`, `BaseModel`, `test_error_handling.py`, `test_package_limits.py`, `_EnvironmentSettings`, `event`, `_reject_wildcard_host`, `_EnvironmentSettings`, `test_application_boot.py`, `configure_logging`, `Package`, `MonkeyPatch`, `OperationService`?**
-  _High betweenness centrality (0.051) - this node is a cross-community bridge._
+  _High betweenness centrality (0.045) - this node is a cross-community bridge._
 - **Are the 75 inferred relationships involving `AppError` (e.g. with `app_error_handler()` and `register_error_handlers()`) actually correct?**
   _`AppError` has 75 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 13 inferred relationships involving `UnitOfWork` (e.g. with `DeploymentService` and `OperationService`) actually correct?**
