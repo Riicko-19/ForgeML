@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 240" width="1200" height="240" fill="none" role="img" aria-label="Module roadmap: phases 0 through 7 done (0 to 2 frozen, 3 to 7 implemented), phase 8 monitoring in progress, phases 9 dashboard and 10 release planned.">
+  <style>
+    .surface{fill:#ffffff}.frame{stroke:#e6e9ee}
+    .rail{stroke:#e2e6ea}.railD{stroke:#0f9d6b}
+    .ink{fill:#0b1220}.sub{fill:#59636e}.faint{fill:#8a94a1}
+    .doneF{fill:#0f9d6b}.doneS{fill:#ffffff;stroke:#0f9d6b}
+    .now{fill:#ffffff;stroke:#b45309}.plan{fill:#ffffff;stroke:#c2c9d2}
+    .green{fill:#0f9d6b}.amber{fill:#b45309}
+    text{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif}
+    @media(prefers-color-scheme:dark){
+      .surface{fill:#0d1117}.frame{stroke:#222932}
+      .rail{stroke:#2a323b}.railD{stroke:#33b088}
+      .ink{fill:#e6edf3}.sub{fill:#9aa4af}.faint{fill:#6b7480}
+      .doneF{fill:#33b088}.doneS{fill:#0d1117;stroke:#33b088}
+      .now{fill:#0d1117;stroke:#d19a3a}.plan{fill:#0d1117;stroke:#3a424c}
+      .green{fill:#33b088}.amber{fill:#d19a3a}
+    }
+  </style>
+  <rect class="surface" width="1200" height="240" rx="14"/>
+  <rect class="frame" x="0.5" y="0.5" width="1199" height="239" rx="14" fill="none"/>
+
+  <text class="ink" x="40" y="46" font-size="18" font-weight="700">Roadmap</text>
+  <text class="faint" x="1160" y="46" text-anchor="end" font-size="12">V1 backend · built module by module, contracts frozen before dependents</text>
+
+  <!-- rail -->
+  <line class="rail" x1="70" y1="118" x2="1130" y2="118" stroke-width="2.5"/>
+  <line class="railD" x1="70" y1="118" x2="812" y2="118" stroke-width="2.5"/>
+
+  <!-- nodes -->
+  <!-- done 0-7 -->
+  <g font-size="11" text-anchor="middle">
+    <g transform="translate(70,118)"><circle class="doneF" r="9"/><path d="M-4 0l3 3 5-6" stroke="#fff" stroke-width="1.8" fill="none"/><text class="sub" y="34">Foundation</text><text class="faint" y="-20" font-size="10">0</text></g>
+    <g transform="translate(176,118)"><circle class="doneF" r="9"/><path d="M-4 0l3 3 5-6" stroke="#fff" stroke-width="1.8" fill="none"/><text class="sub" y="34">Package</text><text class="faint" y="-20" font-size="10">1</text></g>
+    <g transform="translate(282,118)"><circle class="doneF" r="9"/><path d="M-4 0l3 3 5-6" stroke="#fff" stroke-width="1.8" fill="none"/><text class="sub" y="34">Metadata</text><text class="faint" y="-20" font-size="10">2</text></g>
+    <g transform="translate(388,118)"><circle class="doneS" r="9" stroke-width="2"/><text class="sub" y="34">Backend API</text><text class="faint" y="-20" font-size="10">3</text></g>
+    <g transform="translate(494,118)"><circle class="doneS" r="9" stroke-width="2"/><text class="sub" y="34">Analyzer</text><text class="faint" y="-20" font-size="10">4</text></g>
+    <g transform="translate(600,118)"><circle class="doneS" r="9" stroke-width="2"/><text class="sub" y="34">Deployment</text><text class="faint" y="-20" font-size="10">5</text></g>
+    <g transform="translate(706,118)"><circle class="doneS" r="9" stroke-width="2"/><text class="sub" y="34">Runtime</text><text class="faint" y="-20" font-size="10">6</text></g>
+    <g transform="translate(812,118)"><circle class="doneS" r="9" stroke-width="2"/><text class="sub" y="34" font-weight="600">Routing</text><text class="faint" y="-20" font-size="10">7</text></g>
+    <!-- now -->
+    <g transform="translate(918,118)"><circle class="now" r="9" stroke-width="2.4" stroke-dasharray="3 2.6"/><text class="amber" y="34" font-weight="600">Monitoring</text><text class="amber" y="-20" font-size="10">8 · now</text></g>
+    <!-- planned -->
+    <g transform="translate(1024,118)"><circle class="plan" r="9" stroke-width="2"/><text class="faint" y="34">Dashboard</text><text class="faint" y="-20" font-size="10">9</text></g>
+    <g transform="translate(1130,118)"><circle class="plan" r="9" stroke-width="2"/><text class="faint" y="34">Release</text><text class="faint" y="-20" font-size="10">10</text></g>
+  </g>
+
+  <!-- legend -->
+  <g transform="translate(40,196)" font-size="11.5">
+    <circle class="doneF" cx="6" cy="-4" r="6"/><text class="sub" x="20" y="0">Frozen (0–2, CI evidence)</text>
+    <circle class="doneS" cx="226" cy="-4" r="6" stroke-width="2"/><text class="sub" x="240" y="0">Implemented (3–7)</text>
+    <circle class="now" cx="410" cy="-4" r="6" stroke-width="2.2" stroke-dasharray="3 2.6"/><text class="sub" x="424" y="0">In progress</text>
+    <circle class="plan" cx="546" cy="-4" r="6" stroke-width="2"/><text class="sub" x="560" y="0">Planned</text>
+  </g>
+</svg>

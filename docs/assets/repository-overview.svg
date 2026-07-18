@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520" width="1200" height="520" fill="none" role="img" aria-label="Repository overview: backend control plane with api, application, domain, core, infrastructure, tests and migrations; the engineering kit docs; the forgeos operating system; examples and the API collection.">
+  <style>
+    .surface{fill:#ffffff}.frame{stroke:#e6e9ee}
+    .bar{fill:#f6f8fa;stroke:#e6e9ee}
+    .dot1{fill:#e3b7b1}.dot2{fill:#ecd6a6}.dot3{fill:#b7dcc1}
+    .tree{fill:#3a4450}.dir{fill:#0b1220}.ann{fill:#8a94a1}.accent{fill:#2563eb}
+    .con{fill:#b6bdc6}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace}
+    text{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif}
+    @media(prefers-color-scheme:dark){
+      .surface{fill:#0d1117}.frame{stroke:#222932}
+      .bar{fill:#161b22;stroke:#222932}
+      .tree{fill:#c3ccd6}.dir{fill:#e6edf3}.ann{fill:#6b7480}.accent{fill:#4c8dff}
+      .con{fill:#3a424c}
+    }
+  </style>
+  <rect class="surface" width="1200" height="520" rx="14"/>
+  <rect class="frame" x="0.5" y="0.5" width="1199" height="519" rx="14" fill="none"/>
+
+  <!-- window bar -->
+  <path class="bar" d="M0 14a14 14 0 0 1 14-14h1172a14 14 0 0 1 14 14v34H0z"/>
+  <circle class="dot1" cx="28" cy="24" r="5.5"/><circle class="dot2" cx="48" cy="24" r="5.5"/><circle class="dot3" cx="68" cy="24" r="5.5"/>
+  <text class="ann mono" x="600" y="29" text-anchor="middle" font-size="12.5">Riicko-19 / ForgeML</text>
+
+  <!-- tree -->
+  <g class="mono" font-size="14.5">
+    <text class="dir" x="40" y="96">ForgeML/</text>
+
+    <text x="40" y="127"><tspan class="con">├─ </tspan><tspan class="dir">backend/</tspan></text>
+    <text class="ann" x="560" y="127" font-size="12.5">control plane · Python 3.11 · FastAPI</text>
+
+    <text x="40" y="156"><tspan class="con">│  ├─ </tspan><tspan class="dir">src/forgeml/</tspan></text>
+
+    <text x="40" y="185"><tspan class="con">│  │  ├─ </tspan><tspan class="accent">api/</tspan></text>
+    <text class="ann" x="560" y="185" font-size="12.5">HTTP surface — versioned /v1 routes</text>
+
+    <text x="40" y="214"><tspan class="con">│  │  ├─ </tspan><tspan class="accent">application/</tspan></text>
+    <text class="ann" x="560" y="214" font-size="12.5">use cases — package · deployment · routing · operations</text>
+
+    <text x="40" y="243"><tspan class="con">│  │  ├─ </tspan><tspan class="accent">domain/</tspan></text>
+    <text class="ann" x="560" y="243" font-size="12.5">pure policy — validation, generation, lifecycle rules · no I/O</text>
+
+    <text x="40" y="272"><tspan class="con">│  │  ├─ </tspan><tspan class="accent">core/</tspan></text>
+    <text class="ann" x="560" y="272" font-size="12.5">config · composition root · errors · logging</text>
+
+    <text x="40" y="301"><tspan class="con">│  │  └─ </tspan><tspan class="accent">infrastructure/</tspan></text>
+    <text class="ann" x="560" y="301" font-size="12.5">adapters — database · storage · package · runtime</text>
+
+    <text x="40" y="330"><tspan class="con">│  ├─ </tspan><tspan class="dir">tests/</tspan></text>
+    <text class="ann" x="560" y="330" font-size="12.5">unit · contract · integration · architecture</text>
+
+    <text x="40" y="359"><tspan class="con">│  └─ </tspan><tspan class="dir">migrations/</tspan></text>
+    <text class="ann" x="560" y="359" font-size="12.5">Alembic schema with immutability triggers</text>
+
+    <text x="40" y="388"><tspan class="con">├─ </tspan><tspan class="dir">ForgeML_Engineering_Kit_Phase0/</tspan></text>
+    <text class="ann" x="560" y="388" font-size="12.5">architecture, ADRs, per-module designs</text>
+
+    <text x="40" y="417"><tspan class="con">├─ </tspan><tspan class="dir">.forgeos/</tspan></text>
+    <text class="ann" x="560" y="417" font-size="12.5">engineering operating system — governance, roles, workflows</text>
+
+    <text x="40" y="446"><tspan class="con">├─ </tspan><tspan class="dir">examples/</tspan> <tspan class="con">·</tspan> <tspan class="dir">docs/postman/</tspan></text>
+    <text class="ann" x="560" y="446" font-size="12.5">sample .forge package · API collection</text>
+
+    <text x="40" y="475"><tspan class="con">└─ </tspan><tspan class="dir">Makefile</tspan> <tspan class="con">·</tspan> <tspan class="dir">PROJECT_STATUS.md</tspan></text>
+    <text class="ann" x="560" y="475" font-size="12.5">one checkpoint (make verify) · single source of truth</text>
+  </g>
+</svg>

@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" width="1200" height="300" fill="none" role="img" aria-label="Deployment lifecycle: an accepted package walks BUILDING, STARTING, READY, then ACTIVE. Any attempt can FAIL; a retry is a new attempt. Every step is a durable operation.">
+  <style>
+    .surface{fill:#ffffff}.frame{stroke:#e6e9ee}
+    .card{fill:#ffffff;stroke:#e2e6ea}
+    .state{fill:#f6f8fa;stroke:#dfe4ea}
+    .active{fill:#f3f7ff;stroke:#cddffb}
+    .fail{fill:#fdf3f2;stroke:#f2cfcb}
+    .ink{fill:#0b1220}.sub{fill:#59636e}.faint{fill:#8a94a1}
+    .edge{stroke:#c2c9d2}.efail{stroke:#e0b4ad}
+    .accent{fill:#2563eb}.red{fill:#b4443a}
+    text{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif}
+    .lbl{fill:#8a94a1;font-size:11px;font-weight:600;letter-spacing:2}
+    .st{font-size:13.5px;font-weight:700;letter-spacing:1}
+    @media(prefers-color-scheme:dark){
+      .surface{fill:#0d1117}.frame{stroke:#222932}
+      .card{fill:#0f141b;stroke:#242c35}
+      .state{fill:#161b22;stroke:#2a323b}
+      .active{fill:#111d31;stroke:#26436f}
+      .fail{fill:#241413;stroke:#5c2b25}
+      .ink{fill:#e6edf3}.sub{fill:#9aa4af}.faint{fill:#6b7480}
+      .edge{stroke:#3a424c}.efail{stroke:#5c2b25}
+      .accent{fill:#4c8dff}.red{fill:#e06c60}
+    }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 1L8 5L0 9" fill="none" stroke="#c2c9d2" stroke-width="1.5"/></marker>
+    <marker id="af" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 1L8 5L0 9" fill="none" stroke="#e0b4ad" stroke-width="1.5"/></marker>
+  </defs>
+  <rect class="surface" width="1200" height="300" rx="14"/>
+  <rect class="frame" x="0.5" y="0.5" width="1199" height="299" rx="14" fill="none"/>
+
+  <text class="ink" x="40" y="46" font-size="18" font-weight="700">Deployment lifecycle</text>
+  <text class="sub" x="40" y="67" font-size="13">Each transition is a durable, idempotent operation; no database transaction spans a build or start.</text>
+
+  <!-- accepted package -->
+  <g transform="translate(40,120)">
+    <rect class="card" width="150" height="60" rx="10"/>
+    <text class="lbl" x="18" y="26">PACKAGE</text>
+    <text class="ink" x="18" y="46" font-size="13" font-weight="600">accepted</text>
+  </g>
+
+  <!-- states row -->
+  <g transform="translate(0,120)">
+    <g transform="translate(240,0)"><rect class="state" width="150" height="60" rx="10"/><text class="ink st" x="75" y="35" text-anchor="middle">BUILDING</text></g>
+    <g transform="translate(450,0)"><rect class="state" width="150" height="60" rx="10"/><text class="ink st" x="75" y="35" text-anchor="middle">STARTING</text></g>
+    <g transform="translate(660,0)"><rect class="state" width="150" height="60" rx="10"/><text class="ink st" x="75" y="35" text-anchor="middle">READY</text></g>
+    <g transform="translate(900,0)"><rect class="active" width="160" height="60" rx="10"/><text class="accent st" x="80" y="31" text-anchor="middle">ACTIVE</text><text class="faint" x="80" y="48" text-anchor="middle" font-size="10.5">routing owns this</text></g>
+  </g>
+
+  <!-- forward edges -->
+  <path class="edge" d="M190 150h44" stroke-width="1.6" marker-end="url(#a)"/>
+  <path class="edge" d="M390 150h54" stroke-width="1.6" marker-end="url(#a)"/>
+  <text class="faint" x="417" y="142" text-anchor="middle" font-size="10.5">build</text>
+  <path class="edge" d="M600 150h54" stroke-width="1.6" marker-end="url(#a)"/>
+  <text class="faint" x="627" y="142" text-anchor="middle" font-size="10.5">start</text>
+  <path class="edge" d="M810 150h84" stroke-width="1.6" marker-end="url(#a)"/>
+  <text class="faint" x="852" y="142" text-anchor="middle" font-size="10.5">activate</text>
+  <path class="edge" d="M980 180v20q0 8-8 8H738q-8 0-8-8v-8" stroke-width="1.4" marker-end="url(#a)" fill="none"/>
+  <text class="faint" x="856" y="222" text-anchor="middle" font-size="10.5">rollback — re-activate a prior version</text>
+
+  <!-- failure -->
+  <g transform="translate(450,244)">
+    <rect class="fail" width="150" height="40" rx="10"/><text class="red st" x="75" y="26" text-anchor="middle">FAILED</text>
+  </g>
+  <path class="efail" d="M320 180v44q0 8 8 8h114" stroke-width="1.4" marker-end="url(#af)" fill="none"/>
+  <path class="efail" d="M525 180v56" stroke-width="1.4" marker-end="url(#af)"/>
+  <text class="faint" x="640" y="270" font-size="10.5">terminal for the attempt — a retry is a new, immutable attempt</text>
+</svg>
