@@ -251,16 +251,7 @@ ForgeML's philosophy is narrow on purpose: **single server, deterministic, expli
 
 ---
 
-## Screenshots
 
-> Placeholders. Add the images at these paths and the links below will resolve.
-
-| Interface | Path |
-| --- | --- |
-| OpenAPI / Swagger UI | `docs/assets/screenshots/openapi.png` |
-| Postman collection | `docs/assets/screenshots/postman.png` |
-| CI pipeline (backend quality) | `docs/assets/screenshots/ci.png` |
-| Dashboard *(planned — Module 9)* | `docs/assets/screenshots/dashboard.png` |
 
 ---
 
