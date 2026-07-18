@@ -412,7 +412,6 @@ class InMemoryDeploymentRepository:
         return (max(attempts) if attempts else 0) + 1
 
 
-
 class InMemoryApiKeyStore:
     """API keys held in memory, with the same no-plaintext rule as the real one."""
 

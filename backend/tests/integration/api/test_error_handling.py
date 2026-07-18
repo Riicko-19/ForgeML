@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict
 from forgeml.core.composition import create_application
 from forgeml.core.config import AppSettings
 from forgeml.core.errors import AppError, ErrorCategory, ErrorDetail
-from tests.support import ASGITestClient
+from tests.support import ASGITestClient, stub_application
 
 
 class Payload(BaseModel):
@@ -18,7 +18,7 @@ class Payload(BaseModel):
 
 
 def _client_with_failure_routes(settings: AppSettings) -> ASGITestClient:
-    app = create_application(settings)
+    app, token = stub_application(settings)
 
     @app.get("/test/app-error")
     async def app_error() -> None:
@@ -43,11 +43,25 @@ def _client_with_failure_routes(settings: AppSettings) -> ASGITestClient:
     async def body(payload: Annotated[Payload, Body()]) -> Payload:
         return payload
 
-    return ASGITestClient(app)
+    # These probe routes sit outside the public list, so they authenticate like
+    # any other -- which is the property ADR-025 wanted: a route added without
+    # thinking about auth is protected, not exposed.
+    return ASGITestClient(app, credential=token)
 
 
 def test_404_and_405_use_frozen_envelope(settings: AppSettings) -> None:
-    client = ASGITestClient(create_application(settings))
+    """The frozen envelope still holds, now reached through an authenticated call.
+
+    An unknown path answers 404 only to a caller who authenticated. Without a
+    credential it answers 401 (see `test_an_unknown_path_is_401_before_it_is_404`),
+    because authentication runs before routing.
+
+    `/healthz` is on the public list, so its 405 needs no credential -- which is
+    the point of keeping that list closed and tiny.
+    """
+
+    app, token = stub_application(settings)
+    client = ASGITestClient(app, credential=token)
 
     not_found = client.get("/missing")
     wrong_method = client.post("/healthz")
@@ -58,6 +72,19 @@ def test_404_and_405_use_frozen_envelope(settings: AppSettings) -> None:
     assert wrong_method.json()["code"] == "method_not_allowed"
     assert not_found.json()["request_id"] == not_found.headers["x-request-id"]
     assert wrong_method.json()["request_id"] == wrong_method.headers["x-request-id"]
+
+
+def test_an_unknown_path_is_401_before_it_is_404(settings: AppSettings) -> None:
+    """Route existence is not observable without a credential.
+
+    A 404 here would confirm which paths exist, and enumerating the surface is
+    the first step of attacking it.
+    """
+
+    response = ASGITestClient(create_application(settings)).get("/missing")
+
+    assert response.status_code == 401
+    assert response.json()["code"] == "authentication_required"
 
 
 def test_expected_application_error_is_mapped(settings: AppSettings) -> None:

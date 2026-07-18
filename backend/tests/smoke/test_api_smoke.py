@@ -31,6 +31,9 @@ from typing import Any
 import httpx
 import pytest
 
+from forgeml.application.identity.services import ApiKeyAdministration
+from forgeml.core.config import load_settings
+from forgeml.infrastructure.database.provider import DatabaseProvider
 from tests.integration.api.conftest import database_url
 
 EXAMPLE = Path(__file__).parents[3] / "examples" / "hello-model.forge"
@@ -128,6 +131,25 @@ def _await_operation(client: httpx.Client, operation_id: str) -> dict[str, Any]:
     )
 
 
+def _smoke_credential() -> str:
+    """Mint a key in the same database the server under test will read.
+
+    The smoke test drives a real process over real HTTP, so it authenticates
+    the way an operator does: `python -m forgeml.identity create`, then a bearer
+    header. ADR-025 left no bypass, and this test is the proof that the
+    documented first-run path actually works end to end.
+    """
+
+    settings = load_settings(
+        {"FORGEML_ENVIRONMENT": "test", "FORGEML_DATABASE_URL": database_url()}
+    )
+    provider = DatabaseProvider(settings)
+    try:
+        return ApiKeyAdministration(provider.unit_of_work).create(name="smoke")
+    finally:
+        provider.dispose()
+
+
 def test_the_golden_path_works_against_a_running_server(
     migrated: None, tmp_path: Path
 ) -> None:
@@ -137,7 +159,12 @@ def test_the_golden_path_works_against_a_running_server(
 
     with (
         _serve(tmp_path / "artifacts") as base_url,
-        httpx.Client(base_url=base_url, trust_env=False, timeout=10.0) as client,
+        httpx.Client(
+            base_url=base_url,
+            trust_env=False,
+            timeout=10.0,
+            headers={"Authorization": f"Bearer {_smoke_credential()}"},
+        ) as client,
     ):
         assert client.get("/healthz").status_code == 200
 

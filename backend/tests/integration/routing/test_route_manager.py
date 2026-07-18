@@ -32,6 +32,7 @@ from forgeml.domain.routing.ports import (
 from tests.fake_runtime import FakeRuntimeManager
 from tests.fakes import InMemoryUnitOfWork
 from tests.packages import VALID_MANIFEST
+from tests.support import TEST_PRINCIPAL
 
 CORR = uuid4()
 POLICY = ResourcePolicy(cpu_millicores=500, memory_mib=256)
@@ -88,11 +89,15 @@ def env() -> tuple[
 
 def _active_deployment(deployments: DeploymentServices, uow: InMemoryUnitOfWork) -> str:
     package_id = _accept_package(uow)
-    deployment = deployments.lifecycle.create_deployment("scorer", CORR)
-    deployments.lifecycle.deploy_version(deployment.id, package_id, POLICY, "d1", CORR)
+    deployment = deployments.lifecycle.create_deployment("scorer", CORR, TEST_PRINCIPAL)
+    deployments.lifecycle.deploy_version(
+        deployment.id, package_id, POLICY, "d1", CORR, TEST_PRINCIPAL
+    )
     with uow:
         (version,) = uow.deployments.list_versions(deployment.id)
-    deployments.activation.activate_version(deployment.id, version.id, "a1", CORR)
+    deployments.activation.activate_version(
+        deployment.id, version.id, "a1", CORR, TEST_PRINCIPAL
+    )
     return deployment.name
 
 
@@ -127,8 +132,10 @@ def test_no_active_version_is_unavailable(
 ) -> None:
     routing, deployments, uow, _runtime, _gateway = env
     package_id = _accept_package(uow)
-    deployment = deployments.lifecycle.create_deployment("scorer", CORR)
-    deployments.lifecycle.deploy_version(deployment.id, package_id, POLICY, "d1", CORR)
+    deployment = deployments.lifecycle.create_deployment("scorer", CORR, TEST_PRINCIPAL)
+    deployments.lifecycle.deploy_version(
+        deployment.id, package_id, POLICY, "d1", CORR, TEST_PRINCIPAL
+    )
     # Deployed but never activated: nothing to route to.
 
     with pytest.raises(AppError) as caught:

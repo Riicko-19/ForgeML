@@ -34,7 +34,7 @@ from forgeml.domain.routing.ports import PredictionUpstreamError
 from tests.fake_runtime import FakeRuntimeManager
 from tests.fakes import InMemoryUnitOfWork
 from tests.packages import VALID_MANIFEST
-from tests.support import ASGITestClient
+from tests.support import TEST_PRINCIPAL, ASGITestClient, authenticate
 
 
 class FakeGateway:
@@ -60,9 +60,10 @@ def env() -> SimpleNamespace:
     register_error_handlers(app)
     app.include_router(create_deployment_router(deployments), prefix="/v1")
     app.include_router(create_prediction_router(routing), prefix="/v1")
+    token = authenticate(app, uow)
     app.add_middleware(RequestContextMiddleware)
     return SimpleNamespace(
-        client=ASGITestClient(app),
+        client=ASGITestClient(app, credential=token),
         uow=uow,
         deployments=deployments,
         gateway=gateway,
@@ -95,14 +96,25 @@ def _activate_deployment(env: SimpleNamespace, name: str = "scorer") -> None:
             ),
         )
         env.uow.commit()
-    deployment = env.deployments.lifecycle.create_deployment(name, uuid4())
+    deployment = env.deployments.lifecycle.create_deployment(
+        name, uuid4(), TEST_PRINCIPAL
+    )
     env.deployments.lifecycle.deploy_version(
-        deployment.id, package.id, ResourcePolicy(), "d1", uuid4()
+        deployment.id,
+        package.id,
+        ResourcePolicy(),
+        "d1",
+        uuid4(),
+        TEST_PRINCIPAL,
     )
     with env.uow:
         (version,) = env.uow.deployments.list_versions(deployment.id)
     env.deployments.activation.activate_version(
-        deployment.id, version.id, "a1", uuid4()
+        deployment.id,
+        version.id,
+        "a1",
+        uuid4(),
+        TEST_PRINCIPAL,
     )
 
 

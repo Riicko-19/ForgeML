@@ -32,7 +32,7 @@ from forgeml.domain.package.models import (
 from tests.fake_runtime import FakeRuntimeManager
 from tests.fakes import InMemoryUnitOfWork
 from tests.packages import VALID_MANIFEST
-from tests.support import ASGITestClient
+from tests.support import ASGITestClient, authenticate
 
 
 @pytest.fixture
@@ -47,8 +47,11 @@ def env() -> SimpleNamespace:
     app.include_router(create_deployment_router(service), prefix="/v1")
     app.include_router(create_admin_router(service.reconciliation), prefix="/v1")
     app.include_router(create_operation_router(operations), prefix="/v1")
+    token = authenticate(app, uow)
     app.add_middleware(RequestContextMiddleware)
-    return SimpleNamespace(client=ASGITestClient(app), uow=uow, runtime=runtime)
+    return SimpleNamespace(
+        client=ASGITestClient(app, credential=token), uow=uow, runtime=runtime
+    )
 
 
 def _post(

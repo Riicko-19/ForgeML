@@ -10,18 +10,18 @@ import pytest
 from starlette.types import Message, Receive, Scope, Send
 
 from forgeml.api.middleware import RequestContextMiddleware
-from forgeml.core.composition import create_application
 from forgeml.core.config import AppSettings
 from forgeml.core.correlation import current_request_id
 from forgeml.core.logging import JsonEventFormatter
-from tests.support import ASGITestClient
+from tests.support import ASGITestClient, stub_application
 
 
 def test_request_completion_record_is_safe(
     settings: AppSettings,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    client = ASGITestClient(create_application(settings))
+    app, token = stub_application(settings)
+    client = ASGITestClient(app, credential=token)
 
     stream = io.StringIO()
     handler = logging.StreamHandler(stream)

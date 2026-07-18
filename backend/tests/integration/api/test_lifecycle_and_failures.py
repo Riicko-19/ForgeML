@@ -25,6 +25,7 @@ from forgeml.infrastructure.package.zip_archive import ZipArchiveReader
 from forgeml.infrastructure.storage.artifact_store import FilesystemArtifactStore
 from tests.integration.api.conftest import TABLES, database_url
 from tests.packages import build_forge
+from tests.support import TEST_PRINCIPAL
 
 LIMITS = PackageLimits()
 
@@ -90,6 +91,7 @@ def test_an_unreadable_artifact_fails_the_operation(
         filename="model.forge",
         idempotency_key="key-1",
         correlation_id=uuid4(),
+        principal=TEST_PRINCIPAL,
     )
 
     # The platform could not do the work, so the operation FAILED. It did not

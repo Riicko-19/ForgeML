@@ -21,7 +21,7 @@ from forgeml.core.composition import create_application
 from forgeml.core.config import load_settings
 from tests.integration.api.conftest import TABLES, database_url
 from tests.packages import build_forge, manifest
-from tests.support import ASGITestClient
+from tests.support import ASGITestClient, credential_for
 
 
 @pytest.fixture
@@ -45,7 +45,7 @@ def client(
     )
     app = create_application(settings)
     try:
-        yield ASGITestClient(app)
+        yield ASGITestClient(app, credential=credential_for(app))
     finally:
         # The ASGI transport does not run lifespan, so the pool this test opened
         # must be released here or it leaks a live connection per test.

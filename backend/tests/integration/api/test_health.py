@@ -6,7 +6,7 @@ from fastapi import Request
 
 from forgeml.core.composition import create_application
 from forgeml.core.config import AppSettings
-from tests.support import ASGITestClient
+from tests.support import ASGITestClient, stub_application
 
 
 def test_liveness_reports_the_process_is_up(settings: AppSettings) -> None:
@@ -40,13 +40,13 @@ def test_readiness_fails_closed_without_a_metadata_database(
 
 
 def test_inbound_request_ids_are_ignored(settings: AppSettings) -> None:
-    app = create_application(settings)
+    app, token = stub_application(settings)
 
     @app.get("/test/request-id")
     async def request_id_header(request: Request) -> dict[str, str | None]:
         return {"seen": request.headers.get("x-request-id")}
 
-    client = ASGITestClient(app)
+    client = ASGITestClient(app, credential=token)
 
     response = client.get(
         "/test/request-id",
@@ -63,9 +63,19 @@ def test_inbound_request_ids_are_ignored(settings: AppSettings) -> None:
 
 
 def test_docs_and_openapi_routes_are_not_public(settings: AppSettings) -> None:
+    """Epic 1 made this stricter: these answer 401, not 404.
+
+    Authentication runs before routing (ADR-025), so an unauthenticated caller
+    cannot tell an absent route from a protected one. That is the stronger
+    property -- 404 would have confirmed which paths exist, which is how route
+    enumeration starts. `/v1/openapi.json` is authenticated rather than absent,
+    per ADR-019.
+    """
+
     client = ASGITestClient(create_application(settings))
 
-    for path in ("/docs", "/redoc", "/openapi.json"):
+    for path in ("/docs", "/redoc", "/openapi.json", "/v1/openapi.json"):
         response = client.get(path)
-        assert response.status_code == 404
-        assert response.json()["code"] == "route_not_found"
+        assert response.status_code == 401
+        assert response.json()["code"] == "authentication_required"
+        assert response.headers["WWW-Authenticate"] == "Bearer"

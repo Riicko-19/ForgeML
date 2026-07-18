@@ -21,6 +21,7 @@ from forgeml.application.operations.services import OperationService
 from forgeml.application.package.services import PackageService
 from forgeml.application.routing.services import RouteManager
 from forgeml.core.config import AppSettings
+from forgeml.domain.identity.ports import CredentialVerifier
 from forgeml.infrastructure.database.provider import DatabaseProvider
 from forgeml.infrastructure.package.zip_archive import ZipArchiveReader
 from forgeml.infrastructure.runtime.docker import DockerRuntimeManager
@@ -70,8 +71,19 @@ class Container:
         )
 
 
-def create_application(settings: AppSettings) -> FastAPI:
-    """Create the control-plane application with its dependencies wired."""
+def create_application(
+    settings: AppSettings, verifier: CredentialVerifier | None = None
+) -> FastAPI:
+    """Create the control-plane application with its dependencies wired.
+
+    `verifier` is a composition seam, not a switch. It exists because ADR-024
+    anticipates a JWT or OIDC verifier being composed here, and because tests
+    that run without a metadata database still have to authenticate -- ADR-025
+    left no bypass for them to disable. Passing None composes the real
+    ApiKeyVerifier, which is what `bootstrap` does and the only thing a
+    deployment can do: there is no setting, environment variable, or header
+    that reaches this argument.
+    """
 
     container = Container(settings)
 
@@ -114,6 +126,8 @@ def create_application(settings: AppSettings) -> FastAPI:
     # Order matters. add_middleware prepends, so the last added is outermost:
     # request context wraps authentication, which means a 401 still carries a
     # server-owned request id and is still logged like any other response.
-    app.add_middleware(AuthenticationMiddleware, verifier=container.verifier)
+    app.add_middleware(
+        AuthenticationMiddleware, verifier=verifier or container.verifier
+    )
     app.add_middleware(RequestContextMiddleware)
     return app
