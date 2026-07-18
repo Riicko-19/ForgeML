@@ -1,0 +1,32 @@
+# ForgeML code ownership.
+#
+# Ownership here means "must review", not "wrote it". The paths below are the
+# ones where a wrong change is expensive: frozen contracts, architectural
+# boundaries, governance, and the quality gate itself.
+
+# Default owner for everything not matched below.
+*                                   @Riicko-19
+
+# Frozen module surfaces. Changing these requires an ADR (ADR-014).
+/backend/src/forgeml/domain/        @Riicko-19
+/backend/migrations/                @Riicko-19
+
+# The boundaries. If these tests change, the architecture changed.
+/backend/tests/architecture/        @Riicko-19
+/backend/tests/contract/            @Riicko-19
+
+# Governance and decisions.
+/.forgeos/                          @Riicko-19
+/ForgeML_Engineering_Kit_Phase0/    @Riicko-19
+/PROJECT_STATUS.md                  @Riicko-19
+
+# The quality gate and its inputs.
+/Makefile                           @Riicko-19
+/.github/                           @Riicko-19
+/backend/requirements*.lock         @Riicko-19
+/backend/pyproject.toml             @Riicko-19
+
+# Repository standards.
+/LICENSE                            @Riicko-19
+/NOTICE                             @Riicko-19
+/SECURITY.md                        @Riicko-19

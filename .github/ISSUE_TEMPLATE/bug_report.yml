@@ -1,0 +1,69 @@
+name: Bug report
+description: Something behaves differently than documented
+labels: ["type:bug", "needs:triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not report security vulnerabilities here — see [SECURITY.md](../SECURITY.md).
+
+        Missing authentication, authorization, and rate limiting are known and
+        tracked as Module 9. They do not need an issue.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you observed, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. make setup && make db && make migrate
+        2. POST /v1/packages with ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit SHA
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Package format / validation
+        - Metadata / database
+        - HTTP API
+        - Analyzer / generator
+        - Deployment lifecycle
+        - Docker runtime
+        - Routing / prediction
+        - Build, CI, or tooling
+        - Documentation
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: OS, Python version, Docker version, PostgreSQL version
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant output
+      description: Include the request_id from the error envelope if you have one.
+      render: shell
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Confirmations
+      options:
+        - label: I ran `make verify` and it is green on an unmodified checkout
+        - label: I am using PostgreSQL (SQLite is unsupported — ADR-009)

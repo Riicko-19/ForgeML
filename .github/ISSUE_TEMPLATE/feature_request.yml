@@ -1,0 +1,44 @@
+name: Feature request
+description: Propose a capability ForgeML does not have
+labels: ["type:feature", "needs:triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ForgeML is built module by module against a frozen roadmap
+        ([06_IMPLEMENTATION_ROADMAP.md](../ForgeML_Engineering_Kit_Phase0/docs/06_IMPLEMENTATION_ROADMAP.md)),
+        and it has explicit non-goals: no Kubernetes, no distributed scheduling,
+        no multi-tenancy, no model registry, no GPU orchestration in V1.
+
+        Proposals outside that scope are not rejected for being bad ideas — they
+        are deferred because scope discipline is what has kept the architecture
+        intact for seven modules.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What can you not do today? Describe the situation, not the feature.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed capability
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you tried instead
+  - type: dropdown
+    id: module
+    attributes:
+      label: Which module do you think this belongs to?
+      options:
+        - "8 — Monitoring"
+        - "9 — Authentication & Authorization"
+        - "10 — Hardening / Release"
+        - "V2 or later"
+        - Not sure
+    validations:
+      required: true
