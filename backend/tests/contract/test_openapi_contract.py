@@ -21,6 +21,8 @@ EXPECTED_PATHS = {
     "/v1/deployments/{deployment_id}/versions/{version_id}",
     "/v1/deployments/{deployment_id}/versions/{version_id}/activate",
     "/v1/deployments/{deployment_id}/versions/{version_id}/stop",
+    # Module 7 platform prediction route, addressed by deployment name.
+    "/v1/deployments/{name}/predict",
     "/v1/admin/reconcile",
 }
 

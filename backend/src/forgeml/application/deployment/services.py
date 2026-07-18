@@ -55,6 +55,7 @@ from forgeml.domain.operations.models import (
 )
 from forgeml.domain.package.generator import generate
 from forgeml.domain.package.models import InferenceContract
+from forgeml.domain.routing.ports import ActiveTarget
 
 UnitOfWorkFactory = Callable[[], UnitOfWork]
 
@@ -123,6 +124,37 @@ class DeploymentService:
         if version is None:
             raise self._missing("deployment_version")
         return version
+
+    def resolve_active_target(self, name: str) -> ActiveTarget | None:
+        """The routing target for a deployment's active version, or None.
+
+        None means "no active healthy target to route to" for every reason the
+        route manager treats alike (docs 12: 503 deployment_unavailable): the
+        deployment or its active version is absent, the version is not ACTIVE, it
+        has no endpoint, or its contract is gone.
+        """
+
+        with self._unit_of_work() as uow:
+            deployment = uow.deployments.find_deployment_by_name(name)
+            if deployment is None or deployment.active_version_id is None:
+                return None
+            version = uow.deployments.find_version(deployment.active_version_id)
+            if (
+                version is None
+                or version.state is not VersionState.ACTIVE
+                or version.endpoint is None
+                or version.container_id is None
+            ):
+                return None
+            contract = _latest_contract(uow, version.package_id)
+            if contract is None:
+                return None
+            return ActiveTarget(
+                endpoint=version.endpoint,
+                container_id=version.container_id,
+                input_schema=contract.input_schema,
+                output_schema=contract.output_schema,
+            )
 
     def deploy_version(
         self,

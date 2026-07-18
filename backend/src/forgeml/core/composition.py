@@ -13,13 +13,16 @@ from forgeml.api.middleware import RequestContextMiddleware
 from forgeml.api.v1.deployments import create_admin_router, create_deployment_router
 from forgeml.api.v1.operations import create_operation_router
 from forgeml.api.v1.packages import create_package_router
+from forgeml.api.v1.predictions import create_prediction_router
 from forgeml.application.deployment.services import DeploymentService
 from forgeml.application.operations.services import OperationService
 from forgeml.application.package.services import PackageService
+from forgeml.application.routing.services import RouteManager
 from forgeml.core.config import AppSettings
 from forgeml.infrastructure.database.provider import DatabaseProvider
 from forgeml.infrastructure.package.zip_archive import ZipArchiveReader
 from forgeml.infrastructure.runtime.docker import DockerRuntimeManager
+from forgeml.infrastructure.runtime.http_gateway import HttpPredictionGateway
 from forgeml.infrastructure.storage.artifact_store import FilesystemArtifactStore
 
 API_PREFIX = "/v1"
@@ -42,11 +45,20 @@ class Container:
         # Module 6: the real runtime. The Docker adapter resolves the package
         # archive through the same artifact store and reads its src/ into the
         # build context; nothing above the RuntimeManager port changes.
+        runtime = DockerRuntimeManager(
+            store=store, reader=reader, limits=settings.package_limits
+        )
         self.deployments = DeploymentService(
-            unit_of_work=self.database.unit_of_work,
-            runtime=DockerRuntimeManager(
-                store=store, reader=reader, limits=settings.package_limits
-            ),
+            unit_of_work=self.database.unit_of_work, runtime=runtime
+        )
+        # Module 7: the platform routing layer. RouteManager resolves the active
+        # version through the deployment service, health-checks through the same
+        # runtime port, and forwards predictions through the HTTP gateway. It
+        # never touches Docker directly.
+        self.routing = RouteManager(
+            deployments=self.deployments,
+            runtime=runtime,
+            gateway=HttpPredictionGateway(),
         )
 
 
@@ -88,5 +100,6 @@ def create_application(settings: AppSettings) -> FastAPI:
         create_deployment_router(container.deployments), prefix=API_PREFIX
     )
     app.include_router(create_admin_router(container.deployments), prefix=API_PREFIX)
+    app.include_router(create_prediction_router(container.routing), prefix=API_PREFIX)
     app.add_middleware(RequestContextMiddleware)
     return app
