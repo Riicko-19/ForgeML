@@ -26,6 +26,7 @@ from forgeml.domain.deployment.models import (
     DesiredState,
 )
 from forgeml.domain.deployment.ports import DeploymentPage
+from forgeml.domain.identity.models import ApiKey
 from forgeml.domain.operations.models import (
     MAX_ATTEMPTS,
     Operation,
@@ -41,6 +42,7 @@ from forgeml.domain.package.models import (
 from forgeml.domain.package.ports import PackagePage
 from forgeml.infrastructure.database import mappers
 from forgeml.infrastructure.database.models import (
+    ApiKeyRow,
     AuditEventRow,
     DeploymentRow,
     DeploymentVersionRow,
@@ -386,6 +388,7 @@ class SqlAlchemyAuditLog:
             AuditEventRow(
                 id=uuid4(),
                 actor_type=event.actor_type.value,
+                actor_id=event.actor_id,
                 action=event.action,
                 target_type=event.target_type,
                 target_id=event.target_id,
@@ -528,3 +531,65 @@ class SqlAlchemyDeploymentRepository:
             )
         ).scalar_one()
         return (highest or 0) + 1
+
+
+class SqlAlchemyApiKeyStore:
+    """API key records backed by PostgreSQL (ADR-024).
+
+    No method returns or accepts a plaintext secret. `create` receives a record
+    whose digest was computed in the domain, so the secret never reaches this
+    layer in any code path -- which is what makes "the database cannot leak a
+    working credential" a structural property rather than a convention.
+    """
+
+    def __init__(self, session: Session) -> None:
+        self._session = session
+
+    def find_by_key_id(self, key_id: str) -> ApiKey | None:
+        row = self._session.execute(
+            select(ApiKeyRow).where(ApiKeyRow.key_id == key_id)
+        ).scalar_one_or_none()
+        return mappers.to_api_key(row) if row else None
+
+    def create(self, key: ApiKey) -> None:
+        self._session.add(
+            ApiKeyRow(
+                id=key.id,
+                key_id=key.key_id,
+                name=key.name,
+                secret_sha256=key.secret_sha256,
+                created_at=key.created_at,
+                expires_at=key.expires_at,
+            )
+        )
+        try:
+            self._session.flush()
+        except IntegrityError as exc:
+            self._session.rollback()
+            raise _conflict(
+                "api_key_conflict", "an api key with this identifier already exists"
+            ) from exc
+
+    def list(self) -> Sequence[ApiKey]:
+        rows = self._session.execute(
+            select(ApiKeyRow).order_by(ApiKeyRow.created_at.desc())
+        ).scalars()
+        return [mappers.to_api_key(row) for row in rows]
+
+    def revoke(self, key_id: str, revoked_at: datetime) -> bool:
+        row = self._session.execute(
+            select(ApiKeyRow).where(ApiKeyRow.key_id == key_id)
+        ).scalar_one_or_none()
+        if row is None:
+            return False
+        # An already-revoked key keeps its first timestamp: that is the moment
+        # that mattered to the incident, and overwriting it would corrupt the
+        # timeline the column exists to record.
+        if row.revoked_at is None:
+            row.revoked_at = revoked_at
+        return True
+
+    def touch_last_used(self, key_id: UUID, used_at: datetime) -> None:
+        row = self._session.get(ApiKeyRow, key_id)
+        if row is not None:
+            row.last_used_at = used_at

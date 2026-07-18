@@ -19,6 +19,7 @@ from forgeml.domain.deployment.models import (
     ResourcePolicy,
     VersionState,
 )
+from forgeml.domain.identity.models import ApiKey
 from forgeml.domain.operations.models import (
     Operation,
     OperationFailure,
@@ -34,6 +35,7 @@ from forgeml.domain.package.models import (
     ValidationState,
 )
 from forgeml.infrastructure.database.models import (
+    ApiKeyRow,
     AuditEventRow,
     DeploymentRow,
     DeploymentVersionRow,
@@ -112,6 +114,19 @@ def to_operation(row: OperationRow) -> Operation:
     )
 
 
+def to_api_key(row: ApiKeyRow) -> ApiKey:
+    return ApiKey(
+        id=row.id,
+        key_id=row.key_id,
+        name=row.name,
+        secret_sha256=row.secret_sha256,
+        created_at=row.created_at,
+        expires_at=row.expires_at,
+        revoked_at=row.revoked_at,
+        last_used_at=row.last_used_at,
+    )
+
+
 def to_audit_event(row: AuditEventRow) -> AuditEvent:
     return AuditEvent(
         actor_type=ActorType(row.actor_type),
@@ -120,6 +135,7 @@ def to_audit_event(row: AuditEventRow) -> AuditEvent:
         target_id=row.target_id,
         correlation_id=row.correlation_id,
         metadata=dict(row.event_metadata),
+        actor_id=row.actor_id,
         id=row.id,
         occurred_at=row.occurred_at,
     )

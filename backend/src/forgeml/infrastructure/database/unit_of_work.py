@@ -1,4 +1,4 @@
-"""The SQLAlchemy unit of work: one session, one transaction, three repositories."""
+"""The SQLAlchemy unit of work: one session, one transaction, the repositories."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from forgeml.application.unit_of_work import UnitOfWork
 from forgeml.infrastructure.database.repositories import (
+    SqlAlchemyApiKeyStore,
     SqlAlchemyAuditLog,
     SqlAlchemyDeploymentRepository,
     SqlAlchemyOperationStore,
@@ -18,7 +19,7 @@ from forgeml.infrastructure.database.repositories import (
 class SqlAlchemyUnitOfWork(UnitOfWork):
     """One atomic metadata transaction.
 
-    All three repositories are built from the same Session, which is what makes
+    Every repository is built from the same Session, which is what makes
     "persist the validation, transition the package, and append the audit event"
     a single transaction rather than three writes that can partially succeed.
 
@@ -37,6 +38,7 @@ class SqlAlchemyUnitOfWork(UnitOfWork):
         self.operations = SqlAlchemyOperationStore(self._session)
         self.audit = SqlAlchemyAuditLog(self._session)
         self.deployments = SqlAlchemyDeploymentRepository(self._session)
+        self.api_keys = SqlAlchemyApiKeyStore(self._session)
         return self
 
     def __exit__(

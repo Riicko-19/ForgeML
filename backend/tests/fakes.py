@@ -25,6 +25,7 @@ from forgeml.domain.deployment.models import (
     DesiredState,
 )
 from forgeml.domain.deployment.ports import DeploymentPage
+from forgeml.domain.identity.models import ApiKey
 from forgeml.domain.operations.models import (
     MAX_ATTEMPTS,
     Operation,
@@ -411,6 +412,44 @@ class InMemoryDeploymentRepository:
         return (max(attempts) if attempts else 0) + 1
 
 
+
+class InMemoryApiKeyStore:
+    """API keys held in memory, with the same no-plaintext rule as the real one."""
+
+    def __init__(self, clock: _Clock) -> None:
+        self._clock = clock
+        self._keys: dict[str, ApiKey] = {}
+
+    def find_by_key_id(self, key_id: str) -> ApiKey | None:
+        return self._keys.get(key_id)
+
+    def create(self, key: ApiKey) -> None:
+        if key.key_id in self._keys:
+            raise AppError(
+                category=ErrorCategory.CONFLICT,
+                code="api_key_conflict",
+                message="an api key with this identifier already exists",
+            )
+        self._keys[key.key_id] = key
+
+    def list(self) -> Sequence[ApiKey]:
+        return sorted(self._keys.values(), key=lambda key: key.created_at, reverse=True)
+
+    def revoke(self, key_id: str, revoked_at: datetime) -> bool:
+        key = self._keys.get(key_id)
+        if key is None:
+            return False
+        if key.revoked_at is None:
+            self._keys[key_id] = replace(key, revoked_at=revoked_at)
+        return True
+
+    def touch_last_used(self, key_id: UUID, used_at: datetime) -> None:
+        for handle, key in self._keys.items():
+            if key.id == key_id:
+                self._keys[handle] = replace(key, last_used_at=used_at)
+                return
+
+
 class InMemoryUnitOfWork(UnitOfWork):
     """A unit of work whose rollback really does discard writes.
 
@@ -422,7 +461,13 @@ class InMemoryUnitOfWork(UnitOfWork):
     def __init__(self) -> None:
         self._clock = _Clock()
         self._committed = self._new_state()
-        self.packages, self.operations, self.audit, self.deployments = self._committed
+        (
+            self.packages,
+            self.operations,
+            self.audit,
+            self.deployments,
+            self.api_keys,
+        ) = self._committed
 
     def _new_state(
         self,
@@ -431,17 +476,19 @@ class InMemoryUnitOfWork(UnitOfWork):
         InMemoryOperationStore,
         InMemoryAuditLog,
         InMemoryDeploymentRepository,
+        InMemoryApiKeyStore,
     ]:
         return (
             InMemoryPackageCatalog(self._clock),
             InMemoryOperationStore(self._clock),
             InMemoryAuditLog(self._clock),
             InMemoryDeploymentRepository(self._clock),
+            InMemoryApiKeyStore(self._clock),
         )
 
     def __enter__(self) -> InMemoryUnitOfWork:
         self._scratch = copy.deepcopy(self._committed)
-        self.packages, self.operations, self.audit, self.deployments = self._scratch
+        self._bind(self._scratch)
         return self
 
     def __exit__(
@@ -450,11 +497,29 @@ class InMemoryUnitOfWork(UnitOfWork):
         exc: BaseException | None,
         traceback: TracebackType | None,
     ) -> None:
-        self.packages, self.operations, self.audit, self.deployments = self._committed
+        self._bind(self._committed)
 
     def commit(self) -> None:
         self._committed = copy.deepcopy(self._scratch)
 
     def rollback(self) -> None:
         self._scratch = copy.deepcopy(self._committed)
-        self.packages, self.operations, self.audit, self.deployments = self._scratch
+        self._bind(self._scratch)
+
+    def _bind(
+        self,
+        state: tuple[
+            InMemoryPackageCatalog,
+            InMemoryOperationStore,
+            InMemoryAuditLog,
+            InMemoryDeploymentRepository,
+            InMemoryApiKeyStore,
+        ],
+    ) -> None:
+        (
+            self.packages,
+            self.operations,
+            self.audit,
+            self.deployments,
+            self.api_keys,
+        ) = state

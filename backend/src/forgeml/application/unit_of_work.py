@@ -17,6 +17,7 @@ from typing import Protocol
 
 from forgeml.domain.audit.ports import AuditLog
 from forgeml.domain.deployment.ports import DeploymentRepository
+from forgeml.domain.identity.ports import ApiKeyStore
 from forgeml.domain.operations.ports import OperationStore
 from forgeml.domain.package.ports import PackageCatalog
 
@@ -33,6 +34,7 @@ class UnitOfWork(Protocol):
     operations: OperationStore
     audit: AuditLog
     deployments: DeploymentRepository
+    api_keys: ApiKeyStore
 
     def __enter__(self) -> UnitOfWork:
         """Begin the transaction."""
