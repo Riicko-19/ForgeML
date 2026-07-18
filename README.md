@@ -11,7 +11,7 @@
 ![Python](https://img.shields.io/badge/python-3.11-3776AB?logo=python&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/postgres-16-4169E1?logo=postgresql&logoColor=white)
 ![Type checked](https://img.shields.io/badge/mypy-strict-2A6DB2)
-![Coverage](https://img.shields.io/badge/coverage-97%25-3FB950)
+![Coverage](https://img.shields.io/badge/coverage-98%25-3FB950)
 ![Status](https://img.shields.io/badge/status-alpha-orange)
 
 </div>
@@ -20,7 +20,7 @@
 
 <div align="center">
 
-| **594** | **97%** | **21** | **8 / 11** |
+| **774** | **98%** | **26** | **8 / 11** |
 |:--:|:--:|:--:|:--:|
 | automated tests | branch coverage | decision records | modules built |
 
@@ -77,27 +77,35 @@ install ──▶ run ──▶ upload ──▶ deploy ──▶ activate ─�
 make setup      # venv + hash-locked dependencies
 make db         # PostgreSQL 16 in Docker
 make migrate    # apply the schema
+make key        # mint an API key -- shown once, copy it
 make run        # control plane on http://127.0.0.1:8000
 ```
+
+Every `/v1` route requires that key. There is no way to turn authentication off: the control plane drives the Docker daemon, and the daemon is root, so a development bypass would be a root bypass (ADR-025). Only `/healthz` and `/readyz` are open.
 
 In another terminal — build the sample model and drive the pipeline:
 
 ```bash
 make example    # builds examples/hello-model.forge
+export FORGE_TOKEN='forge_...'   # the key make key printed
 
 # 1) Upload — returns 202 and a durable operation you can poll
 curl -X POST http://127.0.0.1:8000/v1/packages \
+  -H "Authorization: Bearer $FORGE_TOKEN" \
   -H "Idempotency-Key: $(uuidgen)" \
   -F "file=@examples/hello-model.forge"
 
 # 2) Create a deployment — a stable name for a succession of versions
 curl -X POST http://127.0.0.1:8000/v1/deployments \
+  -H "Authorization: Bearer $FORGE_TOKEN" \
   -H "Content-Type: application/json" -d '{"name":"scorer"}'
 
 # 3) Build + run a version, then 4) activate it as the route target
 curl -X POST http://127.0.0.1:8000/v1/deployments/<id>/versions \
+  -H "Authorization: Bearer $FORGE_TOKEN" \
   -H "Idempotency-Key: $(uuidgen)" -d '{"package_id":"<package_id>"}'
 curl -X POST http://127.0.0.1:8000/v1/deployments/<id>/versions/<version_id>/activate \
+  -H "Authorization: Bearer $FORGE_TOKEN" \
   -H "Idempotency-Key: $(uuidgen)"
 ```
 
@@ -183,9 +191,11 @@ Each row is a property the codebase enforces, with the decision record that gove
 
 ForgeML runs code that packages supply, so its trust boundary is explicit and narrow.
 
-> **There is no authentication yet.** V1 assumes a **single trusted operator on a protected administrative network**. A package is a trusted administrative artifact — **not** a file accepted from anonymous users. **Do not expose the control plane to a network you do not control.** Public exposure requires an authorization decision (an ADR) that does not yet exist.
+**Every `/v1` route requires an API key** (Epic 1). Authentication is always on — there is no setting, header, or environment that disables it, and only `/healthz` and `/readyz` are open. Credentials are 256-bit CSPRNG secrets stored as SHA-256 digests, so a stolen database yields nothing usable, and every operator command is attributed in the append-only audit trail. See the [authentication guide](docs/AUTHENTICATION_GUIDE.md).
 
-Within that boundary, isolation is defense-in-depth — not a safe sandbox for hostile code. Runtimes are unprivileged, read-only, capability-stripped, resource-limited, and network-isolated (ADR-001). The limits are documented, tested, and enforced rather than assumed; that is the point.
+> **Authentication is not authorization.** Every valid key can do everything, and the control plane drives the Docker daemon — which is root. **Until Epic 2, treat an API key as a root credential for the host**, issue one per consumer, and keep the control plane off untrusted networks. ForgeML now knows *who* is asking; it does not yet limit *what* they may ask for. The full analysis is in the [security review](docs/SECURITY_REVIEW_EPIC_1.md).
+
+A package remains a trusted administrative artifact — **not** a file accepted from anonymous users. Within that boundary, isolation is defense-in-depth, not a safe sandbox for hostile code. Runtimes are unprivileged, read-only, capability-stripped, resource-limited, and network-isolated (ADR-001). The limits are documented, tested, and enforced rather than assumed; that is the point.
 
 ---
 
@@ -210,6 +220,8 @@ The V1 backend is built module by module. A contract freezes before anything dep
 
 <div align="center"><img src="docs/assets/module-roadmap.svg" alt="Roadmap: phases 0–7 done (0–2 frozen, 3–7 implemented), phases 8 monitoring, 9 dashboard and 10 release planned" width="100%"></div>
 
+Work runs on **two tracks** (ADR-022). *Phases* are the ordered capability layers. *Epics* are cross-cutting capabilities that touch every phase and so cannot sit inside one — they carry the same gates and freeze evidence, but hold no position in the ordering.
+
 | Phase | Module | State |
 | --- | --- | --- |
 | 0–2 | Foundation · Forge Package · Metadata | **Frozen** — CI evidence on the frozen commit |
@@ -217,6 +229,13 @@ The V1 backend is built module by module. A contract freezes before anything dep
 | 8 | Monitoring — logs, observations, retention | Planned — next |
 | 9 | Dashboard | Planned |
 | 10 | Hardening & release — backups, SBOM/scan, performance | Planned |
+
+| Epic | Capability | State |
+| --- | --- | --- |
+| 1 | Identity & Authentication — principal model, API keys, actor attribution | **Implemented** — freeze pending CI |
+| 2 | Authorization — scopes, per-command checks, HTTP key management, rate limiting | Planned |
+
+Epic 1 ran ahead of Phase 8 by dependency, not by reordering: monitoring without an actor produces observations nobody can attribute, and a dashboard built before authentication is one that has authentication retrofitted into it.
 
 ---
 
@@ -280,6 +299,9 @@ ForgeML's philosophy is narrow on purpose: **single server, deterministic, expli
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Setup, the checkpoint, architectural rules, how to open a PR |
 | [GOVERNANCE.md](GOVERNANCE.md) | Which documentation root owns what, and the authority order |
 | [SECURITY.md](SECURITY.md) | Security model, current posture, how to report a vulnerability |
+| [docs/SECURITY_REVIEW_EPIC_1.md](docs/SECURITY_REVIEW_EPIC_1.md) | Threat model and findings for identity and authentication |
+| [docs/AUTHENTICATION_GUIDE.md](docs/AUTHENTICATION_GUIDE.md) | How to authenticate, manage keys, and rotate a compromised one |
+| [docs/IDENTITY_AND_AUTH.md](docs/IDENTITY_AND_AUTH.md) | The identity model, the authentication boundary, and the diagrams |
 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | How work moves from idea to frozen module |
 | [docs/RELEASE.md](docs/RELEASE.md) | Versioning, compatibility promise, release steps |
 | [docs/DEPENDENCY_REPORT.md](docs/DEPENDENCY_REPORT.md) | Advisories, licenses, pinning, and how to reproduce the audit |

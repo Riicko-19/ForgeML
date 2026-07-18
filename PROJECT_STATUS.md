@@ -9,7 +9,7 @@ The phase list mirrors the frozen roadmap in
 is the authority; this one reports against it. Changing the phase structure
 requires an ADR, not an edit here.
 
-**Last updated:** 2026-07-18 (ForgeML 0.9.1 — Platform Freeze & Release Readiness)
+**Last updated:** 2026-07-18 (Epic 1 — Identity & Authentication)
 
 ---
 
@@ -20,7 +20,8 @@ requires an ADR, not an edit here.
 ## Current stage
 
 Backend development complete through Module 7. Stabilization (0.9) and freeze
-verification (0.9.1) complete. Modules 8–10 not started.
+verification (0.9.1) complete. **Epic 1 (Identity & Authentication) implemented.**
+Phases 8–10 not started; Epic 2 (Authorization) not started.
 
 ---
 
@@ -40,8 +41,18 @@ verification (0.9.1) complete. Modules 8–10 not started.
 | 9 | Dashboard | Not started | — |
 | 10 | Hardening / Release | Not started | — |
 
-**Implemented: 8 of 11 phases (0–7).**
-**Frozen: 3 of 11 phases (0–2).**
+### Epics (ADR-022)
+
+Cross-cutting capabilities. Same gates and freeze rules as a phase; no position
+in the phase ordering.
+
+| Epic | Capability | Implementation | Freeze |
+| --- | --- | --- | --- |
+| 1 | Identity & Authentication | Complete | Pending CI evidence |
+| 2 | Authorization | Not started | — |
+
+**Implemented: 8 of 11 phases (0–7), and 1 of 2 epics.**
+**Frozen: 3 of 11 phases (0–2), and 0 of 2 epics.**
 
 Those two numbers differ on purpose and both are true. *Implemented* means the
 code is written, tested, and green locally. *Frozen* means ADR-014 is satisfied:
@@ -56,26 +67,26 @@ so treat this as a position in a required order, not a schedule estimate.
 
 ## Repository metrics
 
-Measured at `f6a2c3c` on 2026-07-18, from a clean clone. Reproduce with
-`make verify`.
+Measured at `c114d50` on 2026-07-18. Reproduce with `make verify`.
 
-| Metric | Value |
-| --- | --- |
-| Tests | 594 |
-| Branch coverage | 97% (gate: 95%) |
-| Test suite runtime | ~35s (with Docker) |
-| Source lines (`backend/src`) | 7,063 across 71 files |
-| Test lines | 7,650 |
-| Architecture decisions | 21 (ADR-001 … ADR-021) |
-| HTTP endpoints | 15 |
-| Tracked files | 244 (1.7 MB) |
-| Runtime dependencies | 10, `==` pinned and hash-locked |
-| Known vulnerabilities | 0 (both locks) |
-| Quality gates | black, ruff, mypy strict, pytest, coverage |
+| Metric | Value | Change since 0.9.1 |
+| --- | --- | --- |
+| Tests | 774 | +180 |
+| Branch coverage | 98% (gate: 95%) | +1 |
+| Test lines | 9,058 | +1,408 |
+| Test suite runtime | ~31s (with Docker) | — |
+| Source lines (`backend/src`) | 8,107 across 81 files | +1,044, +10 files |
+| Architecture decisions | 26 (ADR-001 … ADR-026) | +5 |
+| Runtime dependencies | 10, `==` pinned and hash-locked | **unchanged** |
+| Known vulnerabilities | 0 (both locks) | — |
+| Quality gates | black, ruff, mypy strict, pytest, coverage | — |
 
-The Docker-dependent integration tests are included in the 594 only when a Docker
+Epic 1 added authentication without adding a dependency: the entire subsystem
+uses `hashlib`, `hmac`, and `secrets` from the standard library.
+
+The Docker-dependent integration tests are included in the 774 only when a Docker
 daemon is reachable; they skip silently otherwise. A run without Docker is not
-evidence for Module 6. **They ran for the 0.9.1 measurement.**
+evidence for Module 6. **They ran for this measurement.**
 
 ---
 
@@ -122,9 +133,10 @@ immutability triggers, `PackageCatalog` / `OperationStore` / `AuditLog`,
 `UnitOfWork`, in-memory fakes held to the same conformance suite as the real
 adapters, and ADR-016 (operation lease, crash recovery, retry).
 
-**Note for the authentication module:** ADR-018 amends this frozen surface —
-`AuditEvent` and the `audit_events` table gain a nullable `actor_id`. The ADR is
-accepted; the migration is not yet written.
+**Amended by Epic 1:** ADR-018's change to this frozen surface has landed —
+`AuditEvent` and the `audit_events` table now carry a nullable `actor_id`,
+added additively with no backfill. Historical rows keep `NULL`, which is
+truthful: those actions had no recorded principal.
 
 ---
 
@@ -209,6 +221,47 @@ locally, but ADR-014 does not accept that as freeze evidence.
 
 **Reports:** `PLATFORM_READINESS_REPORT.md`, `CHANGELOG.md`,
 `docs/DEPENDENCY_REPORT.md`, `docs/releases/v0.9.1-draft.md`
+
+---
+
+## Epic 1 — Identity & Authentication
+
+Cross-cutting capability, delivered ahead of Phase 8 by dependency rather than
+by reordering (ADR-022): monitoring without an actor produces observations
+nobody can attribute, and a dashboard built before authentication is one that
+has authentication retrofitted into it.
+
+**Delivered:**
+
+- **Identity model** — `Principal`, `AuthenticationContext`, `ApiKey` in a new
+  `domain/identity` package. One principal kind (ADR-023); every unimplemented
+  identity concept has a recorded attachment point that does not require
+  changing `Principal`.
+- **API-key credential** — `forge_<key_id>_<secret>` with 256 bits of CSPRNG
+  entropy, stored only as a SHA-256 digest, constant-time comparison, and an
+  equal-cost miss path so an unknown key cannot be distinguished by latency
+  (ADR-024).
+- **Always-on enforcement** — every `/v1` route authenticated, no bypass in any
+  form, `/healthz` and `/readyz` the only exemptions, uniform 401s (ADR-025).
+- **Attribution** — operator commands carry `actor_id` into the append-only
+  audit trail; crash-recovered work and reconciliation findings record `SYSTEM`
+  rather than inventing an actor.
+- **Out-of-band key administration** — `python -m forgeml.identity`, because an
+  authenticated key-creation endpoint would let every key mint more keys
+  (ADR-026).
+- **Mechanical boundaries** — architecture tests forbid transport types below
+  the API layer, restrict the principal contextvar to one reader, and assert no
+  authorization logic has appeared yet.
+
+**Explicitly not delivered:** authorization, scopes, rate limiting, HTTP key
+management, users, sessions, JWT, OAuth2, OIDC. All are Epic 2 or later.
+
+**Known limitation:** every valid key has full authority, and the control plane
+is root-equivalent through Docker. Until Epic 2, an API key is a root credential
+for the host.
+
+**Reports:** `docs/IDENTITY_AND_AUTH.md`, `docs/SECURITY_REVIEW_EPIC_1.md`,
+`docs/AUTHENTICATION_GUIDE.md`, `ENGINEERING_REPORT_IDENTITY_AUTH.md`
 
 ---
 

@@ -16,7 +16,83 @@ implemented and what is frozen.
 
 ## [Unreleased]
 
-Nothing yet.
+### Epic 1 — Identity & Authentication
+
+**Breaking for every existing client.** Every `/v1` route now requires an API
+key. There is no migration path that avoids this and none is offered: the
+control plane drives the Docker daemon, and the daemon is root, so an
+unauthenticated control plane was an unauthenticated path to host root.
+
+Mint a key before upgrading:
+
+```bash
+make migrate    # adds api_keys and audit_events.actor_id
+make key        # prints the token once
+```
+
+Then send `Authorization: Bearer <token>` on every `/v1` request. See
+[`docs/AUTHENTICATION_GUIDE.md`](docs/AUTHENTICATION_GUIDE.md).
+
+#### Added
+
+- **Identity model** (ADR-023) — `Principal`, `AuthenticationContext`, `ApiKey`
+  in a new `domain/identity` package. One principal kind; each unimplemented
+  identity concept has a recorded attachment point that does not require
+  changing `Principal`.
+- **API-key credentials** (ADR-024) — `forge_<key_id>_<secret>`, 256 bits of
+  CSPRNG entropy, stored only as a SHA-256 digest, compared in constant time,
+  with an equal-cost miss path so an unknown key cannot be distinguished from a
+  wrong secret by latency.
+- **`python -m forgeml.identity`** (ADR-026) — create, list, and revoke keys
+  out-of-band. Not an HTTP surface, deliberately: with authentication and no
+  authorization, an authenticated key-creation endpoint would let every key mint
+  more keys.
+- **`make key`** — mint a key during first-run setup.
+- **Actor attribution** (ADR-018) — `audit_events.actor_id`, nullable, indexed,
+  no backfill. Operator commands carry the acting principal; crash-recovered
+  work and reconciliation findings record `SYSTEM` rather than inventing one.
+- **Architecture tests** for the new boundary — no transport type below the API
+  layer, exactly one reader of the principal contextvar, and no authorization
+  identifier anywhere yet.
+- **ADR-022** — epics as a cross-cutting delivery track. The frozen phase list
+  is unchanged and nothing is renumbered.
+
+#### Changed
+
+- **`/v1/openapi.json` now requires authentication** (ADR-019). It previously
+  returned 404 to everyone; it now returns 401 to an anonymous caller.
+- **Unknown paths answer 401 before 404.** Authentication runs before routing,
+  so route existence is no longer observable without a credential. Authenticated
+  callers still get 404.
+- **`401` is a new member of the error envelope's status set**, with code
+  `authentication_required` and a `WWW-Authenticate: Bearer` header. The
+  envelope shape is unchanged.
+- `ActorType` moved from `domain/audit` to `domain/identity` and is re-exported,
+  so existing imports keep working.
+
+#### Fixed
+
+- Control characters in an `Authorization` header decoded as valid ASCII and
+  reached the credential verifier. Rejected at the parser now.
+- The key CLI leaked its database connection.
+
+#### Security
+
+- The largest gap ForgeML had — an entirely unauthenticated, root-equivalent
+  control plane — is closed. Full threat model and findings in
+  [`docs/SECURITY_REVIEW_EPIC_1.md`](docs/SECURITY_REVIEW_EPIC_1.md).
+- **No dependency was added.** The subsystem uses `hashlib`, `hmac`, and
+  `secrets` from the standard library.
+
+#### Known limitations
+
+- **Every valid key has full authority.** There are no scopes and no read-only
+  keys, and the control plane is root-equivalent through Docker, so **an API key
+  is a root credential for the host** until Epic 2.
+- No rate limiting on the authentication path (Epic 2, ADR-019).
+- Keys do not expire unless `--expires-days` is given.
+- ForgeML does not terminate TLS; a bearer token over plaintext HTTP is readable
+  in transit. Terminate TLS at a reverse proxy.
 
 ---
 

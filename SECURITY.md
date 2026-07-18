@@ -42,25 +42,34 @@ code, and "my package ran the code I put in it" is not a vulnerability.
 Container isolation is defense-in-depth against a *compromised* model, not a
 boundary against a *malicious* operator.
 
-### Current posture (pre-Module 9)
+### Current posture (Epic 1 complete, Epic 2 pending)
 
 | Property | State |
 | --- | --- |
-| Authentication | **None.** Module 9. Every endpoint is open |
-| Authorization | **None.** Module 9 |
-| Rate limiting | **None.** Module 9 |
+| Authentication | **Required on every `/v1` route.** API keys, always on, no bypass (ADR-025) |
+| Authorization | **None.** Epic 2. Every valid key can do everything |
+| Rate limiting | **None.** Epic 2 |
+| Credential storage | SHA-256 digest of a 256-bit CSPRNG secret; plaintext never stored |
+| Transport security | **Not provided.** Terminate TLS at a reverse proxy |
 | Default bind address | `127.0.0.1`; wildcard binds are rejected by config |
 | Intended deployment | Single host, administrative network only |
 
-The control plane **must not** be exposed to an untrusted network today. Reports
-of the form "the API has no authentication" are known and tracked as Module 9;
-they do not need a private report.
+Authentication is not authorization. Because the control plane is root-equivalent
+through the Docker daemon and no key is scoped, **every API key is a root
+credential for the host.** The control plane **must not** be exposed to an
+untrusted network.
+
+Reports of the form "any valid key can do anything" or "there is no rate
+limiting" are known, tracked as Epic 2, and analysed in
+[`docs/SECURITY_REVIEW_EPIC_1.md`](docs/SECURITY_REVIEW_EPIC_1.md); they do not
+need a private report.
 
 ### What the control plane can do
 
 It drives the Docker daemon, and the daemon is root. **Anyone who reaches the
 control plane effectively has root on the host.** This is why the deployment
-model is a single administrative host and why authentication is the next module.
+model is a single administrative host, and why Epic 1 treated the authentication
+boundary as protecting host root rather than model metadata.
 
 ### Runtime isolation (ADR-001)
 
@@ -98,12 +107,18 @@ covered by the runtime hardening above. This is tracked for Module 10.
 - Code execution in the control plane from package *validation*
 - Escaping the artifact store's content-addressed layout
 - Secrets or internal detail leaking through API responses, errors, or logs
+- Any way to reach a `/v1` route without a valid credential
+- Any way to distinguish an unknown key from a wrong, revoked, or expired one
+- Recovering an API key secret from the database, logs, or an error response
+- Forging an audit `actor_id`, or attributing an action to the wrong principal
 - SQL injection, or any way to bypass the metadata layer's immutability triggers
 - Request-ID spoofing or audit-trail forgery
 
 ## Out of scope
 
-- Missing authentication, authorization, or rate limiting (Module 9, known)
+- Missing authorization or rate limiting (Epic 2, known and analysed)
+- A valid API key being able to perform any operation (the same, by design today)
+- Bearer tokens being readable over plaintext HTTP (terminate TLS in front)
 - Arbitrary code execution from a package the operator deliberately uploaded
 - Build-time code execution via package dependencies (known, Module 10)
 - Denial of service through legitimate resource-intensive models
