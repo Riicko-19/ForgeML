@@ -33,7 +33,7 @@ Backend Development
 | 3 | Backend API | ⬛ Implemented — freeze pending CI |
 | 4 | Analyzer / Generator | ⬛ Implemented — freeze pending CI |
 | 5 | Deployment | ⬛ Implemented — freeze pending CI |
-| 6 | Docker Runtime | ⬜ Not Started |
+| 6 | Docker Runtime | ⬛ Implemented — freeze pending CI |
 | 7 | Routing / Versioning | ⬜ Not Started |
 | 8 | Monitoring | ⬜ Not Started |
 | 9 | Dashboard | ⬜ Not Started |
@@ -129,23 +129,34 @@ ADR-016 (operation lease, crash recovery, retry).
 
 ## Current Module
 
-**Module 3 — Backend API**
+**Module 6 — Docker Runtime**
 
 Status: **Implementation complete. NOT frozen** — ADR-014 requires passing
 GitHub Actions evidence on the frozen SHA, and the changes are not yet pushed.
 
-Scope (doc 06): commands/queries, operation resource, error mapping.
-Entry gate: package/metadata ports stable — satisfied by the Module 2 freeze.
-Exit gate: HTTP contract and idempotency tests — **all passing**.
+Scope (doc 06): image/container/network/health adapter.
+Entry gate: deployment semantics frozen — satisfied by the Module 5 runtime port.
+Exit gate: a disposable Docker test proves labels, limits, isolation, and
+cleanup — **all passing**.
 
-Delivered: `POST /v1/packages` (streaming upload, idempotent, 202 + operation),
-`GET /v1/packages`, `GET /v1/packages/{id}`, `GET /v1/operations/{id}`, published
-OpenAPI, database-backed readiness, ADR-016 crash recovery at startup.
+Delivered: `DockerRuntimeManager` implementing the frozen `RuntimeManager` port via
+the Docker CLI behind an injectable seam; a standard-library serving harness
+(`/health`, `/predict`) and the Dockerfile serving layer; `DeploymentService`
+composed onto the Docker adapter with the deployment/admin routers mounted; an
+isolated egress-free runtime network; disposable-Docker integration coverage.
 
-Local evidence: 411 tests, 99% branch coverage, mypy strict / ruff / black clean,
-graph clean with no import cycles.
+Prerequisite fix: ADR-017 corrected a latent Module 4 defect (generated adapter
+embedded JSON `false`/`true`/`null` as Python source) that Module 6 was the first
+to import.
 
-Design: docs 30 · Implementation: docs 31 · Review guide: docs 32 · Decisions: docs 33
+Local evidence: full suite green, 98% branch coverage, mypy strict / ruff / black
+clean; the disposable-Docker test builds, starts, predicts, reconciles, and cleans
+up a real container and asserts the ADR-001 isolation baseline.
+
+Design: docs 36 · Decision: ADR-017
+
+DeploymentService still depends only on the `RuntimeManager` protocol; Docker logic
+is isolated in `infrastructure/runtime/`; no Module 7 functionality was introduced.
 
 ---
 
