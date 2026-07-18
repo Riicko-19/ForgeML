@@ -19,7 +19,14 @@ from sqlalchemy.orm import Session, sessionmaker
 from forgeml.infrastructure.database.engine import create_session_factory
 
 DEFAULT_URL = "postgresql+psycopg://forgeml:forgeml@127.0.0.1:55432/forgeml"
-TABLES = ("audit_events", "package_validations", "operations", "packages")
+TABLES = (
+    "audit_events",
+    "package_validations",
+    "operations",
+    "deployment_versions",
+    "deployments",
+    "packages",
+)
 
 
 def database_url() -> str:

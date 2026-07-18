@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import threading
 from uuid import uuid4
 
 import pytest
@@ -9,8 +10,10 @@ from sqlalchemy import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from forgeml.core.errors import AppError
+from forgeml.domain.deployment.models import DesiredState
 from forgeml.domain.operations.models import OperationState, OperationType
 from forgeml.infrastructure.database.repositories import (
+    SqlAlchemyDeploymentRepository,
     SqlAlchemyOperationStore,
     SqlAlchemyPackageCatalog,
 )
@@ -117,6 +120,56 @@ def test_a_second_begin_with_a_conflicting_fingerprint_still_conflicts(
         store = SqlAlchemyOperationStore(retry)
         with pytest.raises(AppError, match="idempotency"):
             store.begin("key-1", VALIDATE, SHA, "other-fingerprint", uuid4())
+
+
+def test_two_activations_of_one_deployment_serialize_on_the_row_lock(
+    session_factory: sessionmaker[Session],
+) -> None:
+    """The ADR-005 activation guarantee: the route swap is one-at-a-time.
+
+    `lock_deployment` is plain FOR UPDATE, not SKIP LOCKED -- a second activation
+    must *wait* for the first rather than skip it, because skipping would let two
+    callers each believe they own the route and write conflicting active
+    versions. Only a real database can prove the wait, so this is the test that
+    stands behind the atomicity claim in ActivationService.
+    """
+
+    with session_factory() as setup:
+        created = SqlAlchemyDeploymentRepository(setup).create_deployment(
+            "scorer", DesiredState.RUNNING
+        )
+        setup.commit()
+
+    entered = threading.Event()
+    outcome: list[str] = []
+
+    def second_activation() -> None:
+        entered.set()
+        with session_factory() as contender:
+            SqlAlchemyDeploymentRepository(contender).lock_deployment(created.id)
+            outcome.append("locked")
+            contender.commit()
+
+    holder = session_factory()
+    try:
+        assert SqlAlchemyDeploymentRepository(holder).lock_deployment(created.id)
+
+        waiter = threading.Thread(target=second_activation, daemon=True)
+        waiter.start()
+        entered.wait(timeout=5)
+        # The contender is inside lock_deployment and must be blocked: the
+        # holder's transaction is still open. If FOR UPDATE were ever weakened
+        # to SKIP LOCKED or dropped, this join would succeed and outcome would
+        # already be filled.
+        waiter.join(timeout=1.0)
+        assert outcome == [], "second activation acquired the lock concurrently"
+
+        holder.commit()
+    finally:
+        holder.close()
+
+    waiter.join(timeout=10)
+    assert outcome == ["locked"], "second activation never acquired the released lock"
 
 
 def test_claim_leaves_the_operation_running_for_the_next_reader(
