@@ -33,7 +33,7 @@ from forgeml.application.deployment.support import (
     missing,
     not_accepted,
 )
-from forgeml.domain.audit.models import ActorType, AuditEvent
+from forgeml.domain.audit.models import AuditEvent
 from forgeml.domain.deployment.models import (
     Deployment,
     DeploymentVersion,
@@ -53,6 +53,7 @@ from forgeml.domain.deployment.rules import (
     mark_ready,
     mark_stopped,
 )
+from forgeml.domain.identity.models import Principal
 from forgeml.domain.operations.models import Operation, OperationFailure, OperationType
 from forgeml.domain.package.generator import generate
 from forgeml.domain.package.models import InferenceContract
@@ -79,12 +80,15 @@ class DeploymentLifecycleService(OperationAwareService):
 
     # -- commands ----------------------------------------------------------
 
-    def create_deployment(self, name: str, correlation_id: UUID) -> Deployment:
+    def create_deployment(
+        self, name: str, correlation_id: UUID, principal: Principal
+    ) -> Deployment:
         with self._unit_of_work() as uow:
             deployment = uow.deployments.create_deployment(name, DesiredState.RUNNING)
             uow.audit.record(
                 AuditEvent(
-                    actor_type=ActorType.OPERATOR,
+                    actor_type=principal.actor_type,
+                    actor_id=principal.actor_id,
                     action="deployment.created",
                     target_type="deployment",
                     target_id=str(deployment.id),
@@ -102,6 +106,7 @@ class DeploymentLifecycleService(OperationAwareService):
         resource_policy: ResourcePolicy,
         idempotency_key: str,
         correlation_id: UUID,
+        principal: Principal,
     ) -> Operation:
         """Build and start a new version of an accepted package."""
 
@@ -134,10 +139,15 @@ class DeploymentLifecycleService(OperationAwareService):
             contract,
             checksum,
             correlation_id,
+            principal,
         )
 
     def stop_version(
-        self, version_id: UUID, idempotency_key: str, correlation_id: UUID
+        self,
+        version_id: UUID,
+        idempotency_key: str,
+        correlation_id: UUID,
+        principal: Principal,
     ) -> Operation:
         """Stop a READY version and remove its container."""
 
@@ -158,7 +168,7 @@ class DeploymentLifecycleService(OperationAwareService):
                 return operation
             uow.commit()
 
-        return self._execute_stop(operation.id, version_id, correlation_id)
+        return self._execute_stop(operation.id, version_id, correlation_id, principal)
 
     # -- execution ---------------------------------------------------------
 
@@ -171,9 +181,10 @@ class DeploymentLifecycleService(OperationAwareService):
         contract: InferenceContract,
         checksum: str,
         correlation_id: UUID,
+        principal: Principal | None = None,
     ) -> Operation:
         version = self._claim_and_create_version(
-            operation_id, deployment_id, package_id, policy, correlation_id
+            operation_id, deployment_id, package_id, policy, correlation_id, principal
         )
         if version is None:
             return self._current(operation_id)
@@ -185,11 +196,11 @@ class DeploymentLifecycleService(OperationAwareService):
             image = self._runtime.build(version.id, context, checksum, policy)
         except RuntimeUnavailable:
             return self._fail_attempt(
-                operation_id, version, UNAVAILABLE, correlation_id
+                operation_id, version, UNAVAILABLE, correlation_id, principal
             )
         except RuntimeExecutionError as error:
             return self._fail_attempt(
-                operation_id, version, error.failure, correlation_id
+                operation_id, version, error.failure, correlation_id, principal
             )
 
         version = mark_built(version, image_ref=image.image_ref)
@@ -199,11 +210,11 @@ class DeploymentLifecycleService(OperationAwareService):
             container = self._runtime.start(version.id, image, policy)
         except RuntimeUnavailable:
             return self._fail_attempt(
-                operation_id, version, UNAVAILABLE, correlation_id
+                operation_id, version, UNAVAILABLE, correlation_id, principal
             )
         except RuntimeExecutionError as error:
             return self._fail_attempt(
-                operation_id, version, error.failure, correlation_id
+                operation_id, version, error.failure, correlation_id, principal
             )
 
         version = mark_ready(
@@ -211,7 +222,7 @@ class DeploymentLifecycleService(OperationAwareService):
         )
         with self._unit_of_work() as uow:
             uow.deployments.save_version(version)
-            uow.audit.record(self._event("ready", version, correlation_id))
+            uow.audit.record(self._event("ready", version, correlation_id, principal))
             completed = uow.operations.complete(
                 operation_id,
                 {"version_id": str(version.id), "state": version.state.value},
@@ -226,6 +237,7 @@ class DeploymentLifecycleService(OperationAwareService):
         package_id: UUID,
         policy: ResourcePolicy,
         correlation_id: UUID,
+        principal: Principal | None = None,
     ) -> DeploymentVersion | None:
         with self._unit_of_work() as uow:
             if uow.operations.claim(operation_id) is None:
@@ -244,12 +256,18 @@ class DeploymentLifecycleService(OperationAwareService):
                 updated_at=datetime.now(tz=UTC),
             )
             uow.deployments.add_version(version)
-            uow.audit.record(self._event("building", version, correlation_id))
+            uow.audit.record(
+                self._event("building", version, correlation_id, principal)
+            )
             uow.commit()
             return version
 
     def _execute_stop(
-        self, operation_id: UUID, version_id: UUID, correlation_id: UUID
+        self,
+        operation_id: UUID,
+        version_id: UUID,
+        correlation_id: UUID,
+        principal: Principal | None = None,
     ) -> Operation:
         with self._unit_of_work() as uow:
             if uow.operations.claim(operation_id) is None:
@@ -279,7 +297,7 @@ class DeploymentLifecycleService(OperationAwareService):
         stopped = mark_stopped(version)
         with self._unit_of_work() as uow:
             uow.deployments.save_version(stopped)
-            uow.audit.record(self._event("stopped", stopped, correlation_id))
+            uow.audit.record(self._event("stopped", stopped, correlation_id, principal))
             completed = uow.operations.complete(
                 operation_id,
                 {"version_id": str(stopped.id), "state": stopped.state.value},
@@ -293,11 +311,14 @@ class DeploymentLifecycleService(OperationAwareService):
         version: DeploymentVersion,
         failure: OperationFailure,
         correlation_id: UUID,
+        principal: Principal | None = None,
     ) -> Operation:
         failed_version = mark_failed(version, failure)
         with self._unit_of_work() as uow:
             uow.deployments.save_version(failed_version)
-            uow.audit.record(self._event("failed", failed_version, correlation_id))
+            uow.audit.record(
+                self._event("failed", failed_version, correlation_id, principal)
+            )
             failed = uow.operations.fail(operation_id, failure)
             uow.commit()
             return failed

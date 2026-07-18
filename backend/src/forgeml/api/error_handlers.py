@@ -19,6 +19,7 @@ from forgeml.core.errors import AppError, ErrorCategory, ErrorDetail
 
 _CATEGORY_STATUS: Final = {
     ErrorCategory.BAD_REQUEST: 400,
+    ErrorCategory.UNAUTHENTICATED: 401,
     ErrorCategory.NOT_FOUND: 404,
     ErrorCategory.CONFLICT: 409,
     ErrorCategory.VALIDATION: 422,

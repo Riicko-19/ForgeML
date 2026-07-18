@@ -35,6 +35,7 @@ from forgeml.domain.deployment.rules import (
     mark_active,
     mark_deactivated,
 )
+from forgeml.domain.identity.models import Principal
 from forgeml.domain.operations.models import Operation, OperationFailure, OperationType
 
 
@@ -53,6 +54,7 @@ class ActivationService(OperationAwareService):
         version_id: UUID,
         idempotency_key: str,
         correlation_id: UUID,
+        principal: Principal,
     ) -> Operation:
         """Make a READY version the deployment's one ACTIVE version (docs 04).
 
@@ -82,7 +84,7 @@ class ActivationService(OperationAwareService):
             uow.commit()
 
         return self._execute_activate(
-            operation.id, deployment_id, version_id, correlation_id
+            operation.id, deployment_id, version_id, correlation_id, principal
         )
 
     def _execute_activate(
@@ -91,6 +93,7 @@ class ActivationService(OperationAwareService):
         deployment_id: UUID,
         version_id: UUID,
         correlation_id: UUID,
+        principal: Principal | None = None,
     ) -> Operation:
         with self._unit_of_work() as uow:
             if uow.operations.claim(operation_id) is None:
@@ -143,7 +146,9 @@ class ActivationService(OperationAwareService):
             uow.deployments.save_deployment(
                 replace(deployment, active_version_id=version_id)
             )
-            uow.audit.record(self._event("activated", candidate, correlation_id))
+            uow.audit.record(
+                self._event("activated", candidate, correlation_id, principal)
+            )
             completed = uow.operations.complete(
                 operation_id,
                 {"version_id": str(version_id), "state": VersionState.ACTIVE.value},

@@ -23,12 +23,12 @@ export FORGEML_ENVIRONMENT  ?= development
 export FORGEML_DATABASE_URL ?= postgresql+psycopg://forgeml:forgeml@127.0.0.1:$(PG_PORT)/forgeml
 
 .DEFAULT_GOAL := help
-.PHONY: help setup db db-stop migrate run test lint verify example clean
+.PHONY: help setup db db-stop migrate run key test lint verify example clean
 
 help: ## Show this help
 	@grep -hE '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) | awk -F':.*?## ' '{printf "  \033[1m%-12s\033[0m %s\n", $$1, $$2}'
 	@echo ""
-	@echo "  First time:  make setup && make db && make migrate && make run"
+	@echo "  First time:  make setup && make db && make migrate && make key && make run"
 
 setup: ## Create the venv (Python 3.11) and install locked dependencies
 	@command -v python3.11 >/dev/null 2>&1 || { echo "error: Python 3.11 is required (ADR-013). Install it, or use 'uv python install 3.11'."; exit 1; }
@@ -58,6 +58,9 @@ run: ## Run the control plane on http://127.0.0.1:8000
 
 example: ## Build examples/hello-model.forge, ready to upload
 	python3 scripts/forge_pack.py examples/hello-model
+
+key: ## Mint an API key (ADR-026: key admin is out-of-band, never over HTTP)
+	@cd $(BACKEND) && $(PY) -m forgeml.identity create --name "$(or $(NAME),local-dev)"
 
 test: ## Run the full test suite (needs 'make db')
 	cd $(BACKEND) && $(PY) -m pytest -q

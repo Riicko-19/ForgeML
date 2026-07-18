@@ -7,6 +7,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, File, Header, Query, Response, UploadFile, status
 
+from forgeml.api.authentication import CurrentPrincipal
 from forgeml.api.schemas import ErrorEnvelope
 from forgeml.api.v1.schemas import (
     DEFAULT_PAGE_SIZE,
@@ -71,6 +72,7 @@ def create_package_router(service: PackageService) -> APIRouter:
     def upload_package(
         response: Response,
         file: Annotated[UploadFile, File()],
+        principal: CurrentPrincipal,
         idempotency_key: Annotated[IdempotencyKey | None, Header()] = None,
     ) -> OperationResource:
         if idempotency_key is None:
@@ -87,6 +89,7 @@ def create_package_router(service: PackageService) -> APIRouter:
             filename=_safe_filename(file),
             idempotency_key=idempotency_key,
             correlation_id=_correlation_id(),
+            principal=principal,
         )
         response.headers["Location"] = f"/v1/operations/{operation.id}"
         return OperationResource.of(operation)

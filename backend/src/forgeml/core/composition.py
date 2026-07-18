@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from forgeml.api.authentication import AuthenticationMiddleware
 from forgeml.api.error_handlers import register_error_handlers
 from forgeml.api.health import create_health_router
 from forgeml.api.middleware import RequestContextMiddleware
@@ -15,6 +16,7 @@ from forgeml.api.v1.operations import create_operation_router
 from forgeml.api.v1.packages import create_package_router
 from forgeml.api.v1.predictions import create_prediction_router
 from forgeml.application.deployment.services import DeploymentServices
+from forgeml.application.identity.services import ApiKeyVerifier
 from forgeml.application.operations.services import OperationService
 from forgeml.application.package.services import PackageService
 from forgeml.application.routing.services import RouteManager
@@ -42,6 +44,10 @@ class Container:
             limits=settings.package_limits,
         )
         self.operations = OperationService(unit_of_work=self.database.unit_of_work)
+        # Epic 1: the credential verifier. ApiKeyVerifier is one implementation
+        # of the CredentialVerifier port; a future JWT or OIDC verifier is
+        # composed here and nothing above this line changes (ADR-024).
+        self.verifier = ApiKeyVerifier(unit_of_work=self.database.unit_of_work)
         # Module 6: the real runtime. The Docker adapter resolves the package
         # archive through the same artifact store and reads its src/ into the
         # build context; nothing above the RuntimeManager port changes.
@@ -105,5 +111,9 @@ def create_application(settings: AppSettings) -> FastAPI:
         create_admin_router(container.deployments.reconciliation), prefix=API_PREFIX
     )
     app.include_router(create_prediction_router(container.routing), prefix=API_PREFIX)
+    # Order matters. add_middleware prepends, so the last added is outermost:
+    # request context wraps authentication, which means a 401 still carries a
+    # server-owned request id and is still logged like any other response.
+    app.add_middleware(AuthenticationMiddleware, verifier=container.verifier)
     app.add_middleware(RequestContextMiddleware)
     return app

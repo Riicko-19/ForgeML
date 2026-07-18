@@ -21,6 +21,7 @@ from forgeml.application.unit_of_work import UnitOfWork
 from forgeml.core.errors import AppError, ErrorCategory
 from forgeml.domain.audit.models import ActorType, AuditEvent
 from forgeml.domain.deployment.models import DeploymentVersion, VersionState
+from forgeml.domain.identity.models import Principal
 from forgeml.domain.operations.models import Operation, OperationFailure
 from forgeml.domain.package.models import InferenceContract
 
@@ -71,10 +72,24 @@ class OperationAwareService:
 
     @staticmethod
     def _event(
-        action: str, version: DeploymentVersion, correlation_id: UUID
+        action: str,
+        version: DeploymentVersion,
+        correlation_id: UUID,
+        principal: Principal | None = None,
     ) -> AuditEvent:
+        """One lifecycle audit record, attributed when there is someone to blame.
+
+        `principal` is optional because these events have two origins. A command
+        the operator issued carries their identity. The same event re-emitted by
+        ADR-016 crash recovery, after the request that asked for it is long
+        gone, carries none -- and records SYSTEM, which is what actually
+        happened. Inventing an actor for the recovered case would put a false
+        claim in an append-only trail.
+        """
+
         return AuditEvent(
-            actor_type=ActorType.SYSTEM,
+            actor_type=ActorType.SYSTEM if principal is None else principal.actor_type,
+            actor_id=None if principal is None else principal.actor_id,
             action=f"deployment_version.{action}",
             target_type="deployment_version",
             target_id=str(version.id),

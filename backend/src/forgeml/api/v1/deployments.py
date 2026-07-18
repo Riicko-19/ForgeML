@@ -17,6 +17,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Header, Query, Response, status
 
+from forgeml.api.authentication import CurrentPrincipal
 from forgeml.api.schemas import ErrorEnvelope
 from forgeml.api.v1.schemas import (
     DEFAULT_PAGE_SIZE,
@@ -74,8 +75,12 @@ def create_deployment_router(services: DeploymentServices) -> APIRouter:
         responses=_ERRORS,
         summary="Create a named deployment",
     )
-    def create_deployment(body: CreateDeploymentRequest) -> DeploymentResource:
-        deployment = services.lifecycle.create_deployment(body.name, _correlation_id())
+    def create_deployment(
+        body: CreateDeploymentRequest, principal: CurrentPrincipal
+    ) -> DeploymentResource:
+        deployment = services.lifecycle.create_deployment(
+            body.name, _correlation_id(), principal
+        )
         return DeploymentResource.of(deployment)
 
     @router.get(
@@ -116,6 +121,7 @@ def create_deployment_router(services: DeploymentServices) -> APIRouter:
         deployment_id: UUID,
         body: CreateVersionRequest,
         response: Response,
+        principal: CurrentPrincipal,
         idempotency_key: Annotated[IdempotencyKey | None, Header()] = None,
     ) -> OperationResource:
         policy = (body.resource_policy or ResourcePolicyModel()).to_domain()
@@ -125,6 +131,7 @@ def create_deployment_router(services: DeploymentServices) -> APIRouter:
             resource_policy=policy,
             idempotency_key=_require_key(idempotency_key),
             correlation_id=_correlation_id(),
+            principal=principal,
         )
         response.headers["Location"] = f"/v1/operations/{operation.id}"
         return OperationResource.of(operation)
@@ -149,6 +156,7 @@ def create_deployment_router(services: DeploymentServices) -> APIRouter:
         deployment_id: UUID,
         version_id: UUID,
         response: Response,
+        principal: CurrentPrincipal,
         idempotency_key: Annotated[IdempotencyKey | None, Header()] = None,
     ) -> OperationResource:
         operation = services.activation.activate_version(
@@ -156,6 +164,7 @@ def create_deployment_router(services: DeploymentServices) -> APIRouter:
             version_id=version_id,
             idempotency_key=_require_key(idempotency_key),
             correlation_id=_correlation_id(),
+            principal=principal,
         )
         response.headers["Location"] = f"/v1/operations/{operation.id}"
         return OperationResource.of(operation)
@@ -171,12 +180,14 @@ def create_deployment_router(services: DeploymentServices) -> APIRouter:
         deployment_id: UUID,
         version_id: UUID,
         response: Response,
+        principal: CurrentPrincipal,
         idempotency_key: Annotated[IdempotencyKey | None, Header()] = None,
     ) -> OperationResource:
         operation = services.lifecycle.stop_version(
             version_id=version_id,
             idempotency_key=_require_key(idempotency_key),
             correlation_id=_correlation_id(),
+            principal=principal,
         )
         response.headers["Location"] = f"/v1/operations/{operation.id}"
         return OperationResource.of(operation)
@@ -200,6 +211,11 @@ def create_admin_router(service: ReconciliationService) -> APIRouter:
         response: Response,
         idempotency_key: Annotated[IdempotencyKey | None, Header()] = None,
     ) -> OperationResource:
+        # No principal. A reconciliation finding says the runtime drifted from
+        # the record -- an observation the container made true on its own, not
+        # an act by whoever triggered the sweep. Attributing it to the caller
+        # would put a false claim in an append-only trail. The trigger stays
+        # traceable through the operation's correlation id and the request log.
         operation = service.reconcile(
             idempotency_key=_require_key(idempotency_key),
             correlation_id=_correlation_id(),

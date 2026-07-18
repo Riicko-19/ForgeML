@@ -19,6 +19,7 @@ class ErrorCategory(StrEnum):
     """Transport-neutral classes of expected application failure."""
 
     BAD_REQUEST = "bad_request"
+    UNAUTHENTICATED = "unauthenticated"
     NOT_FOUND = "not_found"
     CONFLICT = "conflict"
     VALIDATION = "validation"

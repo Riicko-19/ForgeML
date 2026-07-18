@@ -22,6 +22,7 @@ from forgeml.application.unit_of_work import UnitOfWork
 from forgeml.core.config import PackageLimits
 from forgeml.core.errors import AppError, ErrorCategory
 from forgeml.domain.audit.models import ActorType, AuditEvent
+from forgeml.domain.identity.models import Principal
 from forgeml.domain.operations.models import (
     Operation,
     OperationFailure,
@@ -75,6 +76,7 @@ class PackageService:
         filename: str,
         idempotency_key: str,
         correlation_id: UUID,
+        principal: Principal,
     ) -> Operation:
         """Store an archive, validate it, and return its durable operation."""
 
@@ -102,7 +104,8 @@ class PackageService:
             )
             uow.audit.record(
                 AuditEvent(
-                    actor_type=ActorType.OPERATOR,
+                    actor_type=principal.actor_type,
+                    actor_id=principal.actor_id,
                     action="package.uploaded",
                     target_type="package",
                     target_id=str(package.id),
