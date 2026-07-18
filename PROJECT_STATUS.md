@@ -34,7 +34,7 @@ Backend Development
 | 4 | Analyzer / Generator | ⬛ Implemented — freeze pending CI |
 | 5 | Deployment | ⬛ Implemented — freeze pending CI |
 | 6 | Docker Runtime | ⬛ Implemented — freeze pending CI |
-| 7 | Routing / Versioning | ⬜ Not Started |
+| 7 | Routing / Versioning | ⬛ Implemented — freeze pending CI |
 | 8 | Monitoring | ⬜ Not Started |
 | 9 | Dashboard | ⬜ Not Started |
 | 10 | Hardening / Release | ⬜ Not Started |
@@ -129,34 +129,30 @@ ADR-016 (operation lease, crash recovery, retry).
 
 ## Current Module
 
-**Module 6 — Docker Runtime**
+**Module 7 — Platform Routing & Version Activation**
 
 Status: **Implementation complete. NOT frozen** — ADR-014 requires passing
 GitHub Actions evidence on the frozen SHA, and the changes are not yet pushed.
 
-Scope (doc 06): image/container/network/health adapter.
-Entry gate: deployment semantics frozen — satisfied by the Module 5 runtime port.
-Exit gate: a disposable Docker test proves labels, limits, isolation, and
-cleanup — **all passing**.
+Scope (doc 06): stable route, activation/rollback, retention.
+Entry gate: ready/active semantics frozen — satisfied by the Module 5 state machine.
+Exit gate: replacement/rollback tests — **all passing**.
 
-Delivered: `DockerRuntimeManager` implementing the frozen `RuntimeManager` port via
-the Docker CLI behind an injectable seam; a standard-library serving harness
-(`/health`, `/predict`) and the Dockerfile serving layer; `DeploymentService`
-composed onto the Docker adapter with the deployment/admin routers mounted; an
-isolated egress-free runtime network; disposable-Docker integration coverage.
+Delivered: `activate_version` (durable, health-gated, atomic route swap under the
+deployment lock) and rollback as activation of a prior version; `mark_active` /
+`mark_deactivated` transition rules; route removal on stop-of-active; `RouteManager`
+and the platform prediction route `POST /v1/deployments/{name}/predict`; a
+provider-neutral `PredictionGateway` port with a standard-library HTTP adapter.
 
-Prerequisite fix: ADR-017 corrected a latent Module 4 defect (generated adapter
-embedded JSON `false`/`true`/`null` as Python source) that Module 6 was the first
-to import.
+Local evidence: full suite green (583 tests), 97% branch coverage, mypy strict /
+ruff / black clean; activation/rollback/health-refusal and the prediction proxy
+(input 422, unavailable 503, runtime-failure 502) are all covered.
 
-Local evidence: full suite green, 98% branch coverage, mypy strict / ruff / black
-clean; the disposable-Docker test builds, starts, predicts, reconciles, and cleans
-up a real container and asserts the ADR-001 isolation baseline.
+Design: docs 37
 
-Design: docs 36 · Decision: ADR-017
-
-DeploymentService still depends only on the `RuntimeManager` protocol; Docker logic
-is isolated in `infrastructure/runtime/`; no Module 7 functionality was introduced.
+RouteManager depends only on the deployment service and the `RuntimeManager` /
+`PredictionGateway` ports; the frozen `RuntimeManager` contract is unchanged; no
+Module 8 (monitoring) functionality was introduced.
 
 ---
 
