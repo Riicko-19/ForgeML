@@ -174,3 +174,38 @@ ID is returned in the X-Request-ID response header and used for request-scoped l
 
 **Consequences:** Untrusted clients cannot create collisions or inject log identifiers.
 Trusted upstream trace propagation requires a future approved proxy-boundary decision.
+
+## ADR-017 — Generated runtime adapter emits valid Python literals
+
+**Status:** Accepted 2026-07-18
+**Owner:** Chief Architect (fix implemented under Module 6)
+
+**Context:** Module 4's generator embedded the inference schemas into the generated
+`forge_adapter.py` with `json.dumps`, producing JSON literals (`false`, `true`, `null`)
+as Python source. These are syntactically valid identifiers, so `compile`/`ast.parse`
+and every Module 4 test passed, but they are undefined *names* at runtime: importing
+the module raises `NameError`. Module 5 drove the lifecycle against a fake runtime and
+never imported the adapter, so the defect was latent until Module 6 built and started a
+real container, where the reference package's `additionalProperties: false` crashed the
+runtime before it could become healthy.
+
+**Decision:** The generated adapter must be valid, importable Python. The generator
+emits the schemas as deterministic Python literals via `pprint.pformat(schema,
+sort_dicts=True)` — `True`/`False`/`None`, key-sorted for byte-stability — instead of
+`json.dumps`. This is a correctness fix to a frozen module, authorized here rather than
+edited silently: the Senior Implementation Engineer surfaced it as an investigation
+report and it was approved before the change.
+
+**Consequences:** The generated `forge_adapter.py` content changes, so the Module 4
+artifact identity (`GeneratedBuildContext.identity`) changes value. Determinism and
+input-sensitivity — the actual Module 4 exit-gate properties — are preserved, and no
+test or persisted record pins a specific identity value, so nothing downstream breaks.
+No package needs rebuilding: no version had yet been built through the real runtime
+(Module 6 is the first). Static validity is necessary but not sufficient for generated
+code; a generated runtime artifact must be exercised by an execution test, which the
+Module 6 disposable-Docker integration test now provides.
+
+**Alternatives:** Repairing the adapter from inside Module 6's serving harness (importing
+the model entrypoint directly) was rejected: the entrypoint lives only in the generated
+adapter, so reconstructing it would duplicate Module 4's responsibility and pull manifest
+parsing into the runtime adapter's lane.

@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import pprint
 from collections.abc import Mapping
 from dataclasses import dataclass
 
@@ -60,11 +61,15 @@ def _dockerfile(runtime: str) -> str:
 
 
 def _adapter(contract: InferenceContract) -> str:
-    # Canonical JSON (sorted keys) keeps the embedded schemas byte-stable across
-    # runs. The adapter only wires the entrypoint and schemas; validation and
-    # serving are added around it by the runtime module (Module 6).
-    input_schema = json.dumps(contract.input_schema, indent=4, sort_keys=True)
-    output_schema = json.dumps(contract.output_schema, indent=4, sort_keys=True)
+    # Embed the schemas as deterministic *Python* literals. pformat with
+    # sort_dicts keeps them byte-stable across runs (the property the artifact
+    # identity depends on) and, unlike json.dumps, emits True/False/None rather
+    # than JSON's true/false/null -- which are not Python names and would raise
+    # NameError the moment the runtime imports this module (ADR-017). The adapter
+    # only wires the entrypoint and schemas; validation and serving are added
+    # around it by the runtime module (Module 6).
+    input_schema = pprint.pformat(dict(contract.input_schema), sort_dicts=True)
+    output_schema = pprint.pformat(dict(contract.output_schema), sort_dicts=True)
     return (
         '"""Generated ForgeML runtime adapter. Do not edit."""\n\n'
         "import importlib\n\n"
