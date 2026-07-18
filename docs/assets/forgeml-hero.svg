@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" width="1200" height="300" fill="none" role="img" aria-label="ForgeML — ship a model as a versioned prediction API, without writing Docker or FastAPI. Pipeline: package, validate, build, run, activate, predict.">
+  <defs>
+    <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0.75"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="sparkGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fbbf24" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#fbbf24" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="brandClip">
+      <text x="88" y="122" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="82" font-weight="800" letter-spacing="-2">ForgeML</text>
+    </clipPath>
+    <style>
+      .ground   { fill: #ffffff; }
+      .brandFill { fill: #0b1324; }
+      .tag      { fill: #313a46; }
+      .subtag   { fill: #59636e; }
+      .rail      { stroke: #d1d9e0; }
+      .nodeRing  { stroke: #c4ccd4; fill: #ffffff; }
+      .nodeLabel { fill: #59636e; }
+      .kicker    { fill: #6b7480; }
+      .frame     { stroke: #e4e8ec; }
+      @media (prefers-color-scheme: dark) {
+        .ground   { fill: #0d1117; }
+        .brandFill { fill: #f0f6fc; }
+        .tag      { fill: #c9d3de; }
+        .subtag   { fill: #8b949e; }
+        .rail      { stroke: #30363d; }
+        .nodeRing  { stroke: #3d444d; fill: #0d1117; }
+        .nodeLabel { fill: #8b949e; }
+        .kicker    { fill: #7d8590; }
+        .frame     { stroke: #21262d; }
+      }
+      text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; }
+
+      .sheen { animation: sweep 5s ease-in-out infinite; }
+      @keyframes sweep {
+        0%   { transform: translateX(-260px); }
+        55%  { transform: translateX(560px); }
+        100% { transform: translateX(560px); }
+      }
+      .flow { animation: dash 0.9s linear infinite; }
+      @keyframes dash { to { stroke-dashoffset: -16; } }
+
+      .spark { animation: travel 6s linear infinite; }
+      @keyframes travel {
+        0%   { transform: translateX(0);     opacity: 0; }
+        5%   { opacity: 1; }
+        95%  { opacity: 1; }
+        100% { transform: translateX(900px); opacity: 0; }
+      }
+      .halo { transform-box: fill-box; transform-origin: center; opacity: 0; animation: pop 6s ease-in-out infinite; }
+      @keyframes pop {
+        0%   { opacity: 0; transform: scale(0.5); }
+        3%   { opacity: 0.85; transform: scale(1.7); }
+        11%  { opacity: 0; transform: scale(0.5); }
+        100% { opacity: 0; transform: scale(0.5); }
+      }
+      .dot { transform-box: fill-box; transform-origin: center; animation: lift 6s ease-in-out infinite; }
+      @keyframes lift {
+        0%, 100% { transform: scale(1); }
+        4%       { transform: scale(1.35); }
+        12%      { transform: scale(1); }
+      }
+      .n0 .halo, .n0 .dot { animation-delay: 0s; }
+      .n1 .halo, .n1 .dot { animation-delay: 1s; }
+      .n2 .halo, .n2 .dot { animation-delay: 2s; }
+      .n3 .halo, .n3 .dot { animation-delay: 3s; }
+      .n4 .halo, .n4 .dot { animation-delay: 4s; }
+      .n5 .halo, .n5 .dot { animation-delay: 5s; }
+
+      @media (prefers-reduced-motion: reduce) {
+        .sheen, .flow, .spark, .halo, .dot { animation: none; }
+        .sheen { transform: translateX(200px); opacity: 0.25; }
+        .spark { opacity: 0; }
+        .halo  { opacity: 0; }
+      }
+    </style>
+  </defs>
+
+  <rect class="ground" x="0" y="0" width="1200" height="300" rx="14"/>
+  <rect class="frame" x="0.5" y="0.5" width="1199" height="299" rx="14" fill="none"/>
+
+  <!-- kicker -->
+  <text class="kicker" x="90" y="52" font-size="14" font-weight="600" letter-spacing="3">SELF-HOSTED MODEL DEPLOYMENT CONTROL PLANE</text>
+
+  <!-- wordmark with metal sheen sweeping across the letters -->
+  <g clip-path="url(#brandClip)">
+    <rect class="brandFill" x="84" y="52" width="560" height="86"/>
+    <rect class="sheen" x="84" y="46" width="150" height="98" fill="url(#sheen)" transform="skewX(-18)"/>
+  </g>
+
+  <!-- taglines -->
+  <text class="tag" x="90" y="176" font-size="25" font-weight="650">Ship a model as a versioned prediction API.</text>
+  <text class="subtag" x="90" y="205" font-size="16">You write <tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15">predict()</tspan>. ForgeML builds, hardens, versions, and routes it — no Docker, no FastAPI.</text>
+
+  <!-- pipeline rail -->
+  <line class="rail" x1="150" y1="256" x2="1050" y2="256" stroke-width="2"/>
+  <line class="rail flow" x1="150" y1="256" x2="1050" y2="256" stroke-width="2" stroke-dasharray="6 10" opacity="0.6"/>
+
+  <!-- traveling spark -->
+  <g class="spark">
+    <circle cx="150" cy="256" r="16" fill="url(#sparkGlow)"/>
+    <circle cx="150" cy="256" r="4.5" fill="#fbbf24"/>
+  </g>
+
+  <!-- nodes: package, validate, build, run, activate -> accent; predict -> success -->
+  <g class="n0"><circle class="halo" cx="150" cy="256" r="9" fill="#3b82f6"/><circle class="nodeRing dot" cx="150" cy="256" r="7" stroke-width="2.5"/><text class="nodeLabel" x="150" y="286" font-size="12.5" font-weight="600" letter-spacing="1.2" text-anchor="middle">PACKAGE</text></g>
+  <g class="n1"><circle class="halo" cx="330" cy="256" r="9" fill="#3b82f6"/><circle class="nodeRing dot" cx="330" cy="256" r="7" stroke-width="2.5"/><text class="nodeLabel" x="330" y="286" font-size="12.5" font-weight="600" letter-spacing="1.2" text-anchor="middle">VALIDATE</text></g>
+  <g class="n2"><circle class="halo" cx="510" cy="256" r="9" fill="#3b82f6"/><circle class="nodeRing dot" cx="510" cy="256" r="7" stroke-width="2.5"/><text class="nodeLabel" x="510" y="286" font-size="12.5" font-weight="600" letter-spacing="1.2" text-anchor="middle">BUILD</text></g>
+  <g class="n3"><circle class="halo" cx="690" cy="256" r="9" fill="#3b82f6"/><circle class="nodeRing dot" cx="690" cy="256" r="7" stroke-width="2.5"/><text class="nodeLabel" x="690" y="286" font-size="12.5" font-weight="600" letter-spacing="1.2" text-anchor="middle">RUN</text></g>
+  <g class="n4"><circle class="halo" cx="870" cy="256" r="9" fill="#3b82f6"/><circle class="nodeRing dot" cx="870" cy="256" r="7" stroke-width="2.5"/><text class="nodeLabel" x="870" y="286" font-size="12.5" font-weight="600" letter-spacing="1.2" text-anchor="middle">ACTIVATE</text></g>
+  <g class="n5"><circle class="halo" cx="1050" cy="256" r="9" fill="#10b981"/><circle class="nodeRing dot" cx="1050" cy="256" r="7.5" stroke="#10b981" fill="#10b981" fill-opacity="0.12" stroke-width="2.5"/><text class="nodeLabel" x="1050" y="286" font-size="12.5" font-weight="700" letter-spacing="1.2" text-anchor="middle" fill="#10b981">PREDICT</text></g>
+</svg>
