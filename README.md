@@ -20,13 +20,13 @@
 
 <div align="center">
 
-| **583+** | **97%** | **17** | **8 / 11** |
+| **593** | **97%** | **21** | **8 / 11** |
 |:--:|:--:|:--:|:--:|
 | automated tests | branch coverage | decision records | modules built |
 
 **Hexagonal architecture** · **Contract-first development** · **Deterministic builds** · **Repository-first engineering**
 
-<sub>[Vision](#vision) · [Why ForgeML](#why-forgeml) · [Quick start](#quick-start) · [Architecture](#architecture) · [Security](#security-model) · [Roadmap](#roadmap) · [Why not Kubernetes](#why-not-kubernetes) · [FAQ](#faq)</sub>
+<sub>[Vision](#vision) · [Why ForgeML](#why-forgeml) · [Quick start](#quick-start) · [Architecture](#architecture) · [Security](#security-model) · [Roadmap](#roadmap) · [Why not Kubernetes](#why-not-kubernetes) · [FAQ](#faq) · [Contributing](CONTRIBUTING.md)</sub>
 
 </div>
 
@@ -208,13 +208,13 @@ Within that boundary, isolation is defense-in-depth — not a safe sandbox for h
 
 The V1 backend is built module by module. A contract freezes before anything depends on it, and a module is *frozen* only with passing CI evidence on its exact commit (ADR-014). Live truth is always [PROJECT_STATUS.md](PROJECT_STATUS.md).
 
-<div align="center"><img src="docs/assets/module-roadmap.svg" alt="Roadmap: phases 0–7 done (0–2 frozen, 3–7 implemented), phase 8 monitoring in progress, phases 9 dashboard and 10 release planned" width="100%"></div>
+<div align="center"><img src="docs/assets/module-roadmap.svg" alt="Roadmap: phases 0–7 done (0–2 frozen, 3–7 implemented), phases 8 monitoring, 9 dashboard and 10 release planned" width="100%"></div>
 
 | Phase | Module | State |
 | --- | --- | --- |
 | 0–2 | Foundation · Forge Package · Metadata | **Frozen** — CI evidence on the frozen commit |
 | 3–7 | Backend API · Analyzer/Generator · Deployment · Docker Runtime · Routing | **Implemented** — full checkpoint green, freeze pending CI |
-| 8 | Monitoring — logs, metrics, retention | **In progress** |
+| 8 | Monitoring — logs, observations, retention | Planned — next |
 | 9 | Dashboard | Planned |
 | 10 | Hardening & release — backups, SBOM/scan, performance | Planned |
 
@@ -225,7 +225,7 @@ The V1 backend is built module by module. A contract freezes before anything dep
 This repository treats its own process as a product.
 
 - **One checkpoint, everywhere.** `make verify` runs the exact gates CI runs — format (`black`), lint (`ruff`), types (`mypy --strict`), the full test suite, contract tests, a locked build, and an installed-wheel smoke test — on Python 3.11 against a real PostgreSQL 16. Green locally means green in CI.
-- **583 tests, ~97% branch coverage**, spanning unit, contract (run against real adapters *and* their fakes), integration (real PostgreSQL, disposable Docker), end-to-end, and architecture (dependency-direction) tests.
+- **593 tests, 97% branch coverage**, spanning unit, contract (run against real adapters *and* their fakes), integration (real PostgreSQL, disposable Docker), end-to-end, and architecture (dependency-direction) tests.
 - **Decisions are written down.** 17 Architecture Decision Records capture the *why*, with rejected alternatives, so they are not re-litigated.
 - **[`.forgeos/`](.forgeos/)** — a repository-first engineering operating system: governance, roles, workflows, and templates, so any contributor can clone the repo and contribute correctly without prior context.
 
@@ -275,11 +275,16 @@ ForgeML's philosophy is narrow on purpose: **single server, deterministic, expli
 
 | Where | What |
 | --- | --- |
-| [PROJECT_STATUS.md](PROJECT_STATUS.md) | What is frozen, what is next, and the evidence |
+| [PROJECT_STATUS.md](PROJECT_STATUS.md) | **Source of truth** — what is frozen, what is next, and the evidence |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Setup, the checkpoint, architectural rules, how to open a PR |
+| [GOVERNANCE.md](GOVERNANCE.md) | Which documentation root owns what, and the authority order |
+| [SECURITY.md](SECURITY.md) | Security model, current posture, how to report a vulnerability |
+| [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | How work moves from idea to frozen module |
+| [docs/RELEASE.md](docs/RELEASE.md) | Versioning, compatibility promise, release steps |
 | [backend/README.md](backend/README.md) | Configuration reference, API, quality gates |
 | [`ForgeML_Engineering_Kit_Phase0/docs/`](ForgeML_Engineering_Kit_Phase0/docs/) | Architecture, ADRs, per-module designs |
 | [docs/postman/](docs/postman/) | The API, hands-on, with assertions |
-| [.forgeos/](.forgeos/) | Engineering governance and process |
+| [.forgeos/](.forgeos/) | Engineering process and governance |
 
 ---
 
@@ -293,7 +298,9 @@ Kept out **on purpose**, so the core stays sharp. Each would require an ADR to e
 
 ## License
 
-A license has **not** been finalized yet. Until one is added, all rights are reserved by the author — please open an issue if you need clarity on usage. A license file will land before the first tagged release.
+[Apache License 2.0](LICENSE). Contributions are accepted under the same license.
+
+ForgeML is **pre-1.0** and carries no compatibility guarantee until 1.0 ships — see [ADR-021](ForgeML_Engineering_Kit_Phase0/docs/10_ARCHITECTURE_DECISIONS.md) and [docs/RELEASE.md](docs/RELEASE.md) for the versioning and compatibility policy.
 
 ---
 
