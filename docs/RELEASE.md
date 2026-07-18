@@ -57,7 +57,7 @@ Nothing is ever removed in a patch release.
 ## Branch strategy
 
 `main` is the only long-lived branch and is always releasable. Work merges via
-pull request with `make verify` green. Releases are annotated tags: `v0.9.0`.
+pull request with `make verify` green. Releases are annotated tags: `v0.9.1`.
 
 No release branches before 1.0 — with one supported version there is nothing to
 back-port to, and an unused branch strategy is a process that exists only to be
@@ -94,10 +94,14 @@ make setup
 # 4. Update PROJECT_STATUS.md and write the release notes
 
 # 5. Commit, tag, push
-git commit -am "release: v0.9.0"
-git tag -a v0.9.0 -m "ForgeML 0.9.0"
+git commit -am "release: v0.9.1"
+git tag -a v0.9.1 -m "ForgeML 0.9.1"
 git push origin main --tags
 ```
+
+Step 3 regenerates both lock files. `make setup` must leave `requirements.lock`
+and `requirements-dev.lock` byte-identical to what CI recompiles, because CI
+`cmp`s them — a lock that only reproduces on one machine fails the build.
 
 ### Checklist
 
@@ -115,7 +119,7 @@ git push origin main --tags
 ## Release notes format
 
 ```markdown
-## v0.9.0 — 2026-07-18
+## v0.9.1 — 2026-07-18
 
 ### Breaking
 <!-- Nothing, or: what broke and exactly how to migrate. -->
@@ -141,16 +145,22 @@ Before 1.0: only the latest release is supported. See
 
 ## Release readiness for 1.0
 
-ForgeML reaches 1.0 when Modules 8, 9, and 10 are complete and frozen:
+ForgeML reaches 1.0 when the remaining phases are complete and frozen:
 
-| Requirement | Module | State |
+| Requirement | Phase | State |
 | --- | --- | --- |
 | Monitoring and observability | 8 | Not started |
-| Authentication and authorization | 9 | ADRs recorded (018–019); not implemented |
+| Dashboard | 9 | Not started |
+| Authentication and authorization | *unassigned* | ADRs recorded (018–019); no phase yet — pending ADR-022 |
+| Rate limiting | *with authentication* | Deferred by ADR-019 |
 | Retention and disk-pressure policy | 10 | ADR-012 recorded; not implemented |
 | Build-time isolation hardening | 10 | Gap documented in `SECURITY.md` |
-| Rate limiting | 9 | Deferred by ADR-019 |
 | Release automation | 10 | Policy recorded here; not implemented |
+
+The authentication rows carry no phase number on purpose. The frozen roadmap
+(`06_IMPLEMENTATION_ROADMAP.md`) defines no authentication phase, and assigning
+one is an amendment to that document requiring ADR-022 — not an edit here. See
+the open decision recorded in [`PROJECT_STATUS.md`](../PROJECT_STATUS.md).
 
 Declaring 1.0 before these means promising compatibility for a surface that is
 still moving.

@@ -20,7 +20,7 @@
 
 <div align="center">
 
-| **593** | **97%** | **21** | **8 / 11** |
+| **594** | **97%** | **21** | **8 / 11** |
 |:--:|:--:|:--:|:--:|
 | automated tests | branch coverage | decision records | modules built |
 
@@ -225,7 +225,7 @@ The V1 backend is built module by module. A contract freezes before anything dep
 This repository treats its own process as a product.
 
 - **One checkpoint, everywhere.** `make verify` runs the exact gates CI runs — format (`black`), lint (`ruff`), types (`mypy --strict`), the full test suite, contract tests, a locked build, and an installed-wheel smoke test — on Python 3.11 against a real PostgreSQL 16. Green locally means green in CI.
-- **593 tests, 97% branch coverage**, spanning unit, contract (run against real adapters *and* their fakes), integration (real PostgreSQL, disposable Docker), end-to-end, and architecture (dependency-direction) tests.
+- **594 tests, 97% branch coverage**, spanning unit, contract (run against real adapters *and* their fakes), integration (real PostgreSQL, disposable Docker), end-to-end, and architecture (dependency-direction) tests.
 - **Decisions are written down.** 17 Architecture Decision Records capture the *why*, with rejected alternatives, so they are not re-litigated.
 - **[`.forgeos/`](.forgeos/)** — a repository-first engineering operating system: governance, roles, workflows, and templates, so any contributor can clone the repo and contribute correctly without prior context.
 
@@ -276,11 +276,13 @@ ForgeML's philosophy is narrow on purpose: **single server, deterministic, expli
 | Where | What |
 | --- | --- |
 | [PROJECT_STATUS.md](PROJECT_STATUS.md) | **Source of truth** — what is frozen, what is next, and the evidence |
+| [CHANGELOG.md](CHANGELOG.md) | What changed in each release |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Setup, the checkpoint, architectural rules, how to open a PR |
 | [GOVERNANCE.md](GOVERNANCE.md) | Which documentation root owns what, and the authority order |
 | [SECURITY.md](SECURITY.md) | Security model, current posture, how to report a vulnerability |
 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | How work moves from idea to frozen module |
 | [docs/RELEASE.md](docs/RELEASE.md) | Versioning, compatibility promise, release steps |
+| [docs/DEPENDENCY_REPORT.md](docs/DEPENDENCY_REPORT.md) | Advisories, licenses, pinning, and how to reproduce the audit |
 | [backend/README.md](backend/README.md) | Configuration reference, API, quality gates |
 | [`ForgeML_Engineering_Kit_Phase0/docs/`](ForgeML_Engineering_Kit_Phase0/docs/) | Architecture, ADRs, per-module designs |
 | [docs/postman/](docs/postman/) | The API, hands-on, with assertions |

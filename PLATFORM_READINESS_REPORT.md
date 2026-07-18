@@ -1,396 +1,422 @@
 # ForgeML Platform Readiness Report
 
-**Milestone:** ForgeML 0.9 — Stabilization & Platform Readiness
+**Milestone:** ForgeML 0.9.1 — Platform Freeze & Release Readiness
 **Date:** 2026-07-18
-**Baseline:** `0875662` + the 0.9 stabilization changes
-**Predecessor:** [Pre-Authentication Engineering Review](ForgeML_Engineering_Kit_Phase0/docs/38_PRE_AUTH_ENGINEERING_REVIEW.md)
+**Baseline SHA:** `f6a2c3c` (plus the documentation commit carrying this report)
+**Supersedes:** the 0.9 report of the same name
 
-This is the official checkpoint between ForgeML 0.9 and the authentication
-module. The engineering review asked *is the architecture healthy?* and answered
-"yes, with conditions." This report answers *were those conditions met?* and
-records what the repository looks like now.
+This is the official checkpoint between ForgeML 0.9.1 and the authentication
+module. It replaces the 0.9 report rather than sitting beside it: one readiness
+document, always describing the current baseline.
 
-It is a snapshot, not a decision record. Decisions made during this milestone are
-ADR-018 through ADR-021.
+**What changed in method.** The 0.9 report scored a repository largely by
+reading it. This one re-derived every claim from a clean clone — the test count,
+the coverage figure, the build, the wheel, the lock files, and the determinism of
+the package format were all reproduced from scratch. Three of the scores moved
+because measurement disagreed with documentation, and one security issue was
+found that no amount of reading would have surfaced.
 
 ---
 
 ## Executive Summary
 
-ForgeML 0.9 changed almost no behaviour and a great deal of clarity.
+ForgeML 0.9.1 is a verified engineering baseline. No features were added. The
+milestone's product is confidence: the difference between a repository that
+describes itself accurately and one that has been checked.
 
-The engineering review found an architecture that had survived seven modules
-without a single boundary violation, and a repository that had not kept up with
-it: a status file that contradicted itself, three Postman directories, 19 MB of
-generated output in version control, no license, and one 615-line service that
-the next module would have had to modify five times.
+Four things came out of the verification that reading had not found.
 
-All of that is resolved. The repository now tells one story, the governance says
-who owns which document, a fresh clone is clean, and the authentication module
-has four accepted ADRs waiting for it instead of four decisions to make under
-pressure. `DeploymentService` is four services totalling 820 lines across six
-files, and **593 tests pass before and after the split** — verified by running
-the suite on both states of the tree, not by assuming.
+**A real vulnerability.** `python-multipart` 0.0.20 carried six advisories, five
+of them reachable, all on the multipart parser behind package upload — an
+endpoint with no authentication in front of it. Two denial-of-service paths, an
+unbounded read triggered by a negative `Content-Length`, and a urlencoded parser
+differential. Upgrading to 0.0.32 clears every one. This is the single most
+valuable finding of the milestone and it existed for the entire 0.9 cycle
+undetected, because nothing in the repository ever ran an advisory check.
 
-Two things did not get resolved, and both are honest limitations rather than
-oversights. **No CI evidence exists for anything after `4aa140c`**, because the
-work has never been pushed; Modules 3–7 therefore cannot be frozen, and no
-document in this repository can change that — only a `git push` can.
-**Authentication still has no phase number**, because the frozen roadmap assigns
-Phase 9 to Dashboard and amending it is an ADR-level decision that was
-deliberately left open rather than made by edit.
+**A claimed invariant that nothing tested.** `ActivationService` documents that
+the route swap is atomic under the deployment row lock, and the lock is
+deliberately plain `FOR UPDATE` rather than `SKIP LOCKED` so a second activation
+waits instead of proceeding in parallel. No test drove two callers at one
+deployment. There is one now, against real PostgreSQL, and it was verified to
+fail when the lock is weakened — a concurrency test that cannot fail is
+decoration. This closes the last remaining High finding from the pre-auth review.
 
-The verdict is **YES WITH MINOR CONDITIONS**.
+**A version wrong on the wire.** `/health` and `/ready` report the installed
+distribution version, which was still the `0.1.0` scaffold default while every
+document said 0.9.
+
+**Reproducibility that holds.** A clean clone builds, tests, packages, and
+smoke-tests with no undocumented step. Both lock files recompile byte-identically.
+The example `.forge` package rebuilds to the same SHA-256 — ADR-003's determinism
+claim demonstrated rather than asserted.
+
+**The one thing this milestone could not do is the one thing that matters most
+for freezing.** Phase 1 required pushing and collecting CI evidence. The working
+environment has no git credentials and no `gh`, so nothing was pushed and no
+workflow was observed. Every CI step was reproduced locally instead — including
+the two lock-verification steps historically most likely to fail — but ADR-014 is
+explicit that local green is not freeze evidence. Modules 3–7 remain unfrozen.
 
 ---
 
 ## Scores
 
-Compared against the pre-milestone review. Same scale, same reviewer standard.
-
-| Dimension | Before | After | Movement |
+| Category | 0.9 | 0.9.1 | Direction |
 | --- | --- | --- | --- |
-| Repository Health | 6 / 10 | **9 / 10** | +3 |
-| Architecture Health | 9 / 10 | **9.5 / 10** | +0.5 |
-| Governance Health | 6 / 10 | **9 / 10** | +3 |
-| Security Readiness (pre-auth) | 7 / 10 | **8 / 10** | +1 |
-| Developer Experience | 8 / 10 | **9.5 / 10** | +1.5 |
-| Open Source Readiness | 3 / 10 | **9 / 10** | +6 |
+| Repository Overview / Health | 9.0 | **9.5** | ↑ |
+| Architecture Health | 9.5 | **9.5** | → |
+| Documentation Health | 9.0 | **9.5** | ↑ |
+| Governance Health | 9.0 | **9.0** | → |
+| Release Readiness | — | **8.0** | new |
+| Testing Confidence | — | **9.0** | new |
+| Dependency Health | — | **9.0** | new |
+| Security Readiness (pre-auth) | 8.0 | **8.5** | ↑ |
+| Developer Experience | 9.5 | **9.5** | → |
+| **Overall** | | **9.1 / 10** | |
 
-### Repository Health — 9 / 10
+---
 
-A clean clone now produces a clean `git status`. Generated graph output (288
-files, 19 MB), Postman's two sync directories, and two redundant kit archives are
-untracked and ignored — left on disk, removed from version control, so no local
-tooling breaks. Structure is intuitive: `backend/` is the platform, `docs/` is
-for contributors, the FEK is the specification, `.forgeos/` is the process.
+### Repository Overview / Health — 9.5 / 10
 
-Not 10: the FEK's document numbering still has a gap at 24→30 and interleaves
-designs, reports, and reviews in one flat sequence. Cosmetic, and renumbering
-committed documents costs more than it returns.
+244 tracked files, 1.7 MB. 7,063 source lines across 71 Python files; 7,650 test
+lines. A 1.08 : 1 test-to-source ratio, which for infrastructure software is the
+right side of healthy.
+
+A fresh clone produces an immediately clean `git status` — verified by actually
+cloning, not by inspecting `.gitignore`. No generated artifacts, no temporary
+outputs, no obsolete archives, no duplicated assets.
+
+The remaining half point is the three-root documentation layout (`FEK`,
+`.forgeos`, `docs/`). `GOVERNANCE.md` maps it well and the boundary is defensible,
+but a newcomer still meets three directories before one line of code.
 
 ### Architecture Health — 9.5 / 10
 
-Unchanged where it was already strong — no boundary moved, no dependency
-reversed, no provider leaked. The AST-enforced rules still hold, and the split
-improved cohesion without touching the dependency graph: `RouteManager` now
-depends on `DeploymentQueryService` (a read model) rather than a service that
-also builds, activates, and reconciles, which is a smaller and more honest
-dependency than it had before.
+Unchanged, and unchanged is the correct outcome for a freeze milestone. No
+architectural change was made and none was needed.
 
-Not 10: the domain still imports Pydantic (ADR-002's stated "framework
-independent" claim is not literally true), and `resolve_active_target` still
-returns a routing type from the deployment module. Both are documented, both are
-the better of the available options, neither is worth a change now.
+Dependency direction is enforced by AST tests rather than convention. Ports are
+pinned by a single conformance suite that runs against both the real adapter and
+the in-memory fake, so the fakes cannot drift into fiction. The domain is
+framework-independent apart from the accepted, documented Pydantic dependency.
 
-### Governance Health — 9 / 10
+The 0.9 split of `DeploymentService` into four services holds up under the only
+test that matters: the new concurrency test landed in exactly one file, and
+`ActivationService` is small enough that the invariant it protects is legible at
+a glance. That is what the split was for.
 
-`GOVERNANCE.md` resolves the question a new contributor actually has: three
-documentation roots, which one is authoritative. It defines the authority order,
-names both known overlaps (engineering standards, role taxonomies), and assigns
-ownership so neither drifts — the FEK owns standards and ForgeOS derives from it;
-`.forgeos/roles/` owns process authority and `.skills/` owns domain scope.
+Half a point withheld for the same reason as before: `reconcile()` still issues
+N+1 inspects and prediction still costs a `docker inspect`. Both are Module 8's
+by design and forbidden here.
 
-Critically, governance was *followed* during this milestone rather than merely
-documented. When the instruction to make authentication "Module 9" collided with
-the frozen roadmap, the conflict was surfaced and left to an ADR instead of being
-resolved by editing the status file. That is the process working under pressure,
-which is the only test that counts.
+### Documentation Health — 9.5 / 10
 
-Not 10: `.forgeos/decisions/` still holds only a template while the ADRs live in
-the FEK register. Documented in `GOVERNANCE.md`, but two plausible homes remain.
+34 engineering documents, 21 ADRs, and — after this milestone — no internal
+contradictions that verification could find.
 
-### Security Readiness (pre-authentication) — 8 / 10
+Two were found and fixed. `docs/RELEASE.md` assigned authentication to Module 9
+while `PROJECT_STATUS.md` recorded phase 9 as Dashboard with authentication
+deliberately unassigned; the release document now defers to the roadmap and names
+ADR-022. The distribution version contradicted every document that mentioned a
+version.
 
-The security *model* is now written down and honest. `SECURITY.md` states what
-ForgeML does not defend against and why: packages are trusted by design
-(ADR-001), the control plane is root-equivalent through the Docker daemon, and
-there is no authentication yet. It separates in-scope from out-of-scope reports,
-so a researcher does not waste a week rediscovering Module 9.
+`CHANGELOG.md` and `docs/DEPENDENCY_REPORT.md` were added, closing the two
+documentation gaps a public release would have exposed.
 
-ADR-019 defines four trust boundaries and three security domains, and places the
-authentication check in the API layer and the authorization check in the
-application layer — with the rule that the architecture tests will enforce it,
-not the review.
+### Governance Health — 9.0 / 10
 
-Not higher: **no security defect was fixed**, correctly, because this milestone
-forbade it. The unbounded prediction body, the unverified internal network, the
-`max_entries` gap on extraction, and the build-time isolation gap are all still
-open. They are now documented with owners instead of living in a review.
+Unchanged and deliberately so.
+
+The authority order holds: FEK → ADR → ForgeOS → frozen modules → repository.
+ADR-014's freeze discipline was respected under pressure — it would have been
+easy to mark Modules 3–7 frozen on the strength of local green, and the report
+declines to.
+
+The open authentication-phase decision remains open, correctly. It was raised
+during 0.9 rather than settled by edit, and 0.9.1 did not settle it either,
+because the milestone forbids changing ADR decisions. ADR-022 is the named
+instrument and it is the next governance action.
+
+The missing point is unchanged: `.forgeos/decisions/` holds no decisions, and
+governance that exists only in documents describing governance is thinner than it
+looks.
+
+### Release Readiness — 8.0 / 10
+
+New category. Everything a release needs exists and was exercised:
+
+| Artifact | State |
+| --- | --- |
+| `LICENSE` (Apache-2.0), `NOTICE` | ✅ |
+| `CHANGELOG.md` | ✅ new |
+| `CONTRIBUTING.md`, `SECURITY.md`, `GOVERNANCE.md` | ✅ |
+| `CODEOWNERS`, issue and PR templates | ✅ |
+| `docs/RELEASE.md` | ✅ corrected |
+| Release draft | ✅ `docs/releases/v0.9.1-draft.md` |
+| Version consistent across code and docs | ✅ fixed |
+| Wheel and sdist build | ✅ `forgeml-0.9.1` |
+| Installed-wheel smoke test | ✅ passed |
+
+Two points withheld, both for the same root cause: **no tag can be cut and no
+release published, because CI has not run.** The draft is complete and the
+checklist is honest about which boxes only the remote can tick. Release
+automation also remains unimplemented by choice (ADR-021), so every step here is
+manual.
+
+### Testing Confidence — 9.0 / 10
+
+**594 tests, all passing, 97% branch coverage against a 95% gate, ~35 seconds.**
+
+Measured, not quoted. The suite is fast enough that no one is tempted to skip it,
+which is a real property and not a vanity metric.
+
+**Skip audit.** Exactly one skip mechanism exists in the entire suite: the two
+Docker integration tests, marked `skipif` with the reason `"docker is not
+available"`. There are no `xfail`s, no unconditional skips, and no silently
+disabled tests. For this release **the Docker tests ran** — they are the two
+slowest in the suite (9.0s and 1.6s), which is itself evidence they executed.
+
+**Slowest tests:** Docker full lifecycle 8.99s, Docker build failure 1.63s, API
+smoke 1.18s, SIGTERM handling 0.91s. Nothing else exceeds 0.5s. The slow tests
+are slow for legitimate reasons — they build real images and start real
+containers.
+
+**The activation-race gap is closed.** This was one of the two High findings the
+0.9 report honestly reported as unaddressed. The new test holds a `FOR UPDATE`
+lock in one live session, starts a second in a thread, asserts it blocks, and
+asserts it proceeds once the first commits. It was mutation-checked: weakening
+the lock to `SKIP LOCKED` makes it fail.
+
+**The remaining point is the Docker skip, which is a reporting flaw rather than a
+coverage flaw.** On a machine with no daemon the suite prints green while
+proving nothing about Module 6, and green-when-unproven is the failure mode that
+matters. Closing it needs a CI assertion that the Docker tests were collected and
+run — a small change, but a workflow change, and this milestone does not make
+them.
+
+### Dependency Health — 9.0 / 10
+
+Full report: [`docs/DEPENDENCY_REPORT.md`](docs/DEPENDENCY_REPORT.md).
+
+| Check | Result |
+| --- | --- |
+| Vulnerabilities, both locks | **0** (was 6) |
+| License conflicts | 0 |
+| Unpinned dependencies | 0 |
+| Unused declared dependencies | 0 |
+| Duplicates | 0 |
+| Outdated (patch drift) | 7, none carrying an advisory |
+
+Ten runtime dependencies, every one `==` pinned and hash-locked, installed with
+`--require-hashes`, with both locks recompiling byte-identically. That is a
+stronger supply-chain posture than most projects at 1.0.
+
+One license obligation is now on the record rather than assumed: **psycopg is
+LGPL-3.0-only.** Compatible with Apache-2.0 as ForgeML uses it — separately
+installed, unmodified, not redistributed — and the report states the reasoning
+and the condition under which it changes, which is publishing a container image
+that bundles it.
+
+The missing point is process, not state: **no scheduled advisory check.** The six
+advisories fixed here were found because this milestone happened to look. Nothing
+in CI would have caught them, and nothing will catch the next one.
+
+### Security Readiness (pre-authentication) — 8.5 / 10
+
+Up half a point: six real advisories closed on the unauthenticated upload path.
+
+Unchanged strengths: runtime hardening under ADR-001 (non-root, read-only
+rootfs, all capabilities dropped, no new privileges, no Docker socket, egress-free
+internal network, resource limits); content-addressed immutable artifacts;
+archive extraction that resists traversal and bombs; a single error envelope that
+never leaks a trace; server-owned request IDs; bounded JSON logging; no secrets
+in the repository; Docker driven through an injectable CLI seam rather than a
+socket-mounted SDK.
+
+Unchanged, honestly stated limits: no authentication, control-plane
+root-equivalence through the Docker daemon, packages trusted by design, and a
+build step less isolated than runtime.
+
+The remaining 1.5 points are authentication itself and the build-time isolation
+gap. Neither is in scope here; both are documented in `SECURITY.md`.
 
 ### Developer Experience — 9.5 / 10
 
-`make verify` was already the single gate and remains so. What was missing was
-everything around it: `CONTRIBUTING.md` (setup, the checkpoint, the
-architectural rules, what review checks), `docs/DEVELOPMENT.md` (how work moves
-idea → frozen module), `docs/RELEASE.md`, `docs/LABELS.md`, issue and PR
-templates that ask the questions reviewers actually ask ("which module?", "does
-this touch a frozen contract?", "where is the ADR?").
+Unchanged, and the fresh-clone exercise is the evidence. From `git clone` to a
+running control plane is four documented commands, each of which does exactly
+what a developer would do by hand. `make verify` is one checkpoint whose
+definition lives in the Makefile, so CI cannot drift from it — a property that
+paid off directly here, since every CI gate was reproducible locally.
 
-A contributor can now clone, read four files, and act correctly without project
-history. That was the stated success criterion.
+`make help` is discoverable. `CONTRIBUTING.md` explains the checkpoint, the
+architectural rules, and the review order. Test names read as sentences.
 
-Not 10: the Docker-dependent suite still skips silently. A contributor can run
-`make verify`, see green, and have never executed the runtime adapter's tests.
-
-### Open Source Readiness — 9 / 10
-
-The single largest movement, from the single largest gap. `LICENSE`
-(Apache-2.0, with the patent grant appropriate to infrastructure), `NOTICE`,
-`SECURITY.md` with a private reporting path, `CODEOWNERS` scoped to the places
-where a wrong change is expensive, and a versioning and compatibility policy
-(ADR-021) that states plainly that pre-1.0 carries no guarantee rather than
-implying one.
-
-Not 10: no `CHANGELOG.md` yet — correct, since nothing has been released — and
-no CI badge can be trusted until the repository is pushed.
+Half a point for the three documentation roots and the fact that a full run needs
+both Docker and PostgreSQL, which `make db` eases but does not remove.
 
 ---
 
-## Milestone Delivery
+## Known Risks
 
-### Phase 1 — Repository Truth ✅
-
-`PROJECT_STATUS.md` rewritten. Every contradiction the review found is resolved:
-
-| Was | Now |
-| --- | --- |
-| "~18% (2 of 11 frozen)" while listing 3 frozen | Implemented **8/11**, Frozen **3/11**, with the difference explained |
-| "Last frozen milestone: Module 1" | Module 2 |
-| "ADR-001 … ADR-015" | ADR-001 … ADR-021 |
-| Silent about unpushed work | CI gap stated as the largest open item |
-| README "583 tests" | 593 — measured, and the stale figure corrected in both files |
-
-The implemented-versus-frozen distinction is now explicit, because conflating
-them was the root of most of the drift.
-
-### Phase 2 — Governance Stabilization ✅
-
-`GOVERNANCE.md`: the map, the authority order, ownership of both overlaps, the
-decision process, the artifact taxonomy, and a table of single sources of truth.
-
-### Phase 3 — Repository Organization ✅
-
-Untracked (kept on disk): `graphify-out/`, `postman/`, `.postman/`, and two kit
-`.zip` archives. `.gitignore` rewritten with a comment per rule explaining *why*
-each is ignored. Tracked files: 221.
-
-### Phase 4 — Developer Experience ✅
-
-`LICENSE`, `NOTICE`, `CONTRIBUTING.md`, `SECURITY.md`, `.github/CODEOWNERS`,
-`.github/pull_request_template.md`, three issue templates plus `config.yml`
-routing security reports away from public issues, `docs/DEVELOPMENT.md`,
-`docs/RELEASE.md`, `docs/LABELS.md`.
-
-### Phase 5 — Architecture Preparation ✅
-
-Four ADRs. No implementation.
-
-- **ADR-018** — Principal model and actor identity. One principal kind
-  (operator) with an opaque `actor_id`; `AuditEvent` gains an *optional*
-  `actor_id`; the `audit_events` table gains a *nullable* column with **no
-  backfill**, because inventing historical principals would forge the audit
-  trail the ADR exists to protect. Additive, reversible, and explicitly on the
-  ADR-017 escalation path for a frozen surface.
-- **ADR-019** — Authentication in the API layer, authorization in the
-  application layer, nothing in the domain. Four trust boundaries, three security
-  domains, health endpoints stay unauthenticated, and the rule is enforced by
-  architecture tests.
-- **ADR-020** — Resource identity resolved: **control plane by id, serving path
-  by name.** Scopes bind to the UUID; the prediction route resolves name → id
-  internally so the name is never a permission subject. Four known API gaps get
-  owners.
-- **ADR-021** — SemVer, three independently versioned contracts, the
-  compatibility promise that begins at 1.0, deprecation policy, branch and
-  support policy.
-
-### Phase 6 — DeploymentService Preparation ✅
-
-| Before | After |
-| --- | --- |
-| `services.py` — 615 lines, 5 responsibilities | `queries.py` 78 · `lifecycle.py` 303 · `activation.py` 152 · `reconciliation.py` 100 · `support.py` 123 · `services.py` 64 |
-
-`DeploymentServices` is a bundle, not a facade — it holds the four and forwards
-nothing, so a call site names the responsibility it uses
-(`services.activation.activate_version(...)`). Authorization checks will land in
-four small files.
-
-**Behaviour preservation was measured, not assumed:** the full suite was run on
-the pre-refactor tree (593 passed) and the post-refactor tree (593 passed) by
-stashing and restoring, and the collected test count was confirmed identical on
-both. `make verify` passes at 97% branch coverage.
-
-### Phase 7 — API Consistency ✅ (documented)
-
-Resolved in ADR-020. No endpoint changed — adding routes would have been the
-feature creep this milestone forbids, and an unauthenticated enumeration endpoint
-added now would need retrofitting the moment authorization arrives.
-
-### Phase 8 — Documentation Refresh ✅
-
-- `api/v1/deployments.py` — removed the docstring claiming the router was not yet
-  wired (it has been since Module 6).
-- `domain/deployment/ports.py` — `lock_deployment` no longer describes Module 7
-  in the future tense; `restart_count` and `list_versions` now say *why* they are
-  unused and which module consumes them.
-- `domain/package/ports.py` — `ArtifactStore.delete` records that it is ADR-012's
-  primitive and that artifacts currently accumulate without bound.
-- ADR-015 / ADR-016 reordered.
-
-### Phase 9 — Engineering Standards ✅
-
-Verified: dependency direction holds (AST tests unmodified and passing), naming
-is consistent, imports are clean, mypy strict passes on 121 source files, and all
-internal markdown links across the eight top-level documents resolve (checked
-programmatically — 0 broken).
-
-### Phase 10 — Release Readiness ✅
-
-ADR-021 and `docs/RELEASE.md`. Automation deliberately not implemented.
-
----
-
-## Remaining Technical Debt
-
-Carried from the review with current status. Nothing here blocks authentication
-except where marked.
-
-| # | Item | Severity | Status |
+| # | Risk | Severity | State |
 | --- | --- | --- | --- |
-| 1 | **No CI evidence since `4aa140c`** | **Blocking (freeze)** | Open — requires `git push`, not a code change |
-| 2 | Authentication has no roadmap phase | **Blocking (scheduling)** | Open by decision — needs an ADR amending docs 06 |
-| 3 | Docker tests skip silently | High | **Open** — not addressed in 0.9 |
-| 4 | No activation-race concurrency test | High | **Open** — not addressed in 0.9 |
-| 5 | Unbounded prediction request body | High | Open — deferred to the auth module (ADR-019) |
-| 6 | Build-time isolation gap | High | Documented in `SECURITY.md`; Module 10 |
-| 7 | Per-prediction `docker inspect` | High | Open — Module 8 by design; forbidden here |
-| 8 | Blocking work in the request pool | High | Open — the deferred worker (ADR-006/010) |
-| 9 | No version-listing endpoint | High | Deferred with an owner (ADR-020) |
-| 10 | Egress isolation unverified | Medium | Open — Module 10 |
-| 11 | `max_entries` unenforced on extract | Medium | Open — Module 10 |
-| 12 | No retention / GC | Medium | Open — ADR-012, Module 10 |
-| 13 | No rate limiting | Medium | Deferred to the auth module (ADR-019) |
-| 14 | `reconcile()` N+1 inspects | Medium | Open — Module 8 |
-| 15 | Domain depends on Pydantic | Medium | Open — accepted, documented |
-| 16 | FEK numbering gap (24→30) | Low | Accepted — renumbering costs more than it returns |
-| 17 | `.forgeos/decisions/` holds no ADRs | Low | Documented in `GOVERNANCE.md` |
-| 18 | Truncated image identity (48-bit) | Low | Accepted |
+| 1 | **No CI evidence since `4aa140c`** | **Blocking (freeze)** | Open — needs a push; not a code change |
+| 2 | Authentication has no roadmap phase | **Blocking (scheduling)** | Open by decision — needs ADR-022 |
+| 3 | Docker tests skip silently | High | Open — ran for this release; no CI assertion |
+| 4 | ~~No activation-race test~~ | ~~High~~ | ✅ **Closed in 0.9.1** |
+| 5 | No scheduled advisory scanning | High | **New** — found six live advisories by hand |
+| 6 | Unbounded prediction request body | High | Deferred to authentication (ADR-019) |
+| 7 | Build-time isolation gap | High | Documented in `SECURITY.md`; Module 10 |
+| 8 | Per-prediction `docker inspect` | High | Module 8 by design |
+| 9 | Blocking work in the request pool | High | The deferred worker (ADR-006/010) |
+| 10 | No version-listing endpoint | High | Deferred with an owner (ADR-020) |
+| 11 | Egress isolation unverified | Medium | Module 10 |
+| 12 | `max_entries` unenforced on extract | Medium | Module 10 |
+| 13 | No retention / GC | Medium | ADR-012, Module 10 |
+| 14 | No rate limiting | Medium | Deferred to authentication (ADR-019) |
+| 15 | `reconcile()` N+1 inspects | Medium | Module 8 |
+| 16 | Domain depends on Pydantic | Medium | Accepted, documented |
+| 17 | FEK numbering gap (24→30) | Low | Accepted |
+| 18 | `.forgeos/decisions/` holds no ADRs | Low | Documented in `GOVERNANCE.md` |
+| 19 | Truncated image identity (48-bit) | Low | Accepted |
 
-**Items 3 and 4 are the honest gaps in this milestone.** Both were rated High by
-the review, and neither was in the ten phases this milestone defined. Adding a
-concurrency test and a CI Docker gate is the right first work of the next
-milestone, whichever it is — not because they block authentication, but because
-they are the two places where the test suite currently over-reports confidence.
-
----
-
-## Deferred Items
-
-### Module 8 — Monitoring
-
-Cached readiness gate replacing the per-prediction inspect · batched
-reconciliation · logs and usage sampling · `restart_count` finally getting a
-consumer · retention of observations (ADR-012).
-
-### Authentication module (phase unassigned)
-
-Principal plumbed through every command (ADR-018) · `actor_id` migration ·
-authentication middleware and authorization checks at the boundaries ADR-019
-defines · architecture tests enforcing those boundaries · rate limiting ·
-request-body bounds · `GET /v1/deployments/{id}/versions`, authorized on arrival
-· `/v1/admin/reconcile` → `/v1/reconciliations`.
-
-### Module 10 — Hardening / Release
-
-Build-time isolation ADR and socket proxy · retention and disk-pressure
-enforcement · `max_entries` on extraction · internal-network verification ·
-`DELETE` semantics · SBOM and scanning · release automation · backup and restore.
+**Risk 5 is new and it is the honest lesson of this milestone.** A dependency
+sat six advisories deep on an unauthenticated code path for an entire release
+cycle, and the repository's own quality gates — black, ruff, mypy strict,
+pytest, 97% coverage — all reported green throughout. Coverage measures whether
+code runs, not whether it is safe. A scheduled `pip-audit` job is the smallest
+thing that would have caught it.
 
 ---
 
-## Exit Criteria
+## Deferred Work
 
-| Criterion | Status |
+**Module 8 — Monitoring.** Cached readiness gate replacing the per-prediction
+inspect · batched reconciliation · logs and usage sampling · `restart_count`
+finally getting a consumer · retention of observations (ADR-012).
+
+**Authentication (phase unassigned).** Principal plumbed through every command
+(ADR-018) · the additive-nullable `actor_id` migration · authentication
+middleware and authorization checks at the ADR-019 boundaries · architecture
+tests enforcing those boundaries · rate limiting · request-body bounds ·
+`GET /v1/deployments/{id}/versions` authorized on arrival ·
+`/v1/admin/reconcile` → `/v1/reconciliations`.
+
+**Module 9 — Dashboard.** Per the frozen roadmap.
+
+**Module 10 — Hardening / Release.** Build-time isolation ADR and socket proxy ·
+retention and disk-pressure enforcement · `max_entries` on extraction ·
+internal-network verification · `DELETE` semantics · SBOM and scanning · release
+automation · backup and restore.
+
+**Recommended for the next milestone regardless of which it is:** a CI assertion
+that Docker tests ran, and a scheduled `pip-audit`. Both are small, both close
+places where the pipeline currently over-reports confidence, and neither is a
+feature.
+
+---
+
+## Authentication Prerequisites
+
+| Prerequisite | State |
 | --- | --- |
-| Repository tells one consistent story | ✅ |
-| Repository clone is clean | ✅ 31 intended changes, no generated files |
-| Governance is internally consistent | ✅ `GOVERNANCE.md` |
-| Documentation is synchronized | ✅ README ↔ `PROJECT_STATUS.md` reconciled |
-| Repository structure is intuitive | ✅ |
-| `DeploymentService` ready for authentication | ✅ four services, behaviour verified identical |
-| Authentication ADRs exist | ✅ ADR-018, 019, 020 |
-| Actor identity strategy exists | ✅ ADR-018, with migration strategy |
-| Trust boundaries documented | ✅ ADR-019, `SECURITY.md` |
-| LICENSE exists | ✅ Apache-2.0 |
-| CONTRIBUTING exists | ✅ |
-| SECURITY policy exists | ✅ |
-| Release strategy exists | ✅ ADR-021, `docs/RELEASE.md` |
-| Every blocking review issue resolved | ⚠️ **All except CI evidence**, which no document can resolve |
+| Actor identity model | ✅ ADR-018 — principal, `actor_id`, additive-nullable migration, no backfill |
+| Authentication / authorization boundary | ✅ ADR-019 — auth in the API layer, authz in the application layer |
+| Trust boundaries enumerated | ✅ ADR-019 (T1–T4) and `SECURITY.md` |
+| Resource identity settled | ✅ ADR-020 — control plane by id, serving path by name |
+| Versioning and compatibility policy | ✅ ADR-021 |
+| Services small enough to authorize | ✅ four services, verified by the concurrency test landing in one file |
+| Dependency direction enforced | ✅ AST architecture tests |
+| Ports pinned against drift | ✅ conformance suite, real adapter and fake |
+| Audit log ready for an actor | ✅ ADR-018 accepted; migration not yet written |
+| Repository suitable for contributors | ✅ license, contributing, security, governance, templates |
+| Test suite trustworthy | ✅ 594 passing, activation race now proven |
+| Dependencies free of known vulnerabilities | ✅ both locks audit clean |
+| **CI evidence for Modules 3–7** | ❌ **not collected — the blocking prerequisite** |
+| **Phase assignment for authentication** | ❌ **ADR-022 not written** |
 
 ---
 
 ## Final Recommendation
 
-### Is ForgeML ready to begin the authentication module?
+### Is ForgeML ready to begin Authentication?
 
 ## YES WITH MINOR CONDITIONS
 
-*(The frozen roadmap assigns Phase 9 to Dashboard and defines no authentication
-phase. This answer is about readiness for authentication work, not about a
-number. Assigning it one is condition 2.)*
+Both conditions are administrative. Neither requires code, architecture, or
+design work. Both can be discharged in an afternoon.
 
 ### Why YES
 
-Every condition the engineering review raised as blocking has been closed except
-the two that cannot be closed by writing code or documents.
+The architectural preconditions are met and were checked rather than assumed.
 
-The four decisions that would otherwise have been made mid-implementation — how
-a principal is modelled, how identity reaches the audit trail through a frozen
-schema, where the checks live, and which identifier scopes bind to — are all
-accepted ADRs. The service that would have absorbed five authorization checks is
-four services. The status file that gates module entry is now accurate. The audit
-model has a migration strategy that is additive, reversible, and refuses to
-fabricate history.
+Authentication is invasive in a way most features are not: it touches every
+entry point, every command, and the audit trail. A codebase absorbs it well or
+badly depending on properties that must exist *before* the work starts, and
+ForgeML has them.
 
-More telling than any of that: the governance held under pressure. The
-instruction to make authentication "Module 9" conflicted with the frozen
-roadmap, and the conflict was surfaced rather than resolved by quietly editing
-the authoritative document. A process that survives an inconvenient collision is
-a process that will survive the authentication module.
+Dependency direction is enforced by tests, so authorization cannot quietly leak
+into the domain — a violation fails the build. Ports are pinned by a conformance
+suite, so adding a principal to a port signature cannot silently desynchronize
+the fakes. The four deployment services are small enough that authorization
+checks land in four legible places instead of one 615-line file; the new
+concurrency test landing entirely inside `ActivationService` is direct evidence
+that the seams are real. The trust boundaries are enumerated in advance, the
+actor-identity migration is designed as additive-nullable with no backfill, and
+the audit log already exists and simply gains a column.
+
+The verification behind those claims is stronger than at 0.9. 594 tests pass at
+97% branch coverage. The one High-severity untested invariant is now tested, and
+mutation-checked. A clean clone builds, packages, and smoke-tests. Both locks
+reproduce byte-identically. Dependencies audit clean after a real vulnerability
+was found and fixed. The example package rebuilds bit-for-bit.
+
+Most persuasive is what the milestone did when measurement disagreed with
+documentation: it changed the documentation. The version was wrong, the release
+document contradicted the roadmap, the test conftest truncated the wrong tables,
+and a dependency was six advisories deep. All four were found by checking, all
+four were fixed or recorded, and none was quietly smoothed over. A repository
+that behaves that way under audit is one that will absorb an invasive feature
+honestly.
 
 ### The conditions
 
-1. **Push and record CI evidence.** Nothing since `4aa140c` has been verified by
-   GitHub Actions. Modules 3–7 cannot be frozen without it (ADR-014), which means
-   authentication would be built on five unfrozen contracts — precisely the
-   situation the freeze discipline exists to prevent. This is a `git push`, and
-   this environment has no credentials to perform it.
+**1. Push, and record the CI evidence.** Nothing since `4aa140c` has been
+verified by GitHub Actions, because nothing has been pushed. Every CI step was
+reproduced locally — including both lock-verification steps and the installed
+wheel smoke test — but ADR-014 is explicit that local green is not freeze
+evidence, and this report will not pretend otherwise. Until that run exists,
+Modules 3–7 cannot freeze and `v0.9.1` cannot be tagged. This is the single
+highest-value action available and it is one command.
 
-2. **Assign authentication a phase.** ADR-022 amending `06_IMPLEMENTATION_ROADMAP.md`,
-   deciding among: insert as a new phase and shift Dashboard and Hardening;
-   replace Dashboard in V1; or deliver inside Phase 10.
-
-3. **Close the two test gaps first.** Make the Docker suite fail rather than skip
-   when CI expects a daemon, and add the activation-race concurrency test. Both
-   are places where the suite currently reports more confidence than it has, and
-   authentication will add authorization checks to the exact activation path that
-   is untested under concurrency.
+**2. Write ADR-022 and assign authentication a phase.** The frozen roadmap
+defines no authentication phase; security work sits inside Phase 10, where
+multi-user auth is explicitly flagged as requiring an ADR. ADR-018 through
+ADR-021 prepared everything except *when*. Starting the module without settling
+this means building against a roadmap that does not describe it — the exact drift
+ADR-014 exists to prevent. Three options remain open: insert authentication as a
+new phase and shift Dashboard and Hardening; replace Dashboard in V1 and move it
+to V2; or deliver authentication inside Phase 10.
 
 ### Why not unconditional YES
 
-Condition 1 is not paperwork. Building authentication against contracts that have
-never passed CI means that if a Module 5 defect surfaces later, it will be
-unclear whether it predated the authentication work — and the freeze record
-exists specifically to make that question answerable.
+Because freezing on unverified evidence is precisely the failure ADR-014 was
+written to prevent, and because beginning a module the roadmap does not contain
+is how a governed project stops being governed. Both conditions are cheap. That
+is why they are conditions and not blockers.
 
 ### Why not NO
 
-Nothing structural is wrong. The architecture that passed the review unchanged is
-the same architecture, and every gap remaining is either scheduled, documented
-with an owner, or resolvable by a push.
+Nothing architectural is missing. Every prerequisite that requires design
+judgement is decided, recorded, and — as of this milestone — verified rather than
+asserted. The two open items are a `git push` and a decision the project has
+already framed and only needs to make. Holding a repository in this state is not
+caution; it is delay.
 
 ---
 
-**ForgeML 0.9 is complete.** The repository is in the healthiest state it has
-been: one story, clean tree, defined governance, stated license, documented
-security model, and four decisions banked for the module that comes next.
+**Baseline established.** ForgeML 0.9.1 is the reference point from which
+Authentication, Monitoring, and the eventual 1.0 release evolve. Every metric in
+this report is reproducible with `make verify` and the commands in
+[`docs/DEPENDENCY_REPORT.md`](docs/DEPENDENCY_REPORT.md).

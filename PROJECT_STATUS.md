@@ -9,18 +9,18 @@ The phase list mirrors the frozen roadmap in
 is the authority; this one reports against it. Changing the phase structure
 requires an ADR, not an edit here.
 
-**Last updated:** 2026-07-18 (ForgeML 0.9 — Stabilization & Platform Readiness)
+**Last updated:** 2026-07-18 (ForgeML 0.9.1 — Platform Freeze & Release Readiness)
 
 ---
 
 ## Current version
 
-**ForgeML 0.9** — pre-1.0. No compatibility guarantee (ADR-021).
+**ForgeML 0.9.1** — pre-1.0. No compatibility guarantee (ADR-021).
 
 ## Current stage
 
-Backend development complete through Module 7. Stabilization milestone (0.9)
-complete. Modules 8–10 not started.
+Backend development complete through Module 7. Stabilization (0.9) and freeze
+verification (0.9.1) complete. Modules 8–10 not started.
 
 ---
 
@@ -56,20 +56,26 @@ so treat this as a position in a required order, not a schedule estimate.
 
 ## Repository metrics
 
-Measured at `0875662` on 2026-07-18. Reproduce with `make verify`.
+Measured at `f6a2c3c` on 2026-07-18, from a clean clone. Reproduce with
+`make verify`.
 
 | Metric | Value |
 | --- | --- |
-| Tests | 593 |
+| Tests | 594 |
 | Branch coverage | 97% (gate: 95%) |
-| Source lines (`backend/src`) | 7,049 |
+| Test suite runtime | ~35s (with Docker) |
+| Source lines (`backend/src`) | 7,063 across 71 files |
+| Test lines | 7,650 |
 | Architecture decisions | 21 (ADR-001 … ADR-021) |
+| HTTP endpoints | 15 |
+| Tracked files | 244 (1.7 MB) |
+| Runtime dependencies | 10, `==` pinned and hash-locked |
+| Known vulnerabilities | 0 (both locks) |
 | Quality gates | black, ruff, mypy strict, pytest, coverage |
-| Runtime dependencies | Pinned and hash-locked |
 
-The Docker-dependent integration tests are included in the 593 only when a Docker
+The Docker-dependent integration tests are included in the 594 only when a Docker
 daemon is reachable; they skip silently otherwise. A run without Docker is not
-evidence for Module 6.
+evidence for Module 6. **They ran for the 0.9.1 measurement.**
 
 ---
 
@@ -169,7 +175,40 @@ begins.
 **Explicitly not delivered** (out of scope by instruction): authentication,
 authorization, monitoring, rate limiting, performance optimization.
 
-**Report:** `PLATFORM_READINESS_REPORT.md`
+---
+
+## ForgeML 0.9.1 — Platform freeze milestone
+
+Not a module. A verification milestone: every claim the repository makes about
+itself re-derived from a clean clone rather than carried forward from a document.
+
+**Delivered:**
+
+- **Security** — `python-multipart` 0.0.20 → 0.0.32, clearing six advisories,
+  five of them reachable on the unauthenticated package upload path. Both locks
+  now audit clean.
+- **Concurrency proof** — the activation row lock is now tested with two live
+  PostgreSQL sessions, and the test was verified to fail when the lock is
+  weakened to `SKIP LOCKED`. This closes the last open High finding from the
+  pre-authentication review.
+- **Version correctness** — the distribution version was still the `0.1.0`
+  placeholder, which `/health` and `/ready` report on the wire. Now `0.9.1`.
+- **Test isolation** — the database conftest truncated four of six tables;
+  `deployments` and `deployment_versions` leaked between tests.
+- **Reproducibility** — fresh clone, fresh venv, locked install, `make verify`,
+  wheel and sdist build, hash-locked install, and installed-wheel smoke test all
+  executed from scratch. Both lock files recompile byte-identically. The example
+  `.forge` package rebuilds to the same SHA-256.
+- **Release metadata** — `CHANGELOG.md`, `docs/DEPENDENCY_REPORT.md`, and the
+  `v0.9.1` release draft added; `docs/RELEASE.md` corrected where it contradicted
+  this file on authentication's phase.
+
+**Not delivered:** CI evidence. The working environment had no git credentials,
+so nothing was pushed and no workflow was observed. Every CI step was reproduced
+locally, but ADR-014 does not accept that as freeze evidence.
+
+**Reports:** `PLATFORM_READINESS_REPORT.md`, `CHANGELOG.md`,
+`docs/DEPENDENCY_REPORT.md`, `docs/releases/v0.9.1-draft.md`
 
 ---
 
