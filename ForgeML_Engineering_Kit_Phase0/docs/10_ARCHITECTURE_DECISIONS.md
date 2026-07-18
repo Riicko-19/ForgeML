@@ -135,6 +135,16 @@ gates cannot run at all — ran against commit
 with conclusion `success` on 2026-07-14. Verified against the Actions API rather than
 accepted on report.
 
+## ADR-015 — Server-owned request identifiers
+
+**Status:** Accepted  
+**Decision:** The control plane generates a UUIDv4 request ID for every request.
+Inbound X-Request-ID values are ignored and never logged or reflected. The generated
+ID is returned in the X-Request-ID response header and used for request-scoped logs.
+
+**Consequences:** Untrusted clients cannot create collisions or inject log identifiers.
+Trusted upstream trace propagation requires a future approved proxy-boundary decision.
+
 ## ADR-016 — Operation lease, crash recovery, and retry
 
 **Status:** Accepted 2026-07-14
@@ -164,16 +174,6 @@ Recovery heals only at startup, so a worker that hangs without dying still holds
 its row. Lifting ADR-010's single-worker cap invalidates this decision and
 requires a lease or fencing token; `recover_orphaned` is the single place that
 assumption lives.
-
-## ADR-015 — Server-owned request identifiers
-
-**Status:** Accepted  
-**Decision:** The control plane generates a UUIDv4 request ID for every request.
-Inbound X-Request-ID values are ignored and never logged or reflected. The generated
-ID is returned in the X-Request-ID response header and used for request-scoped logs.
-
-**Consequences:** Untrusted clients cannot create collisions or inject log identifiers.
-Trusted upstream trace propagation requires a future approved proxy-boundary decision.
 
 ## ADR-017 — Generated runtime adapter emits valid Python literals
 
@@ -209,3 +209,256 @@ Module 6 disposable-Docker integration test now provides.
 the model entrypoint directly) was rejected: the entrypoint lives only in the generated
 adapter, so reconstructing it would duplicate Module 4's responsibility and pull manifest
 parsing into the runtime adapter's lane.
+
+## ADR-018 — Principal model and actor identity
+
+**Status:** Accepted 2026-07-18
+**Owner:** Chief Architect (ForgeML 0.9; consumed by the authentication module)
+
+**Context:** The audit record `AuditEvent` carries `actor_type` (`OPERATOR` | `SYSTEM`)
+but no actor *identity*. Every state change is therefore attributable to a kind of
+actor and to a correlation id, never to a principal. Authentication without
+attribution is a lock with no logbook: "who deactivated this version" has no answer.
+`AuditEvent` and the `audit_events` table belong to Module 2, which is **frozen**, so
+adding identity is a change to a frozen surface and must be decided before the authentication module
+rather than discovered inside it.
+
+**Decision:** ForgeML V1 has exactly one kind of principal: an **operator**, identified
+by a stable opaque `actor_id`.
+
+1. A `Principal` is a frozen value object in `domain/audit` carrying `actor_type` and
+   `actor_id: str`. It holds no credential, no secret, and no transport detail — a
+   principal is *who*, never *how they proved it*.
+2. `AuditEvent` gains an optional `actor_id: str | None`. Optional, because `SYSTEM`
+   actions (reconciliation, startup recovery) have no principal and must not invent one.
+3. The `audit_events` table gains a nullable `actor_id` column, indexed for the
+   "everything this principal did" query that any real audit review begins with.
+4. Every value is bounded and control-character-filtered by the same `_safe_text` rule
+   the existing audit fields use. An audit row still describes *what* changed and never
+   the content that changed (docs 04).
+5. Machine-to-machine callers are operators. ForgeML V1 has no user model, no tenants,
+   no groups, and no delegation. Multi-tenancy is a V2 concern and inventing a subject
+   hierarchy now would be exactly the speculative generality the FEK forbids.
+
+**Migration strategy:** Additive and reversible, in this order.
+
+- Alembic migration adds `actor_id` as nullable with no backfill. Historical rows keep
+  `NULL`, which is truthful: those actions genuinely had no recorded principal, and
+  writing a synthetic value would forge the audit trail this ADR exists to protect.
+- The immutability trigger on `audit_events` is unchanged; the column is append-only
+  like every other.
+- The domain field defaults to `None`, so every existing construction site keeps
+  compiling and every existing test keeps passing. The authentication module then populates it at the
+  call sites that have a principal.
+- Rollback is dropping the column; no code path requires it to be present.
+
+**Consequences:** The authentication module inherits a place to put identity instead of negotiating one
+mid-implementation. The frozen Module 2 surface changes by exactly one nullable column
+and one optional field, under an ADR, on the escalation path ADR-017 established. The
+audit trail can answer "who" for everything after the migration and honestly reports
+"unknown" for everything before it. Because `actor_id` is optional, a bug in that module that
+forgets to pass a principal degrades to an unattributed row rather than a crash — so
+That module must assert attribution on authenticated paths in tests; the type system will
+not do it for them.
+
+**Alternatives:** A required `actor_id` was rejected: it forces a synthetic principal
+for `SYSTEM` actions and a fabricated backfill for history. A separate `principals`
+table with a foreign key was rejected for V1: there is no principal *record* to store
+beyond the identifier until there is a user model, and an empty join table is a schema
+that lies about its own importance. Reusing `correlation_id` as identity was rejected
+outright — it identifies a request, not an actor, and conflating them would make the
+audit trail unusable for exactly the security review it exists to serve.
+
+## ADR-019 — Authentication, authorization, and trust boundaries
+
+**Status:** Accepted 2026-07-18
+**Owner:** Chief Architect + Security Reviewer (ForgeML 0.9; consumed by the authentication module)
+
+**Context:** Authentication and authorization have no assigned phase in the frozen
+roadmap (`06_IMPLEMENTATION_ROADMAP.md` defines Phase 9 as Dashboard and places
+security inside Phase 10). Assigning them a phase is a roadmap amendment requiring
+its own ADR and is deliberately **not** decided here. This ADR decides only *where
+the code goes* when that work is scheduled. Both concerns are
+cross-cutting, and cross-cutting concerns are what erode layered architectures: a
+check leaks into the domain, a credential ends up in a repository signature, and the
+dependency direction is gone two modules later. Where these checks live must be decided
+before any of them is written.
+
+**Decision — trust boundaries.** ForgeML V1 recognises four, and they are ordered by
+decreasing trust:
+
+| # | Boundary | Trust | Crossing rule |
+| --- | --- | --- | --- |
+| T1 | Operator → control-plane HTTP API | Untrusted until authenticated | Authenticate, then authorize, then admit |
+| T2 | Control plane → PostgreSQL / filesystem | Trusted | Same host, operator-owned; no additional check |
+| T3 | Control plane → Docker daemon | **Trusted and root-equivalent** | Never influenced by request content |
+| T4 | Control plane → runtime container | Semi-trusted | Platform-internal endpoint only, never a client-supplied URL |
+
+T3 is the boundary that sets the stakes: the control plane can drive the Docker daemon,
+and the daemon is root. The authentication boundary is therefore not protecting model
+metadata, it is protecting host root. Its threat model must say so in those words.
+
+**Decision — security domains.** Three, with no path between them except the ones named:
+
+- **Public** — nothing. ForgeML exposes no anonymous surface (ADR-001 forbids public
+  upload).
+- **Operator** — the authenticated control-plane API. Every `/v1` route lives here.
+- **Runtime** — the egress-free internal Docker network. Reachable only from the control
+  plane, never from a client, and it cannot reach the operator domain.
+
+**Decision — the authentication boundary is the API layer.** Authentication is a
+transport concern: it reads a header, verifies a credential, and produces a `Principal`.
+It belongs in `forgeml.api` — as middleware for the credential and a FastAPI dependency
+for the resulting principal — and nowhere else. No credential, header, token, or request
+object may cross into `forgeml.application`. The application layer receives a
+`Principal`, which is a domain value object, exactly as it already receives a
+`correlation_id`.
+
+**Decision — the authorization boundary is the application layer.** Whether *this*
+principal may perform *this* command is a use-case decision, not a routing decision. It
+belongs at the entry of each application service method, where the target resource is
+already known. This is precisely why ForgeML 0.9 split `DeploymentService` into four
+services: the authorization checks land in four small files, each with one reason to
+change, rather than threading through one 615-line class.
+
+The domain layer holds **no** authorization logic. Domain rules are policy over values
+and must stay decidable without knowing who asked.
+
+**Decision — health endpoints stay unauthenticated.** `/healthz` and `/readyz` are
+consumed by process supervisors and load balancers that have no credential to present.
+They already expose no state beyond liveness and database reachability. `/v1/openapi.json`
+moves inside the operator domain with the rest of `/v1`.
+
+**Decision — enforcement is mechanical.** The architecture test suite gains rules
+mirroring the ones that already hold the other boundaries: no `forgeml.application` or
+`forgeml.domain` module may import a transport credential type, and no `forgeml.domain`
+module may reference authorization. A boundary defended only by review is a boundary
+already lost.
+
+**Consequences:** That module has one place for authentication, one place for
+authorization, and a test suite that fails the build if either moves. `401` and `403`
+become two members of `ErrorCategory` and two entries in `_CATEGORY_STATUS` — the error
+envelope needs no other change. Every command signature gains a `Principal`, which is a
+wide but mechanical diff, and one the four-way service split has already made
+tractable. Rate limiting is explicitly **not** decided here; it belongs with the identity
+it keys on and is deferred to that module's own design.
+
+**Alternatives:** Authorization in the API layer was rejected: the router would have to
+re-read the target resource to decide, duplicating the query the service performs anyway
+and creating a check that can silently disagree with the command it guards.
+Authorization in the domain was rejected: it makes pure policy depend on a caller and
+would break the determinism the domain is built on. A single `@requires_permission`
+decorator over the routers was rejected as the same mistake in more convenient
+packaging.
+
+## ADR-020 — Deployment resource identity and API consistency
+
+**Status:** Accepted 2026-07-18
+**Owner:** Chief Architect (ForgeML 0.9)
+
+**Context:** Deployment routes key on `{deployment_id}` (a UUID) everywhere except the
+prediction route, which keys on `{name}`. Authorization scopes bind to resource
+identifiers, so a resource with two identifiers grows two scope models — and an
+authorization bypass shaped like a naming inconsistency. This must be settled before
+the authentication module writes its first scope.
+
+**Decision:** A deployment has **two identifiers, with defined roles**, and this is
+deliberate rather than accidental:
+
+1. `id` (UUID) is the **control-plane identifier**. Every administrative route — create,
+   read, list, deploy, activate, stop — uses it. It is stable, opaque, and unguessable.
+2. `name` is the **data-plane identifier**. Exactly one route uses it:
+   `POST /v1/deployments/{name}/predict`. A caller running predictions should not need
+   to know a UUID, and the name is already immutable and unique by database constraint,
+   so it is a legitimate natural key.
+
+The rule that makes this safe and non-arbitrary: **the control plane is addressed by
+id; the serving path is addressed by name.** A route that changes deployment state
+takes a UUID. A route that runs a model takes a name.
+
+Authorization scopes bind to the **UUID**. The prediction route resolves
+name → deployment inside the query service and authorizes against the resolved id, so
+there is exactly one scope model and the name is never itself a permission subject.
+
+**Decision — deferred API items.** Recorded here so they are decisions rather than
+omissions, and none of them is implemented in ForgeML 0.9:
+
+- `GET /v1/deployments/{id}/versions` — genuinely missing. `list_versions` exists on the
+  repository port with no HTTP route, so a client cannot enumerate versions to choose a
+  rollback target. Deferred to the authentication module, which must authorize it on arrival; adding an
+  unauthenticated enumeration endpoint now would be a route to retrofit rather than
+  build.
+- `/v1/admin/reconcile` — `admin` is a role, not a resource. It is renamed to
+  `POST /v1/reconciliations` (returning an operation, like every other durable command)
+  when The authentication module introduces roles, because the move and the role that justifies it should
+  land in one change.
+- `DELETE` on deployments and packages — deferred to Module 10 with retention (ADR-012).
+  Deletion without a retention policy is a way to lose artifacts that other versions
+  still reference.
+- Typed prediction responses in OpenAPI — the route returns `Any`. Each active version
+  has a known output schema; publishing it per deployment is an enhancement for the authentication module or later.
+
+**Consequences:** The identity question is closed and written down, so the authentication module writes
+one scope model. The naming split is now a documented rule a reviewer can enforce rather
+than an inconsistency a reviewer must rediscover. Four known API gaps have owners and
+target modules instead of living in a review document.
+
+**Alternatives:** Making every route name-based was rejected: names are immutable today,
+but a rename feature would silently break every stored reference and every audit row.
+Making the prediction route UUID-based was rejected: it degrades the one path a
+non-operator client actually calls, for internal consistency the caller cannot see.
+
+## ADR-021 — Versioning, compatibility, and release policy
+
+**Status:** Accepted 2026-07-18
+**Owner:** Release Manager (ForgeML 0.9)
+
+**Context:** ForgeML approaches a public v1.0 with no stated versioning scheme,
+compatibility promise, or deprecation path. Contributors cannot tell what may change,
+and operators cannot tell what will break them.
+
+**Decision — Semantic Versioning 2.0.0** for the distribution, with ForgeML's three
+public contracts versioned explicitly:
+
+| Contract | Versioned by | Breaking change means |
+| --- | --- | --- |
+| HTTP API | URL prefix (`/v1`) | A new prefix (`/v2`); `/v1` keeps its promise |
+| `.forge` package format | `format_version` in the manifest | A new format version; the old one stays readable |
+| Python distribution | SemVer | Major bump |
+
+**Decision — pre-1.0 status.** ForgeML is `0.x` until Modules 8–10 complete. Under
+SemVer, `0.x` carries no compatibility guarantee, and ForgeML states plainly that it
+has none yet. This honesty is the point: the alternative is an implied promise the
+project cannot keep.
+
+**Decision — compatibility promise from 1.0.** Within a major version: no endpoint is
+removed, no field is removed from a response, no field becomes required in a request, no
+error `code` changes meaning, and no `.forge` manifest field changes meaning. Adding an
+optional request field, a response field, a new endpoint, or a new error code is a minor
+release. Clients must tolerate unknown response fields.
+
+**Decision — deprecation.** A deprecated surface is announced in the release notes,
+marked in the OpenAPI description, and kept working for **at least one minor release**
+before removal in the next major. Nothing is removed in a patch.
+
+**Decision — database migrations.** Forward-only via Alembic. Every migration is
+additive or reversible, and one is never squashed after release. A release note names
+every migration it carries and whether it holds a lock.
+
+**Decision — branch and support policy.** `main` is always releasable and is the only
+long-lived branch; work merges via pull request with the `make verify` checkpoint green.
+Releases are annotated tags (`v0.9.0`). Only the latest minor of the latest major is
+supported before 1.0; the security policy in `SECURITY.md` governs fixes.
+
+**Decision — freeze policy is unchanged.** ADR-014 governs module freezes and this ADR
+does not weaken it: a module is frozen only on passing CI evidence at a named SHA.
+Release versioning and module freezing are separate mechanisms answering separate
+questions — what an operator can rely on, and what an engineer may still edit.
+
+**Consequences:** Contributors and operators can both predict what will change.
+Release automation is explicitly *not* implemented here; this ADR is the policy the
+automation will later encode.
+
+**Alternatives:** CalVer was rejected: it communicates recency, and ForgeML's users need
+to know about breakage. Promising compatibility before 1.0 was rejected as a promise the
+project cannot yet keep.

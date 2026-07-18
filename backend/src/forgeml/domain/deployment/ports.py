@@ -53,6 +53,9 @@ class RuntimeStatus:
     present: bool
     running: bool
     healthy: bool
+    #: Reserved for monitoring (Module 8). Parsed from Docker and recorded, but
+    #: no lifecycle policy reads it yet -- a restart-loop signal needs somewhere
+    #: to report to before it can mean anything.
     restart_count: int
 
 
@@ -145,7 +148,8 @@ class DeploymentRepository(Protocol):
     def lock_deployment(self, deployment_id: UUID) -> Deployment | None:
         """Lock a deployment for update (the activation lock, docs 04).
 
-        Frozen here for the routing module (Module 7); Module 5 does not activate.
+        Frozen by Module 5 ahead of its consumer; Module 7's activation and
+        stop-of-active both take this lock to swap the route atomically.
         """
 
     def save_deployment(self, deployment: Deployment) -> None:
@@ -158,7 +162,12 @@ class DeploymentRepository(Protocol):
         """Read one version by id."""
 
     def list_versions(self, deployment_id: UUID) -> tuple[DeploymentVersion, ...]:
-        """Read a deployment's versions, newest attempt first."""
+        """Read a deployment's versions, newest attempt first.
+
+        No HTTP route exposes this yet. ADR-020 defers
+        `GET /v1/deployments/{id}/versions` to the authentication module so the
+        endpoint arrives authorized rather than being retrofitted.
+        """
 
     def save_version(self, version: DeploymentVersion) -> None:
         """Persist a version's lifecycle transition."""

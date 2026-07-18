@@ -40,7 +40,12 @@ class ArtifactStore(Protocol):
         """Open a stored artifact for reading."""
 
     def delete(self, sha256: str) -> None:
-        """Delete a stored artifact. Deleting an absent artifact is not an error."""
+        """Delete a stored artifact. Deleting an absent artifact is not an error.
+
+        Nothing calls this yet. It is the primitive ADR-012's retention and
+        disk-pressure policy needs, and that policy belongs to Module 10 --
+        artifacts currently accumulate without bound.
+        """
 
 
 @dataclass(frozen=True, slots=True)
