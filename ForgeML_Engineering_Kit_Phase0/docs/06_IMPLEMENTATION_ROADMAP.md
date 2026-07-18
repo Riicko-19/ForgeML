@@ -24,6 +24,25 @@ Work proceeds in vertical, reviewable modules, but shared contracts freeze befor
 
 Phase 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10. A role may prepare tests/docs concurrently inside a phase but may not silently change a frozen upstream contract.
 
+## Epics (cross-cutting track)
+
+Amended by **ADR-022**. Phases above are unchanged: same numbering, same order, same gates.
+
+Some capabilities cut across every phase and cannot sit inside one. They are delivered as **epics**, which carry the same discipline as a phase — entry gate, exit gate, ADRs, CI freeze evidence under ADR-014 — but hold no position in the phase ordering.
+
+| Epic | Scope | Entry gate | Exit gate |
+| --- | --- | --- | --- |
+| 1 Identity & Authentication | Principal model, API-key credential, authentication boundary, actor attribution in audit | Phases 0–7 implemented; ADR-018/019 accepted | Every `/v1` route authenticated; audit carries actor identity; security review complete |
+| 2 Authorization | Permission model, per-command checks, scoped keys, HTTP key management | Epic 1 frozen | Every command authorizes; no privilege-escalation path |
+
+**Epic 1 runs before Phase 8.** This is a dependency, not a reordering: Monitoring without an actor yields observations that cannot be attributed, and a Dashboard built before authentication is one that has authentication retrofitted into it.
+
+An epic may not weaken a phase gate. Where an epic changes a frozen module's public contract it names that surface in its own ADR, exactly as a phase would.
+
+## Deferred milestone reclassified
+
+"Multi-user auth" below remains deferred. Epic 1 delivers **single-kind operator authentication** (ADR-023): one principal type, no users, no tenants, no groups. The multi-user identity model that entry refers to is still a V2 concern requiring its own ADR.
+
 ## Definition of done
 
 1. Contract and ADR impact reviewed.

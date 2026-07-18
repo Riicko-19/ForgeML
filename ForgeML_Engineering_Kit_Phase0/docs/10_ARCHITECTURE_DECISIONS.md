@@ -462,3 +462,347 @@ automation will later encode.
 **Alternatives:** CalVer was rejected: it communicates recency, and ForgeML's users need
 to know about breakage. Promising compatibility before 1.0 was rejected as a promise the
 project cannot yet keep.
+
+## ADR-022 — Epics as a cross-cutting delivery track
+
+**Status:** Accepted 2026-07-18
+**Owner:** Chief Architect (Epic 1)
+
+**Context:** ADR-019 decided *where* authentication code goes and explicitly declined to
+decide *when* it is built. The frozen roadmap (`06_IMPLEMENTATION_ROADMAP.md`) defines
+eleven numbered phases, of which Phase 9 is Dashboard, and places security work inside
+Phase 10 while noting that multi-user authentication there would require an ADR. So
+authentication has a home in the code and no home in the plan. ForgeML 0.9 and 0.9.1
+both recorded this as the open decision blocking the work, and both declined to settle it
+by editing the roadmap, because that document is the authority the status file reports
+against.
+
+The phase list has a property worth preserving: it is a **required order** over
+capability layers, each with an entry gate and an exit gate. Authentication does not fit
+that shape. It is not a layer that sits between Routing and Monitoring; it is a concern
+that cuts across every phase already delivered and every phase remaining.
+
+**Decision:** ForgeML delivers work along **two tracks**, and this ADR amends the roadmap
+additively to say so.
+
+1. **Phases** (0–10) remain exactly as frozen, with their numbering, ordering, entry
+   gates, and exit gates unchanged. Nothing is renumbered. Every existing reference to
+   "Module 8", "Phase 9", or "Module 10" across the engineering kit stays correct.
+2. **Epics** are cross-cutting capabilities that touch many phases and therefore cannot
+   be placed inside one. An epic has the same discipline as a phase — an entry gate, an
+   exit gate, ADRs, and CI freeze evidence under ADR-014 — but no position in the phase
+   ordering.
+3. Two epics are defined now:
+   - **Epic 1 — Identity & Authentication**
+   - **Epic 2 — Authorization**
+4. **Epic 1 runs before Phase 8.** Not because the phase order changed, but because
+   Monitoring and Dashboard are both cheaper and more correct with identity present.
+   Monitoring without an actor produces observations that cannot be attributed;
+   a dashboard built before authentication is a dashboard that has authentication
+   retrofitted into it. Ordering the epic first is a consequence of the dependency, not
+   a reordering of the phase list.
+5. **An epic may not weaken a phase gate.** Epic 1 changes one frozen surface — the
+   `audit_events` table, under the amendment ADR-018 already authorized — and nothing
+   else. Where an epic would change a frozen module's public contract, it needs its own
+   ADR naming that surface, exactly as a phase would.
+
+**Consequences:** The roadmap gains a concept rather than losing its shape. The status
+file can report `Phases: 8 of 11` and `Epics: 1 of 2` without either number lying.
+Authentication acquires an entry gate, an exit gate, and freeze evidence like everything
+else, which is what the governance was protecting. The cost is one more axis of progress
+to explain to a newcomer, which `GOVERNANCE.md` absorbs.
+
+The alternative readings this closes: authentication is not "part of Phase 10", it is not
+"Phase 9 renamed", and it does not push Dashboard to 10.
+
+**Alternatives:** Inserting authentication as a new Phase 9 and shifting Dashboard and
+Hardening was rejected: it renumbers a frozen document and invalidates every
+cross-reference in the kit, buying nothing that a second track does not give. Replacing
+Dashboard in V1 was rejected as dropping a committed deliverable to solve a filing
+problem. Delivering authentication inside Phase 10 was rejected because it puts the
+security boundary behind Monitoring and Dashboard, both of which are built better with it
+already in place — and because a phase that contains backups, hardening, docs,
+performance, release, *and* a complete identity subsystem has stopped being a phase.
+
+## ADR-023 — The identity model: one principal kind, and what V1 deliberately lacks
+
+**Status:** Accepted 2026-07-18
+**Owner:** Chief Architect + Security Reviewer (Epic 1)
+
+**Context:** ADR-018 decided that a principal is a frozen value object carrying
+`actor_type` and a stable opaque `actor_id`, and that V1 has exactly one kind of
+principal. Epic 1 implements it, and implementation forces the questions the earlier ADR
+could leave open: what represents *no* principal, where the type lives, and which of the
+many identity concepts in the literature ForgeML actually needs.
+
+The pressure here is toward a rich model — subjects, identities, sessions, service
+accounts, tenants, groups, delegation. Every one of those is a real concept in a mature
+identity system and every one of them is speculative in a single-server control plane
+with no user store. The FEK forbids speculative generality, and an identity model is the
+worst possible place to guess, because it ends up in the audit trail, which is
+append-only and therefore permanent.
+
+**Decision — the model has three types and no more.**
+
+1. **`Principal`** — a frozen value object in `forgeml.domain.identity`, carrying
+   `actor_type: ActorType` and `actor_id: str`. It is *who*, never *how they proved it*.
+   It holds no credential, no secret, no token, no header, and no expiry. A `Principal`
+   is safe to log, safe to put in an audit row, and safe to pass into the domain.
+2. **`Credential`** — the presented proof, which lives only in `forgeml.api` and
+   `forgeml.application.identity` and never reaches the domain as a value. Epic 1's
+   single credential kind is an API key (ADR-024).
+3. **`AuthenticationContext`** — the result of authenticating: a `Principal` plus the
+   `credential_id` that produced it and the `method` that verified it. This is what the
+   audit trail needs to answer "which key was used", which is a different question from
+   "who acted" and matters during key rotation and compromise.
+
+**Decision — absence of a principal is `None`, not an anonymous principal.** ForgeML
+does not define an `ANONYMOUS` principal singleton. Unauthenticated routes (`/healthz`,
+`/readyz`) simply have no principal, and their handlers take none. An anonymous principal
+is a value that can be accidentally passed where an authenticated one was expected, and
+it would type-check. `None` cannot be, because the type system rejects it at the call
+site. The absence of a principal must be a compile-time error, not a runtime value with
+weak privileges.
+
+**Decision — `ActorType` keeps its two members.** `OPERATOR` and `SYSTEM`, unchanged from
+Module 2. An API key holder is an `OPERATOR`; reconciliation and startup recovery are
+`SYSTEM` and carry no `actor_id`, which is truthful rather than a synthetic identity.
+A "service principal" and a "user principal" are both `OPERATOR` in V1 because ForgeML
+cannot yet tell them apart and inventing the distinction would put an unverifiable claim
+into a permanent record.
+
+**Decision — the concepts V1 does not implement, and where each would attach.**
+
+| Concept | State | Attachment point when it arrives |
+| --- | --- | --- |
+| Subject / user identity | Not implemented | A `users` table; `actor_id` becomes a user id, `ActorType` gains `USER` |
+| Session | Not implemented | Sessions are for browsers; the Dashboard phase owns this, not Epic 1 |
+| Service account | Merged into `OPERATOR` | A new `ActorType` member once ForgeML can distinguish one |
+| Tenant / organization | Not implemented | V2. Would add a scope to `Principal`, not a new type |
+| Group / role | Not implemented | Epic 2 (authorization); a role is an authorization input, not an identity |
+| Delegation / impersonation | Not implemented | Would add `on_behalf_of` to `AuthenticationContext`, never to `Principal` |
+| Federated identity (OIDC) | Not implemented | A new `CredentialVerifier` (ADR-024); the identity model is unchanged |
+
+Every row of that table attaches to an existing seam without changing `Principal`. That
+is the test this ADR sets for itself: **no future authentication mechanism may require
+redesigning the identity model**, and the way that promise is kept is by `Principal`
+carrying only what is true of every principal that will ever exist — a kind and a stable
+identifier.
+
+**Consequences:** The domain gains one small package with no dependencies. The audit
+trail can answer "who" and "with which credential" for everything after the migration and
+honestly reports "unknown" for everything before it. The cost is that ForgeML cannot
+express any identity distinction beyond operator-versus-system, and adding one later is a
+migration — which is correct, because that distinction is exactly the thing that should
+require a deliberate schema change rather than appearing by accident.
+
+**Alternatives:** A rich `Subject`/`Identity`/`Principal` triad was rejected as three
+names for one thing ForgeML has one of. An `AnonymousPrincipal` was rejected on the
+type-safety argument above. Putting `Principal` in `domain/audit` (where ADR-018
+tentatively placed it) was rejected once authentication became real: identity is now
+consumed by authentication, authorization, and audit, and filing it under one consumer
+would make the other two import from it.
+
+## ADR-024 — API keys: format, storage, and the verifier seam
+
+**Status:** Accepted 2026-07-18
+**Owner:** Principal Security Engineer (Epic 1)
+
+**Context:** Epic 1 needs exactly one working credential kind. The candidates were API
+keys, JWTs, and OIDC. JWT and OIDC both presuppose something ForgeML does not have — an
+issuer, a user store, a key distribution story — and building either now means encoding
+guesses about an identity provider that has not been chosen. API keys presuppose only a
+database, which ForgeML has.
+
+**Decision — the token format is `forge_<key_id>_<secret>`.**
+
+- `key_id` — 16 characters, URL-safe, generated server-side. **Not secret.** It is the
+  lookup handle and the `actor_id`, and it appears in logs and audit rows.
+- `secret` — 43 characters from `secrets.token_urlsafe(32)`, i.e. **256 bits of entropy**
+  from the OS CSPRNG. Never stored, never logged, shown exactly once at creation.
+- The `forge_` prefix makes the credential greppable in a leaked file or a repository
+  scan, which is the property that makes secret-scanning tools work.
+
+Splitting the identifier from the secret means verification is a single indexed lookup
+followed by one constant-time comparison. A single opaque token would force either a
+table scan or a hash-as-primary-key scheme that cannot be rotated.
+
+**Decision — the stored verifier is SHA-256, not a password KDF.** This is the decision
+most likely to be challenged in review, so the reasoning is recorded rather than assumed.
+
+A password KDF (scrypt, argon2, bcrypt) exists to impose cost on *guessing*, and guessing
+is only feasible when the secret comes from a small space — which is what human-chosen
+passwords are. ForgeML's secret is 256 bits from the OS CSPRNG. There is no guess space
+to protect: brute-forcing it is not made infeasible by a work factor, it is already
+infeasible by counting. Meanwhile a KDF's work factor is paid **on every authenticated
+request**, turning a sub-millisecond lookup into a ~100 ms one, which is a denial-of-
+service amplifier an unauthenticated attacker can trigger by presenting garbage.
+
+So: `sha256(secret)`, stored hex, compared with `hmac.compare_digest`. This is the same
+construction Stripe and GitHub use for machine tokens, and for the same reason.
+
+**The property this preserves:** a database dump does not yield working credentials,
+which is the actual threat a stored-credential decision must answer. The property it
+declines to buy is resistance to guessing a 256-bit random value, which needs no
+purchasing.
+
+**This reasoning is load-bearing on the entropy.** If a future change ever lets a
+human choose, shorten, or derive the secret, the KDF decision must be revisited in the
+same commit. The generator is the only place a key is created, and it is the place that
+comment lives.
+
+**Decision — timing.** Verification performs a constant-time comparison whether or not
+the `key_id` was found, comparing against a fixed dummy digest on the miss path. Without
+it, response latency distinguishes "no such key" from "wrong secret", which lets an
+attacker enumerate valid `key_id`s. The lookup itself is an indexed equality query, whose
+timing does not vary with the stored value.
+
+**Decision — lifecycle.** A key is `created_at`, optionally `expires_at`, and optionally
+`revoked_at`. Verification rejects expired and revoked keys with the *same* error and the
+*same* status as an unknown key: an authentication failure tells the caller nothing about
+why, because "this key existed but is revoked" is information an attacker can use and a
+legitimate operator can get from the CLI. `last_used_at` is recorded for compromise
+review, written outside the request's transaction so that audit and authentication never
+contend.
+
+**Decision — the seam.** `CredentialVerifier` is a Protocol in
+`forgeml.domain.identity.ports` with one method: `verify(presented: str) ->
+AuthenticationContext | None`. `ApiKeyVerifier` implements it. A future `JwtVerifier` or
+`OidcVerifier` implements the same Protocol and is composed in the composition root
+without touching the API layer, the application layer, or the identity model. **This is
+the entire extension mechanism, and it is one Protocol with one method** — the seam is
+the deliverable, not a plugin framework.
+
+**Consequences:** Epic 1 ships a credential that works, that leaks nothing useful when
+the database is stolen, and that a scanner can find in a leaked repo. Adding JWT later is
+a new class implementing an existing Protocol plus a composition-root line. The cost is
+that API keys have no expiry-by-default and no automatic rotation, both of which are
+operator discipline in V1 and are recorded as limitations.
+
+**Alternatives:** JWT was rejected for V1: it is a bearer token with a signature and an
+expiry, and ForgeML has no issuer, no rotation story, and no second service to present it
+to — the complexity buys nothing until there is an identity provider. HMAC request
+signing was rejected as substantially harder for operators to use correctly (clock skew,
+canonicalization) for a threat — replay over TLS — that ADR-025 addresses more cheaply.
+mTLS was rejected as an operational burden disproportionate to a single-server control
+plane.
+
+## ADR-025 — Authentication is always on and has no bypass
+
+**Status:** Accepted 2026-07-18
+**Owner:** Principal Security Engineer (Epic 1)
+
+**Context:** The obvious convenience is a setting — `FORGEML_AUTH_ENABLED=false` — that
+turns authentication off for local development and tests. Almost every framework offers
+one. It is also the single most reliable way to ship an unauthenticated production
+service, because the flag that makes development pleasant is the flag someone sets in an
+environment file that gets copied.
+
+ForgeML's threat model raises the stakes above the usual. ADR-019 records that the
+control plane drives the Docker daemon and the daemon is root: the authentication
+boundary is not protecting model metadata, it is protecting host root. A bypass flag on
+that boundary is a root bypass flag.
+
+**Decision — there is no such setting.** Every route under `/v1` requires a valid
+credential, in every environment, with no configuration that changes it. There is no
+"development mode", no localhost exemption, no header that skips the check, and no
+environment value that disables it.
+
+**Decision — the exemption list is closed and lives in code.** Exactly two paths are
+unauthenticated: `/healthz` and `/readyz`. They are consumed by process supervisors and
+load balancers that hold no credential, and ADR-019 already established they expose
+nothing beyond liveness and database reachability. The list is a module-level constant,
+not configuration, and a test asserts that every other route rejects an unauthenticated
+request — so a new route is authenticated by default and a new exemption cannot be added
+without editing the constant and the test that guards it.
+
+`/v1/openapi.json` is authenticated, per ADR-019.
+
+**Decision — failures are uniform and quiet.** A missing header, a malformed header, an
+unparseable token, an unknown `key_id`, a wrong secret, an expired key, and a revoked key
+all produce the identical response: `401` with code `authentication_required` and no
+detail. The server logs the reason with the `key_id` where one was parsed; the client is
+told only that it failed. Distinguishing these to the client is an enumeration oracle,
+and the operator who needs the real reason has the CLI and the logs.
+
+`WWW-Authenticate: Bearer` is returned, because the status code requires it and it tells
+a correct client what to present.
+
+**Decision — the credential never reaches the log.** The presented token is not logged,
+not attached to an exception, not put in an audit row, and not echoed in any error. Only
+`key_id` — which is not secret by construction (ADR-024) — appears in logs. The bounded
+JSON logger from Module 0 already refuses unbounded fields; this adds the rule that the
+`Authorization` header is stripped before any request logging.
+
+**Decision — tests authenticate.** Because there is no bypass, the test suite mints a
+real key against the real store and presents it, which means the authenticated path is
+exercised by every existing API test rather than a mocked-out shortcut. This is the main
+argument for always-on beyond deployment safety: the code that runs in production is the
+code the tests run.
+
+**Consequences:** ForgeML cannot be started without authentication, so it cannot be
+accidentally deployed without it. The cost is real and is accepted: a developer must mint
+a key before the first request (`make key`), and every API test carries a header. Both
+are one-time mechanical costs paid to remove an entire class of incident.
+
+**Alternatives:** A bypass flag defaulting to secure was rejected — defaults do not
+survive contact with environment files, and the failure is silent and total. Binding to
+localhost as an implicit exemption was rejected: it authenticates the network position
+rather than the caller, and the container that reaches ForgeML over a bridge network
+looks local. A "development" environment exemption was rejected on the same grounds as
+the flag, with the added problem that `FORGEML_ENVIRONMENT` is already load-bearing for
+unrelated behaviour and would quietly acquire a security meaning.
+
+## ADR-026 — Key administration is out-of-band until authorization exists
+
+**Status:** Accepted 2026-07-18
+**Owner:** Principal Security Engineer + Chief Architect (Epic 1)
+
+**Context:** Authentication creates a bootstrap problem and a privilege problem at the
+same time. The bootstrap problem: the first key cannot be minted through an authenticated
+endpoint, because no key exists to authenticate the request. The privilege problem is
+worse and less obvious: if key creation is an authenticated `/v1` endpoint, then **every
+valid key can mint more keys**, because Epic 1 has authentication and no authorization.
+A leaked read-only-intent key would be able to issue itself a permanent replacement, and
+revoking the original would accomplish nothing.
+
+That is privilege escalation delivered as a convenience feature.
+
+**Decision — Epic 1 exposes no HTTP key-management surface.** There is no
+`POST /v1/api-keys`, no `DELETE /v1/api-keys/{id}`, and no listing endpoint. Key
+administration happens out-of-band through a CLI that talks to the database directly:
+
+```
+python -m forgeml.identity create --name "ci-pipeline" [--expires-days N]
+python -m forgeml.identity list
+python -m forgeml.identity revoke <key_id>
+```
+
+The CLI's authorization is possession of the database credential and shell access on the
+host — the same authority required to run the control plane itself. It grants nothing
+that an operator at that privilege level does not already have, which is the test for
+whether an out-of-band tool is a hole.
+
+**Decision — the secret is displayed exactly once.** `create` prints the full token to
+stdout and it is never recoverable, because only its SHA-256 is stored (ADR-024). A lost
+key is revoked and replaced, never recovered.
+
+**Decision — this is a deliberate deferral with a named owner.** HTTP key management
+arrives in **Epic 2 (Authorization)**, where a key can carry a scope and the "may this
+principal mint keys" question has somewhere to be asked. The endpoint shape is not
+designed here, because designing an authorized endpoint before the authorization model
+exists is how the authorization model gets designed backwards from an endpoint.
+
+**Consequences:** Operators mint keys over SSH rather than over HTTP, which for a
+single-server control plane is where they already are. The first-run experience gains one
+documented step. In exchange, Epic 1 ships with no privilege-escalation path, and Epic 2
+inherits the key-management design as an open question rather than a shipped mistake it
+has to stay compatible with.
+
+**Alternatives:** An authenticated key-management endpoint was rejected on the escalation
+argument above. A bootstrap key supplied by environment variable was rejected: it is a
+long-lived root credential living in a process environment and an environment file, and
+it would be the highest-value secret in the system stored in the least protected place. A
+first-run setup token printed at startup was rejected as the same secret with a shorter
+life and a race condition — and it requires an unauthenticated endpoint to redeem it,
+which ADR-025 forbids.
