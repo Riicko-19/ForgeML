@@ -1,20 +1,37 @@
+# Python
 .venv/
 __pycache__/
 *.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Tooling caches and reports
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
 .coverage
 htmlcov/
-build/
-dist/
-*.egg-info/
+
+# Local runtime state
 .env
 /storage/
 /uploads/
 /backend/storage/
 /backend/uploads/
 
-
-# built example packages (regenerate with: make example)
+# Built example packages (regenerate with: make example)
 examples/*.forge
+
+# Generated code-graph output. Regenerate with `graphify update .`; it is
+# rewritten on every run, so tracking it makes a clean checkout look dirty.
+/graphify-out/
+
+# Postman's local sync directories. The reviewed, committed API collection
+# lives in docs/postman/ -- these are the desktop app's working copies.
+/postman/
+/.postman/
+
+# Engineering-kit archives. The extracted, reviewable tree is the source of
+# truth: ForgeML_Engineering_Kit_Phase0/
+/ForgeML_Engineering_Kit_Phase0*.zip
