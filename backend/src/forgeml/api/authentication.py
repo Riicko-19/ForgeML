@@ -73,6 +73,11 @@ def _presented_token(scope: Scope) -> str | None:
         token = credential.strip()
         if scheme.lower() != _SCHEME or not token:
             return None
+        # Control characters decode as valid ASCII but are never part of a
+        # credential. Rejecting them here keeps them out of the verifier, the
+        # store query, and anything downstream that might render them.
+        if any(character < " " or character == "\x7f" for character in token):
+            return None
         return str(token)
     return None
 

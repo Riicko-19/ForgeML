@@ -24,10 +24,8 @@ so it cannot be recovered -- if you lose it, revoke this key and create another.
 """
 
 
-def _administration() -> ApiKeyAdministration:
-    settings = load_settings()
-    provider = DatabaseProvider(settings)
-    return ApiKeyAdministration(unit_of_work=provider.unit_of_work)
+def _provider() -> DatabaseProvider:
+    return DatabaseProvider(load_settings())
 
 
 def _create(admin: ApiKeyAdministration, args: argparse.Namespace) -> int:
@@ -100,15 +98,24 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     args = _parser().parse_args(argv)
     try:
-        admin = _administration()
+        provider = _provider()
     except ConfigurationFailure as failure:
         print(f"configuration error: {failure.code}", file=sys.stderr)
         return 2
+
+    # Explicit try/finally rather than a @contextmanager: AppError is a frozen
+    # slots dataclass, and contextlib unwinds by assigning to `__traceback__`,
+    # which such a class refuses -- turning a clean "no such key" into an
+    # unrelated TypeError. A plain finally has no such opinion.
     try:
-        result: int = args.run(admin, args)
+        result: int = args.run(
+            ApiKeyAdministration(unit_of_work=provider.unit_of_work), args
+        )
     except AppError as error:
         print(f"error: {error.message}", file=sys.stderr)
         return 1
+    finally:
+        provider.dispose()
     return result
 
 

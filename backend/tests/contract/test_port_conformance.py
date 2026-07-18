@@ -28,6 +28,7 @@ from forgeml.domain.deployment.models import (
     VersionState,
 )
 from forgeml.domain.deployment.rules import mark_built
+from forgeml.domain.identity.models import ApiKey
 from forgeml.domain.operations.models import (
     MAX_ATTEMPTS,
     OperationFailure,
@@ -48,6 +49,7 @@ from tests.packages import VALID_MANIFEST
 
 DEFAULT_URL = "postgresql+psycopg://forgeml:forgeml@127.0.0.1:55432/forgeml"
 TABLES = (
+    "api_keys",
     "audit_events",
     "package_validations",
     "deployment_versions",
@@ -731,3 +733,165 @@ def test_desired_state_can_be_saved(uow: UnitOfWork) -> None:
         stored = uow.deployments.find_deployment(deployment.id)
 
     assert stored is not None and stored.desired_state is DesiredState.STOPPED
+
+
+# --------------------------------------------------------------------------
+# ApiKeyStore (ADR-024)
+#
+# Held to the same both-implementations rule as every other port: the fake the
+# API tests run against must behave like the PostgreSQL one, or those tests are
+# measuring a fiction.
+# --------------------------------------------------------------------------
+
+
+def _api_key(**overrides: object) -> ApiKey:
+    fields: dict[str, object] = {
+        "id": uuid4(),
+        "key_id": "a" * 16,
+        "name": "ci",
+        "secret_sha256": "b" * 64,
+        "created_at": datetime(2026, 7, 18, 12, 0, tzinfo=UTC),
+    }
+    fields.update(overrides)
+    return ApiKey(**fields)  # type: ignore[arg-type]
+
+
+def test_a_stored_key_can_be_read_back_by_its_handle(uow: UnitOfWork) -> None:
+    with uow:
+        uow.api_keys.create(_api_key())
+        uow.commit()
+
+    with uow:
+        found = uow.api_keys.find_by_key_id("a" * 16)
+
+    assert found is not None
+    assert found.name == "ci"
+    assert found.secret_sha256 == "b" * 64
+
+
+def test_an_unknown_handle_reads_as_nothing(uow: UnitOfWork) -> None:
+    with uow:
+        assert uow.api_keys.find_by_key_id("f" * 16) is None
+
+
+def test_a_duplicate_handle_conflicts(uow: UnitOfWork) -> None:
+    with uow:
+        uow.api_keys.create(_api_key())
+        uow.commit()
+
+    with uow, pytest.raises(AppError, match="api key"):
+        uow.api_keys.create(_api_key(id=uuid4()))
+
+
+def test_keys_list_newest_first(uow: UnitOfWork) -> None:
+    older = datetime(2026, 7, 18, 10, 0, tzinfo=UTC)
+    newer = datetime(2026, 7, 18, 14, 0, tzinfo=UTC)
+    with uow:
+        uow.api_keys.create(_api_key(key_id="a" * 16, created_at=older, name="old"))
+        uow.api_keys.create(
+            _api_key(id=uuid4(), key_id="c" * 16, created_at=newer, name="new")
+        )
+        uow.commit()
+
+    with uow:
+        listed = uow.api_keys.list()
+
+    assert [key.name for key in listed] == ["new", "old"]
+
+
+def test_revoking_reports_whether_the_key_existed(uow: UnitOfWork) -> None:
+    moment = datetime(2026, 7, 18, 15, 0, tzinfo=UTC)
+    with uow:
+        uow.api_keys.create(_api_key())
+        uow.commit()
+
+    with uow:
+        assert uow.api_keys.revoke("a" * 16, moment) is True
+        assert uow.api_keys.revoke("f" * 16, moment) is False
+        uow.commit()
+
+    with uow:
+        found = uow.api_keys.find_by_key_id("a" * 16)
+    assert found is not None and found.revoked_at is not None
+
+
+def test_a_second_revocation_keeps_the_first_timestamp(uow: UnitOfWork) -> None:
+    """The first revocation is the one the incident timeline needs."""
+
+    first = datetime(2026, 7, 18, 15, 0, tzinfo=UTC)
+    second = datetime(2026, 7, 19, 15, 0, tzinfo=UTC)
+    with uow:
+        uow.api_keys.create(_api_key())
+        uow.commit()
+
+    with uow:
+        uow.api_keys.revoke("a" * 16, first)
+        uow.commit()
+    with uow:
+        uow.api_keys.revoke("a" * 16, second)
+        uow.commit()
+
+    with uow:
+        found = uow.api_keys.find_by_key_id("a" * 16)
+    assert found is not None
+    assert found.revoked_at is not None
+    assert found.revoked_at.replace(tzinfo=UTC) == first
+
+
+def test_use_is_recorded_against_the_record_id(uow: UnitOfWork) -> None:
+    identifier = uuid4()
+    used = datetime(2026, 7, 18, 16, 0, tzinfo=UTC)
+    with uow:
+        uow.api_keys.create(_api_key(id=identifier))
+        uow.commit()
+
+    with uow:
+        uow.api_keys.touch_last_used(identifier, used)
+        uow.commit()
+
+    with uow:
+        found = uow.api_keys.find_by_key_id("a" * 16)
+    assert found is not None
+    assert found.last_used_at is not None
+
+
+def test_recording_use_of_an_absent_key_is_not_an_error(uow: UnitOfWork) -> None:
+    """Authentication must never fail because bookkeeping could not land."""
+
+    with uow:
+        uow.api_keys.touch_last_used(uuid4(), datetime.now(UTC))
+        uow.commit()
+
+
+def test_an_audit_event_round_trips_its_actor(uow: UnitOfWork) -> None:
+    """ADR-018: attribution survives the write, and absence stays absent."""
+
+    correlation = uuid4()
+    with uow:
+        uow.audit.record(
+            AuditEvent(
+                actor_type=ActorType.OPERATOR,
+                actor_id="d" * 16,
+                action="package.uploaded",
+                target_type="package",
+                target_id=str(uuid4()),
+                correlation_id=correlation,
+            )
+        )
+        uow.audit.record(
+            AuditEvent(
+                actor_type=ActorType.SYSTEM,
+                action="deployment.reconcile.drift",
+                target_type="runtime",
+                target_id="container-1",
+                correlation_id=correlation,
+            )
+        )
+        uow.commit()
+
+    with uow:
+        events = uow.audit.for_correlation(correlation)
+
+    by_action = {event.action: event for event in events}
+    assert by_action["package.uploaded"].actor_id == "d" * 16
+    assert by_action["deployment.reconcile.drift"].actor_id is None

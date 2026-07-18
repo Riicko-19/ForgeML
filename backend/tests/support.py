@@ -12,6 +12,7 @@ from fastapi import FastAPI
 from forgeml.api.authentication import AuthenticationMiddleware
 from forgeml.application.identity.services import ApiKeyAdministration, ApiKeyVerifier
 from forgeml.application.unit_of_work import UnitOfWork
+from forgeml.core.config import AppSettings
 from forgeml.domain.identity.models import (
     ActorType,
     AuthenticationContext,
@@ -52,7 +53,7 @@ class StubVerifier:
         )
 
 
-def stub_application(settings: object) -> tuple[FastAPI, str]:
+def stub_application(settings: AppSettings) -> tuple[FastAPI, str]:
     """A fully composed app whose verifier needs no database, and its token."""
 
     from forgeml.core.composition import create_application

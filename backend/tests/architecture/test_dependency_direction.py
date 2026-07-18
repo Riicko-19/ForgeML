@@ -152,3 +152,103 @@ def test_no_package_path_can_import_or_deserialize_package_content(path: Path) -
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
     }
     assert not called & {"eval", "exec", "compile", "__import__"}
+
+
+# --------------------------------------------------------------------------
+# Epic 1: the authentication and identity boundaries (ADR-019, ADR-023).
+#
+# ADR-019: "A boundary defended only by review is a boundary already lost."
+# --------------------------------------------------------------------------
+
+IDENTITY_HOME = SOURCE / "domain" / "identity"
+
+#: The credential lives in the API layer and the identity use cases. Nothing
+#: below may import the machinery of proving who someone is -- an application
+#: service that can hash a secret is one refactor away from verifying one.
+CREDENTIAL_MODULES = ("forgeml.domain.identity.credentials",)
+
+
+@pytest.mark.parametrize(
+    "path",
+    sorted((SOURCE / "domain").rglob("*.py")),
+    ids=lambda path: path.name,
+)
+def test_the_identity_domain_is_the_only_domain_that_knows_about_credentials(
+    path: Path,
+) -> None:
+    """Identity policy is confined to one package.
+
+    Deployment or package policy that could reach a credential type would be
+    policy that can branch on who is asking, and ADR-019 keeps the domain
+    decidable without knowing that.
+    """
+
+    if IDENTITY_HOME in path.parents:
+        return
+
+    assert _violations(path, CREDENTIAL_MODULES) == set()
+
+
+@pytest.mark.parametrize(
+    "path",
+    sorted((SOURCE / "application").rglob("*.py"))
+    + sorted((SOURCE / "domain").rglob("*.py")),
+    ids=lambda path: str(path.relative_to(SOURCE)),
+)
+def test_no_transport_credential_type_crosses_below_the_api(path: Path) -> None:
+    """ADR-019: no credential, header, token, or request object may cross into
+    the application or domain layers.
+
+    The application layer receives a Principal -- a domain value -- exactly as
+    it already receives a correlation id. If a Request or a header type can be
+    imported here, authentication has started leaking downward.
+    """
+
+    forbidden = (
+        "starlette",
+        "fastapi",
+        "forgeml.api",
+        "forgeml.core.principal",
+    )
+
+    assert _violations(path, forbidden) == set()
+
+
+def test_the_principal_context_is_read_only_inside_the_api_layer() -> None:
+    """`core.principal` is a transport detail with exactly one consumer.
+
+    Services take a Principal as an argument. If anything outside the API layer
+    reads the contextvar instead, the dependency becomes invisible: the service
+    would look pure and behave differently depending on an ambient value.
+    """
+
+    readers = {
+        path.relative_to(SOURCE).as_posix()
+        for path in SOURCE.rglob("*.py")
+        if "forgeml.core.principal" in _imports(path)
+    }
+
+    assert readers == {"api/authentication.py"}
+
+
+def test_no_authorization_check_has_appeared_yet() -> None:
+    """Epic 1 is authentication only; authorization is Epic 2 (ADR-019).
+
+    Scanned as declared names rather than as text, so prose about file
+    permissions or an ADR reference in a docstring does not trip it. A real
+    permission check would arrive as a function or a class, and it would arrive
+    without the model ADR-019 says it needs -- becoming the thing Epic 2 has to
+    stay compatible with instead of designing freely.
+    """
+
+    marker_words = ("permission", "authorize", "authorization", "allowed", "role")
+    declared: set[str] = set()
+    for path in SOURCE.rglob("*.py"):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+                name = node.name.lower()
+                if any(word in name for word in marker_words):
+                    declared.add(f"{path.relative_to(SOURCE).as_posix()}:{node.name}")
+
+    assert declared == set()
