@@ -14,12 +14,12 @@ from sqlalchemy import create_engine, text
 
 from forgeml.domain.identity import credentials
 from forgeml.identity.__main__ import main
-from tests.integration.api.conftest import database_url
+from tests.integration.identity.conftest import TEST_DATABASE_URL
 
 
 @pytest.fixture
 def clean_keys(migrated: None) -> Iterator[None]:
-    engine = create_engine(database_url(), future=True)
+    engine = create_engine(TEST_DATABASE_URL, future=True)
     with engine.begin() as connection:
         connection.execute(text("TRUNCATE api_keys RESTART IDENTITY CASCADE"))
     engine.dispose()
@@ -35,11 +35,14 @@ def database_environment(monkeypatch: pytest.MonkeyPatch) -> None:
     *test-harness* variable, not a setting -- leaving it set makes the CLI exit
     with a configuration error. That is correct behaviour and worth knowing
     about: a developer with it exported in their shell will see the same thing.
+
+    The URL comes from the package constant, not from `database_url()`, for
+    the reason recorded in this package's conftest.
     """
 
     monkeypatch.delenv("FORGEML_TEST_DATABASE_URL", raising=False)
     monkeypatch.setenv("FORGEML_ENVIRONMENT", "test")
-    monkeypatch.setenv("FORGEML_DATABASE_URL", database_url())
+    monkeypatch.setenv("FORGEML_DATABASE_URL", TEST_DATABASE_URL)
 
 
 def test_create_prints_a_usable_token_exactly_once(
@@ -91,7 +94,7 @@ def test_the_secret_is_not_recoverable_from_the_database(
     )
     secret = token.split("_", 2)[2]
 
-    engine = create_engine(database_url(), future=True)
+    engine = create_engine(TEST_DATABASE_URL, future=True)
     with engine.connect() as connection:
         stored = connection.execute(text("SELECT * FROM api_keys")).mappings().all()
     engine.dispose()
@@ -158,7 +161,7 @@ def test_revoking_an_unknown_key_fails_without_a_traceback(
     captured = capsys.readouterr()
     assert "error:" in captured.err
     assert "Traceback" not in captured.err
-    assert database_url() not in captured.err
+    assert TEST_DATABASE_URL not in captured.err
 
 
 def test_an_expiring_key_can_be_created(
